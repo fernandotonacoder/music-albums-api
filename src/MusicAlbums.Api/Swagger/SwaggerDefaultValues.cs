@@ -20,12 +20,12 @@ public class SwaggerDefaultValues : IOperationFilter
                 : responseType.StatusCode.ToString();
             var response = operation.Responses[responseKey];
 
-            foreach (var contentType in response.Content.Keys)
+            var keysToRemove = response.Content.Keys
+                .Where(contentType => responseType.ApiResponseFormats.All(x => x.MediaType != contentType))
+                .ToList();
+            foreach (var contentType in keysToRemove)
             {
-                if (responseType.ApiResponseFormats.All(x => x.MediaType != contentType))
-                {
-                    response.Content.Remove(contentType);
-                }
+                response.Content.Remove(contentType);
             }
         }
 
