@@ -25,7 +25,7 @@ public class MusicAlbumsController(IMusicAlbumService musicAlbumService, IOutput
         var album = request.MapToMusicAlbum();
         await musicAlbumService.CreateAsync(album, token);
         await outputCacheStore.EvictByTagAsync("albums", token);
-		var albumResponse = album.MapToResponse();
+        var albumResponse = album.MapToResponse();
         return CreatedAtAction(nameof(GetV1), new { idOrSlug = album.Id }, albumResponse);
     }
     
