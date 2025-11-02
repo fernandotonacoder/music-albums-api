@@ -1,0 +1,1965 @@
+{
+	"info": {
+		"_postman_id": "536e94a9-1f5d-4506-b713-a3af3625918d",
+		"name": "Music Albums API - Complete Testing Suite",
+		"description": "Comprehensive Postman collection for testing the Music Albums API with all possible scenarios including authentication, CRUD operations, ratings, filters, pagination, and error cases.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "21003782"
+	},
+	"item": [
+		{
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Get Admin Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('adminToken', response.token);",
+									"    pm.environment.set('adminToken', response.token);",
+									"    console.log('Admin token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"00000000-0000-0000-0000-000000000001\",\n    \"email\": \"admin@example.com\",\n    \"customClaims\": {\n        \"admin\": \"true\",\n        \"trusted_member\": \"true\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{identityUrl}}/token",
+							"host": [
+								"{{identityUrl}}"
+							],
+							"path": [
+								"token"
+							]
+						},
+						"description": "Generate an admin token with full permissions (admin + trusted_member)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Trusted Member Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('trustedToken', response.token);",
+									"    pm.environment.set('trustedToken', response.token);",
+									"    console.log('Trusted member token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"00000000-0000-0000-0000-000000000002\",\n    \"email\": \"trusted@example.com\",\n    \"customClaims\": {\n        \"trusted_member\": \"true\"\n    }\n}"
+						},
+						"url": {
+							"raw": "{{identityUrl}}/token",
+							"host": [
+								"{{identityUrl}}"
+							],
+							"path": [
+								"token"
+							]
+						},
+						"description": "Generate a trusted member token (can create/update albums but cannot delete)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Regular User Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('userToken', response.token);",
+									"    pm.environment.set('userToken', response.token);",
+									"    console.log('Regular user token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"00000000-0000-0000-0000-000000000003\",\n    \"email\": \"user@example.com\",\n    \"customClaims\": {}\n}"
+						},
+						"url": {
+							"raw": "{{identityUrl}}/token",
+							"host": [
+								"{{identityUrl}}"
+							],
+							"path": [
+								"token"
+							]
+						},
+						"description": "Generate a regular user token (can only rate albums)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Second User Token",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 200) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('user2Token', response.token);",
+									"    pm.environment.set('user2Token', response.token);",
+									"    console.log('Second user token saved');",
+									"}"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userId\": \"00000000-0000-0000-0000-000000000004\",\n    \"email\": \"user2@example.com\",\n    \"customClaims\": {}\n}"
+						},
+						"url": {
+							"raw": "{{identityUrl}}/token",
+							"host": [
+								"{{identityUrl}}"
+							],
+							"path": [
+								"token"
+							]
+						},
+						"description": "Generate a second user token for testing multiple user ratings"
+					},
+					"response": []
+				}
+			],
+			"description": "Generate authentication tokens for different user roles"
+		},
+		{
+			"name": "Albums - Create",
+			"item": [
+				{
+					"name": "Create Album - Single Artist",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"if (pm.response.code === 201) {",
+									"    const response = pm.response.json();",
+									"    pm.collectionVariables.set('albumId', response.id);",
+									"    pm.collectionVariables.set('albumSlug', response.slug);",
+									"    console.log('Album ID saved: ' + response.id);",
+									"    console.log('Album Slug saved: ' + response.slug);",
+									"}",
+									"",
+									"pm.test('Status code is 201', function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test('Response has album ID', function () {",
+									"    pm.expect(pm.response.json()).to.have.property('id');",
+									"});"
+								],
+								"type": "text/javascript",
+								"packages": {},
+								"requests": {}
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"The Dark Side of the Moon\",\n    \"yearOfRelease\": 1973,\n    \"artistNames\": [\"Pink Floyd\"],\n    \"genres\": [\"Progressive Rock\", \"Psychedelic Rock\"],\n    \"tracks\": [\n        {\n            \"title\": \"Speak to Me\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 90\n        },\n        {\n            \"title\": \"Breathe\",\n            \"trackNumber\": 2,\n            \"durationInSeconds\": 163\n        },\n        {\n            \"title\": \"On the Run\",\n            \"trackNumber\": 3,\n            \"durationInSeconds\": 216\n        },\n        {\n            \"title\": \"Time\",\n            \"trackNumber\": 4,\n            \"durationInSeconds\": 413\n        },\n        {\n            \"title\": \"Money\",\n            \"trackNumber\": 5,\n            \"durationInSeconds\": 382\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Create a simple album with a single artist and multiple tracks"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Multiple Artists (Collaboration)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Watch the Throne\",\n    \"yearOfRelease\": 2011,\n    \"artistNames\": [\"Jay-Z\", \"Kanye West\"],\n    \"genres\": [\"Hip Hop\", \"Rap\"],\n    \"tracks\": [\n        {\n            \"title\": \"No Church in the Wild\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 292\n        },\n        {\n            \"title\": \"Lift Off\",\n            \"trackNumber\": 2,\n            \"durationInSeconds\": 260\n        },\n        {\n            \"title\": \"Niggas in Paris\",\n            \"trackNumber\": 3,\n            \"durationInSeconds\": 219\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Create an album with multiple main artists (collaboration)"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Featured Artists on Tracks",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"good kid, m.A.A.d city\",\n    \"yearOfRelease\": 2012,\n    \"artistNames\": [\"Kendrick Lamar\"],\n    \"genres\": [\"Hip Hop\", \"West Coast Hip Hop\"],\n    \"tracks\": [\n        {\n            \"title\": \"Sherane a.k.a Master Splinters Daughter\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 274\n        },\n        {\n            \"title\": \"Bitch, Dont Kill My Vibe\",\n            \"trackNumber\": 2,\n            \"durationInSeconds\": 310\n        },\n        {\n            \"title\": \"Poetic Justice\",\n            \"trackNumber\": 3,\n            \"durationInSeconds\": 301,\n            \"artistNames\": [\"Kendrick Lamar\", \"Drake\"]\n        },\n        {\n            \"title\": \"Swimming Pools (Drank)\",\n            \"trackNumber\": 4,\n            \"durationInSeconds\": 313\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Create album where specific tracks have featured artists"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Various Artists Compilation",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Now Thats What I Call Music! 50\",\n    \"yearOfRelease\": 2020,\n    \"artistNames\": [\"Various Artists\"],\n    \"genres\": [\"Pop\", \"Rock\", \"Hip Hop\"],\n    \"tracks\": [\n        {\n            \"title\": \"Blinding Lights\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 200,\n            \"artistNames\": [\"The Weeknd\"]\n        },\n        {\n            \"title\": \"Watermelon Sugar\",\n            \"trackNumber\": 2,\n            \"durationInSeconds\": 174,\n            \"artistNames\": [\"Harry Styles\"]\n        },\n        {\n            \"title\": \"Levitating\",\n            \"trackNumber\": 3,\n            \"durationInSeconds\": 203,\n            \"artistNames\": [\"Dua Lipa\"]\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Create compilation album where each track has different artists"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - No Tracks (Minimal)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Abbey Road\",\n    \"yearOfRelease\": 1969,\n    \"artistNames\": [\"The Beatles\"],\n    \"genres\": [\"Rock\", \"Pop\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Create minimal album with no tracks"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Tracks Without Duration",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Nevermind\",\n    \"yearOfRelease\": 1991,\n    \"artistNames\": [\"Nirvana\"],\n    \"genres\": [\"Grunge\", \"Alternative Rock\"],\n    \"tracks\": [\n        {\n            \"title\": \"Smells Like Teen Spirit\",\n            \"trackNumber\": 1\n        },\n        {\n            \"title\": \"In Bloom\",\n            \"trackNumber\": 2\n        },\n        {\n            \"title\": \"Come as You Are\",\n            \"trackNumber\": 3\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Create album with tracks but no duration specified"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Test Artist Reusability (Beatles #1)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Sgt. Peppers Lonely Hearts Club Band\",\n    \"yearOfRelease\": 1967,\n    \"artistNames\": [\"The Beatles\"],\n    \"genres\": [\"Rock\", \"Pop\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "First Beatles album - creates new artist"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Test Artist Reusability (Beatles #2)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Let It Be\",\n    \"yearOfRelease\": 1970,\n    \"artistNames\": [\"The Beatles\"],\n    \"genres\": [\"Rock\", \"Pop\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Second Beatles album - should reuse same artist ID"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Case Insensitive Artist Match",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Revolver\",\n    \"yearOfRelease\": 1966,\n    \"artistNames\": [\"the beatles\"],\n    \"genres\": [\"Rock\", \"Pop\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Test case-insensitive artist matching - 'the beatles' should match 'The Beatles'"
+					},
+					"response": []
+				}
+			],
+			"description": "Test album creation with various scenarios",
+			"event": [
+				{
+					"listen": "prerequest",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				},
+				{
+					"listen": "test",
+					"script": {
+						"type": "text/javascript",
+						"packages": {},
+						"requests": {},
+						"exec": [
+							""
+						]
+					}
+				}
+			]
+		},
+		{
+			"name": "Albums - Retrieve",
+			"item": [
+				{
+					"name": "Get Album by ID",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Retrieve a specific album by its GUID"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Album by Slug",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumSlug}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumSlug}}"
+							]
+						},
+						"description": "Retrieve a specific album by its slug (URL-friendly identifier)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Album with User Rating",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Get album as authenticated user - shows userRating field"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Albums (No Filters)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Retrieve all albums without any filters"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Albums - Page 1",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?page=1&pageSize=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get first page with 10 items per page"
+					},
+					"response": []
+				},
+				{
+					"name": "Get All Albums - Page 2",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?page=2&pageSize=10",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "page",
+									"value": "2"
+								},
+								{
+									"key": "pageSize",
+									"value": "10"
+								}
+							]
+						},
+						"description": "Get second page"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Albums - Filter by Title",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?title=dark",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "title",
+									"value": "dark"
+								}
+							]
+						},
+						"description": "Search albums by title (partial match)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Albums - Filter by Year",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?year=1973",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "year",
+									"value": "1973"
+								}
+							]
+						},
+						"description": "Filter albums by year of release"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Albums - Combined Filters",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?title=moon&year=1973&page=1&pageSize=5",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "title",
+									"value": "moon"
+								},
+								{
+									"key": "year",
+									"value": "1973"
+								},
+								{
+									"key": "page",
+									"value": "1"
+								},
+								{
+									"key": "pageSize",
+									"value": "5"
+								}
+							]
+						},
+						"description": "Combine multiple filters with pagination"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Albums - Sort by Title Asc",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?sortBy=title",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "title"
+								}
+							]
+						},
+						"description": "Sort albums by title in ascending order"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Albums - Sort by Title Desc",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?sortBy=-title",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "-title"
+								}
+							]
+						},
+						"description": "Sort albums by title in descending order (prefix with -)"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Albums - Sort by Year Asc",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?sortBy=yearOfRelease",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "yearOfRelease"
+								}
+							]
+						},
+						"description": "Sort albums by year of release ascending"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Albums - Sort by Year Desc",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums?sortBy=-yearOfRelease",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							],
+							"query": [
+								{
+									"key": "sortBy",
+									"value": "-yearOfRelease"
+								}
+							]
+						},
+						"description": "Sort albums by year of release descending"
+					},
+					"response": []
+				}
+			],
+			"description": "Test album retrieval with various filters and sorting options"
+		},
+		{
+			"name": "Albums - Update",
+			"item": [
+				{
+					"name": "Update Album - Change Title",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"The Dark Side of the Moon (Remastered)\",\n    \"yearOfRelease\": 1973,\n    \"artistNames\": [\"Pink Floyd\"],\n    \"genres\": [\"Progressive Rock\", \"Psychedelic Rock\"],\n    \"tracks\": [\n        {\n            \"title\": \"Speak to Me\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 90\n        },\n        {\n            \"title\": \"Breathe\",\n            \"trackNumber\": 2,\n            \"durationInSeconds\": 163\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Update album title"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Album - Add Artists",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Watch the Throne (Deluxe)\",\n    \"yearOfRelease\": 2011,\n    \"artistNames\": [\"Jay-Z\", \"Kanye West\", \"Frank Ocean\"],\n    \"genres\": [\"Hip Hop\", \"Rap\"],\n    \"tracks\": [\n        {\n            \"title\": \"No Church in the Wild\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 292\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Update album to add more artists"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Album - Add More Tracks",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Abbey Road\",\n    \"yearOfRelease\": 1969,\n    \"artistNames\": [\"The Beatles\"],\n    \"genres\": [\"Rock\", \"Pop\"],\n    \"tracks\": [\n        {\n            \"title\": \"Come Together\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 259\n        },\n        {\n            \"title\": \"Something\",\n            \"trackNumber\": 2,\n            \"durationInSeconds\": 182\n        },\n        {\n            \"title\": \"Maxwells Silver Hammer\",\n            \"trackNumber\": 3,\n            \"durationInSeconds\": 207\n        },\n        {\n            \"title\": \"Oh! Darling\",\n            \"trackNumber\": 4,\n            \"durationInSeconds\": 206\n        },\n        {\n            \"title\": \"Here Comes the Sun\",\n            \"trackNumber\": 5,\n            \"durationInSeconds\": 185\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Expand track list of an album"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Album - Change Genres",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Nevermind\",\n    \"yearOfRelease\": 1991,\n    \"artistNames\": [\"Nirvana\"],\n    \"genres\": [\"Grunge\", \"Alternative Rock\", \"Hard Rock\"],\n    \"tracks\": [\n        {\n            \"title\": \"Smells Like Teen Spirit\",\n            \"trackNumber\": 1\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Update album genres"
+					},
+					"response": []
+				}
+			],
+			"description": "Test album update operations"
+		},
+		{
+			"name": "Albums - Delete",
+			"item": [
+				{
+					"name": "Delete Album (Admin)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{adminToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Delete an album (requires admin privileges)"
+					},
+					"response": []
+				}
+			],
+			"description": "Test album deletion"
+		},
+		{
+			"name": "Ratings",
+			"item": [
+				{
+					"name": "Rate Album - 5 Stars",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Rate an album with 5 stars"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Album - 1 Star",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 1\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Rate an album with 1 star"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Album - 3 Stars (Update)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 3\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Update existing rating to 3 stars"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Album - User 2 (4 Stars)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{user2Token}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 4\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Second user rates the same album (tests multiple ratings)"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Rating",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Remove user's rating for an album"
+					},
+					"response": []
+				},
+				{
+					"name": "Get My Ratings",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/ratings/me",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"ratings",
+								"me"
+							]
+						},
+						"description": "Get all ratings by the authenticated user"
+					},
+					"response": []
+				}
+			],
+			"description": "Test album rating operations"
+		},
+		{
+			"name": "Error Cases",
+			"item": [
+				{
+					"name": "Create Album - Missing Title (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"yearOfRelease\": 2024,\n    \"artistNames\": [\"Test Artist\"],\n    \"genres\": [\"Rock\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Should fail with validation error - missing title"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Empty Artists (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Test Album\",\n    \"yearOfRelease\": 2024,\n    \"artistNames\": [],\n    \"genres\": [\"Rock\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Should fail - at least one artist required"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Duplicate Track Numbers (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Test Album\",\n    \"yearOfRelease\": 2024,\n    \"artistNames\": [\"Test Artist\"],\n    \"genres\": [\"Rock\"],\n    \"tracks\": [\n        {\n            \"title\": \"Track 1\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 180\n        },\n        {\n            \"title\": \"Track 2\",\n            \"trackNumber\": 1,\n            \"durationInSeconds\": 200\n        }\n    ]\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Should fail - duplicate track numbers"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album - Future Year (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Future Album\",\n    \"yearOfRelease\": 2030,\n    \"artistNames\": [\"Test Artist\"],\n    \"genres\": [\"Rock\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Should fail - year in the future"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Album - Invalid Rating 0 (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 0\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Should fail - rating must be 1-5"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Album - Invalid Rating 6 (400)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 6\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Should fail - rating must be 1-5"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-Existent Album (404)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/00000000-0000-0000-0000-000000000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						},
+						"description": "Should return 404 - album doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Get Non-Existent Slug (404)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/this-album-does-not-exist-9999",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"this-album-does-not-exist-9999"
+							]
+						},
+						"description": "Should return 404 - slug doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Update Non-Existent Album (404)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{trustedToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Updated\",\n    \"yearOfRelease\": 2024,\n    \"artistNames\": [\"Artist\"],\n    \"genres\": [\"Rock\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/00000000-0000-0000-0000-000000000000",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"00000000-0000-0000-0000-000000000000"
+							]
+						},
+						"description": "Should return 404 - album doesn't exist"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Album Without Auth (401)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Should fail with 401 - authentication required"
+					},
+					"response": []
+				},
+				{
+					"name": "Delete Album As Regular User (403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}"
+							]
+						},
+						"description": "Should fail with 403 - admin privileges required"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album Without Auth (401)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Test\",\n    \"yearOfRelease\": 2024,\n    \"artistNames\": [\"Artist\"],\n    \"genres\": [\"Rock\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Should fail with 401 - trusted member required"
+					},
+					"response": []
+				},
+				{
+					"name": "Create Album As Regular User (403)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"title\": \"Test\",\n    \"yearOfRelease\": 2024,\n    \"artistNames\": [\"Artist\"],\n    \"genres\": [\"Rock\"],\n    \"tracks\": []\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums"
+							]
+						},
+						"description": "Should fail with 403 - trusted member required"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Album Without Auth (401)",
+					"request": {
+						"auth": {
+							"type": "noauth"
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/{{albumId}}/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"{{albumId}}",
+								"ratings"
+							]
+						},
+						"description": "Should fail with 401 - authentication required"
+					},
+					"response": []
+				},
+				{
+					"name": "Rate Non-Existent Album (404)",
+					"request": {
+						"auth": {
+							"type": "bearer",
+							"bearer": [
+								{
+									"key": "token",
+									"value": "{{userToken}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"rating\": 5\n}"
+						},
+						"url": {
+							"raw": "{{baseUrl}}/api/albums/00000000-0000-0000-0000-000000000000/ratings",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"api",
+								"albums",
+								"00000000-0000-0000-0000-000000000000",
+								"ratings"
+							]
+						},
+						"description": "Should return 404 - album doesn't exist"
+					},
+					"response": []
+				}
+			],
+			"description": "Test error cases and validation"
+		},
+		{
+			"name": "Health Check",
+			"item": [
+				{
+					"name": "Health Check",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{baseUrl}}/health",
+							"host": [
+								"{{baseUrl}}"
+							],
+							"path": [
+								"health"
+							]
+						},
+						"description": "Check API health status"
+					},
+					"response": []
+				}
+			],
+			"description": "Health check endpoint"
+		}
+	],
+	"auth": {
+		"type": "oauth2",
+		"oauth2": [
+			{
+				"key": "addTokenTo",
+				"value": "header",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"requests": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "baseUrl",
+			"value": "http://localhost:5000"
+		},
+		{
+			"key": "identityUrl",
+			"value": "http://localhost:5003"
+		},
+		{
+			"key": "adminToken",
+			"value": ""
+		},
+		{
+			"key": "trustedToken",
+			"value": ""
+		},
+		{
+			"key": "userToken",
+			"value": ""
+		},
+		{
+			"key": "user2Token",
+			"value": ""
+		},
+		{
+			"key": "albumId",
+			"value": ""
+		},
+		{
+			"key": "albumSlug",
+			"value": ""
+		}
+	]
+}

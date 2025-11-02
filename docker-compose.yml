@@ -1,0 +1,19 @@
+﻿# DO NOT EDIT THESE DEFAULT VALUES!
+# Only edit this file for adding NEW services/features/images/etcetera
+# To use different values for local development: create a .env file (see .env.example)
+
+services:
+  db:
+    image: postgres:latest
+    restart: no
+    environment:
+      - POSTGRES_USER=${POSTGRES_USER:-dev}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-changeme}
+      - POSTGRES_DB=${POSTGRES_DB:-albums}
+    ports:
+      - '${POSTGRES_PORT:-5433}:5432'
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
