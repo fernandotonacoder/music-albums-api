@@ -16,7 +16,7 @@ public class RatingService : IRatingService
         _musicAlbumRepository = musicAlbumRepository;
     }
 
-    public async Task<bool> RateAlbumAsync(Guid movieId, int rating, Guid userId, CancellationToken token = default)
+    public async Task<bool> RateAlbumAsync(Guid albumId, int rating, Guid userId, CancellationToken token = default)
     {
         if (rating is <= 0 or > 5)
         {
@@ -30,18 +30,18 @@ public class RatingService : IRatingService
             });
         }
 
-        var movieExists = await _musicAlbumRepository.ExistsByIdAsync(movieId, token);
-        if (!movieExists)
+        var albumExists = await _musicAlbumRepository.ExistsByIdAsync(albumId, token);
+        if (!albumExists)
         {
             return false;
         }
 
-        return await _musicAlbumRatingRepository.RateAlbumAsync(movieId, rating, userId, token);
+        return await _musicAlbumRatingRepository.RateAlbumAsync(albumId, rating, userId, token);
     }
 
-    public Task<bool> DeleteRatingAsync(Guid movieId, Guid userId, CancellationToken token = default)
+    public Task<bool> DeleteRatingAsync(Guid albumId, Guid userId, CancellationToken token = default)
     {
-        return _musicAlbumRatingRepository.DeleteRatingAsync(movieId, userId, token);
+        return _musicAlbumRatingRepository.DeleteRatingAsync(albumId, userId, token);
     }
 
     public Task<IEnumerable<MusicAlbumRating>> GetRatingsForUserAsync(Guid userId, CancellationToken token = default)

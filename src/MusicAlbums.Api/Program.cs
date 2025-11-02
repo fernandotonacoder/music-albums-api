@@ -60,11 +60,11 @@ builder.Services.AddApiVersioning(x =>
 builder.Services.AddOutputCache(x =>
 {
     x.AddBasePolicy(c => c.Cache());
-    x.AddPolicy("MovieCache", c => 
+    x.AddPolicy("AlbumCache", c => 
         c.Cache()
         .Expire(TimeSpan.FromMinutes(1))
         .SetVaryByQuery(new[] { "title", "year", "sortBy", "page", "pageSize" })
-        .Tag("movies"));
+        .Tag("albums"));
 });
 
 builder.Services.AddControllers();

@@ -111,12 +111,12 @@ public static class MusicAlbumMapping
         };
     }
 
-    public static MusicAlbumsResponse MapToResponse(this IEnumerable<MusicAlbum> movies,
+    public static MusicAlbumsResponse MapToResponse(this IEnumerable<MusicAlbum> albums,
         int page, int pageSize, int totalCount)
     {
         return new MusicAlbumsResponse
         {
-            Items = movies.Select(MapToResponse),
+            Items = albums.Select(MapToResponse),
             Page = page,
             PageSize = pageSize,
             Total = totalCount

@@ -38,8 +38,8 @@ public class MusicAlbumService(
     {
         await albumValidator.ValidateAndThrowAsync(musicAlbum, cancellationToken: token);
         
-        var movieExists = await musicAlbumRepository.ExistsByIdAsync(musicAlbum.Id, token);
-        if (!movieExists)
+        var albumExists = await musicAlbumRepository.ExistsByIdAsync(musicAlbum.Id, token);
+        if (!albumExists)
         {
             return null;
         }

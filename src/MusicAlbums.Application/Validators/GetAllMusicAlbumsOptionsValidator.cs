@@ -24,6 +24,6 @@ public class GetAllMusicAlbumsOptionsValidator : AbstractValidator<GetAllMusicAl
 
         RuleFor(x => x.PageSize)
             .InclusiveBetween(1, 25)
-            .WithMessage("You can get between 1 and 25 movies per page");
+            .WithMessage("You can get between 1 and 25 albums per page");
     }
 }
