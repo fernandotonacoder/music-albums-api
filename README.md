@@ -65,3 +65,30 @@ code ~/.microsoft/usersecrets/<UserSecretsId>/secrets.json
 
 Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
 
+## ☁️ Cloud Deployment (Azure Container Apps)
+
+The API is cloud-ready with the following features:
+
+**Health Check Endpoints:**
+- `/_health` - General health status
+- `/_health/live` - Liveness probe (app is running)
+- `/_health/ready` - Readiness probe (database is accessible)
+
+**Database Resilience:**
+- Automatic retry on startup (5 attempts with exponential backoff)
+- Handles transient database connection failures
+
+**Configuration via Environment Variables:**
+```bash
+Database__ConnectionString=Host=...;Port=5432;Database=albums;...
+Jwt__Key=your-secret-key-min-32-chars
+Jwt__Issuer=MusicAlbumsIdentity
+Jwt__Audience=MusicAlbumsApi
+ApiKey=your-admin-api-key
+```
+
+**Build Docker Image:**
+```bash
+docker build -t music-albums-api .
+```
+

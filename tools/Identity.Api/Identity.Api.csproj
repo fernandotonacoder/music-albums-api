@@ -4,13 +4,13 @@
         <TargetFramework>net8.0</TargetFramework>
         <Nullable>enable</Nullable>
         <ImplicitUsings>enable</ImplicitUsings>
-      <UserSecretsId>dc0b86df-2160-4012-b982-32d81526d6c8</UserSecretsId>
-  </PropertyGroup>
+        <UserSecretsId>dc0b86df-2160-4012-b982-32d81526d6c8</UserSecretsId>
+    </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="8.0.19" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.4" />
-        <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+        <PackageReference Include="Swashbuckle.AspNetCore" />
+        <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     </ItemGroup>
 
 </Project>

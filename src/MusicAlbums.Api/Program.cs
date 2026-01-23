@@ -40,10 +40,10 @@ builder.Services.AddAuthorization(x =>
 {
     x.AddPolicy(AuthConstants.AdminUserPolicyName,
         p => p.AddRequirements(new AdminAuthRequirement(config["ApiKey"]!)));
-    
+
     x.AddPolicy(AuthConstants.TrustedMemberPolicyName,
-        p => p.RequireAssertion(c => 
-            c.User.HasClaim(m => m is { Type: AuthConstants.AdminUserClaimName, Value: "true" }) || 
+        p => p.RequireAssertion(c =>
+            c.User.HasClaim(m => m is { Type: AuthConstants.AdminUserClaimName, Value: "true" }) ||
             c.User.HasClaim(m => m is { Type: AuthConstants.TrustedMemberClaimName, Value: "true" })));
 });
 
@@ -60,7 +60,7 @@ builder.Services.AddApiVersioning(x =>
 builder.Services.AddOutputCache(x =>
 {
     x.AddBasePolicy(c => c.Cache());
-    x.AddPolicy("AlbumCache", c => 
+    x.AddPolicy("AlbumCache", c =>
         c.Cache()
         .Expire(TimeSpan.FromMinutes(1))
         .SetVaryByQuery(new[] { "title", "year", "sortBy", "page", "pageSize" })
@@ -97,13 +97,25 @@ if (app.Environment.IsDevelopment())
     {
         foreach (var description in app.DescribeApiVersions())
         {
-            x.SwaggerEndpoint( $"/swagger/{description.GroupName}/swagger.json",
+            x.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
                 description.GroupName);
         }
     });
 }
 
 app.MapHealthChecks("_health");
+
+// Liveness probe - basic check that the app is running (no DB check)
+app.MapHealthChecks("_health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = _ => false // No checks - just confirms the app responds
+});
+
+// Readiness probe - confirms app can handle requests (includes DB check)
+app.MapHealthChecks("_health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+{
+    Predicate = check => check.Name == DatabaseHealthCheck.Name
+});
 
 app.UseHttpsRedirection();
 
@@ -117,6 +129,6 @@ app.UseMiddleware<ValidationMappingMiddleware>();
 app.MapControllers();
 
 var dbInitializer = app.Services.GetRequiredService<DbInitializer>();
-await dbInitializer.InitializeAsync();
+await dbInitializer.InitializeAsync(CancellationToken.None);
 
 app.Run();
