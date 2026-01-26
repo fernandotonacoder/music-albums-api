@@ -3,6 +3,7 @@
 Complete collection of copy-pastable HTTP requests for testing all API endpoints.
 
 ## 📋 Table of Contents
+
 - [Prerequisites](#prerequisites)
 - [Authentication](#authentication)
 - [Album Endpoints](#album-endpoints)
@@ -16,12 +17,14 @@ Complete collection of copy-pastable HTTP requests for testing all API endpoints
 **Base URL**: `http://localhost:5000` (adjust port as needed)
 
 **Required Headers**:
+
 ```
 Content-Type: application/json
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
 
 **Get a Token**: First, get a token from your Identity API:
+
 ```bash
 # Get Admin Token
 curl -X POST http://localhost:5001/token \
@@ -846,10 +849,7 @@ curl -X POST http://localhost:5000/api/albums \
       "yearFormed": null
     }
   ],
-  "genres": [
-    "Progressive Rock",
-    "Psychedelic Rock"
-  ],
+  "genres": ["Progressive Rock", "Psychedelic Rock"],
   "tracks": [
     {
       "id": "1234-5678-90ab-cdef",
@@ -970,4 +970,3 @@ curl -s -X GET http://localhost:5000/api/albums | jq
 ---
 
 **Happy Testing! 🎵**
-
