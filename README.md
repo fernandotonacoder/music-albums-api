@@ -10,7 +10,11 @@ A live version of this API is deployed on Azure Container Apps:
 
 > **Note:** This is a demo instance and may be scaled down to zero when not in use. The first request might take a few seconds while the container starts.
 
-## 🚀 Local Setup
+## � Documentation
+
+- [API Testing Guide](docs/API_TESTING_GUIDE.md) - Complete collection of HTTP requests for testing all endpoints
+
+## �🚀 Local Setup
 
 Secrets are stored in **User Secrets** (outside the repo, never committed).
 
@@ -44,6 +48,7 @@ cp .env.example .env
 **Note:** Don't edit `docker-compose.yml` directly - use `.env` to override defaults.
 
 **Keep ports in sync:** If you change `POSTGRES_PORT` in `.env`, update your connection string to match:
+
 ```bash
 cd src/MusicAlbums.Api
 dotnet user-secrets set "Database:ConnectionString" "Server=localhost;Port=YOUR_NEW_PORT;Database=albums;User ID=dev;Password=changeme;"
@@ -78,15 +83,18 @@ Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
 The API is cloud-ready with the following features:
 
 **Health Check Endpoints:**
+
 - `/_health` - General health status
 - `/_health/live` - Liveness probe (app is running)
 - `/_health/ready` - Readiness probe (database is accessible)
 
 **Database Resilience:**
+
 - Automatic retry on startup (5 attempts with exponential backoff)
 - Handles transient database connection failures
 
 **Configuration via Environment Variables:**
+
 ```bash
 Database__ConnectionString=Host=...;Port=5432;Database=albums;...
 Jwt__Key=your-secret-key-min-32-chars
@@ -96,7 +104,7 @@ ApiKey=your-admin-api-key
 ```
 
 **Build Docker Image:**
+
 ```bash
 docker build -t music-albums-api .
 ```
-
