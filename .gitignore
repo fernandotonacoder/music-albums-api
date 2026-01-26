@@ -34,3 +34,8 @@ Properties/launchSettings.json
 
 # JetBrains Rider
 .idea/
+
+# Azure Infrastructure Parameters (sensitive information)
+parameters.json
+*.bicepparam
+!*.sample.bicepparam
