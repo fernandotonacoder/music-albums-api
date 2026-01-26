@@ -104,7 +104,7 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     tier: 'Burstable'
   }
   properties: {
-    version: '16'
+    version: '18'
     administratorLogin: postgresAdminLogin
     administratorLoginPassword: postgresAdminPassword
     storage: {
