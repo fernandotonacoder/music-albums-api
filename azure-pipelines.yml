@@ -56,12 +56,22 @@ stages:
         displayName: "Build Docker Image"
         steps:
           - task: Docker@2
-            displayName: "Build and push to ACR"
+            displayName: "Build Docker image"
             inputs:
               containerRegistry: "acr-service-connection"
               repository: "$(imageRepository)"
-              command: "buildAndPush"
+              command: "build"
               Dockerfile: "$(dockerfilePath)"
+              tags: |
+                $(tag)
+                latest
+
+          - task: Docker@2
+            displayName: "Push to ACR"
+            inputs:
+              containerRegistry: "acr-service-connection"
+              repository: "$(imageRepository)"
+              command: "push"
               tags: |
                 $(tag)
                 latest
