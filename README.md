@@ -93,6 +93,16 @@ Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
 
 The API is cloud-ready with the following features:
 
+**Azure Key Vault Integration:**
+
+All secrets are stored securely in Azure Key Vault and accessed via Managed Identity:
+- `db-connection-string` - PostgreSQL connection string
+- `jwt-key` - JWT signing key
+- `api-key` - Admin API key
+- `acr-password` - Container Registry password
+
+The Container App uses System-Assigned Managed Identity with the "Key Vault Secrets User" role - **no secrets in code or environment variables!**
+
 **Health Check Endpoints:**
 
 - `/_health` - General health status
@@ -104,14 +114,16 @@ The API is cloud-ready with the following features:
 - Automatic retry on startup (5 attempts with exponential backoff)
 - Handles transient database connection failures
 
-**Configuration via Environment Variables:**
+**Infrastructure as Code:**
+
+Deploy the complete infrastructure with Bicep:
 
 ```bash
-Database__ConnectionString=Host=...;Port=5432;Database=albums;...
-Jwt__Key=your-secret-key-min-32-chars
-Jwt__Issuer=MusicAlbumsIdentity
-Jwt__Audience=MusicAlbumsApi
-ApiKey=your-admin-api-key
+# First deployment (creates Key Vault with initial secrets)
+az deployment group create -g <resource-group> -f infra/main.bicep -p infra/main.bicepparam
+
+# After first deployment, rotate secrets directly in Key Vault
+az keyvault secret set --vault-name music-albums-kv --name jwt-key --value "new-secret-value"
 ```
 
 **Build Docker Image:**

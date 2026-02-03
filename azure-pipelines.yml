@@ -139,8 +139,15 @@ stages:
   # ============================================================================
   - stage: DeployApp
     displayName: "Deploy Application"
-    dependsOn: Build # TODO: Change to Test when tests are implemented
-    condition: succeeded()
+    dependsOn: 
+      - Build
+      - DeployInfra
+    condition: |
+      and(
+        not(failed('Build')),
+        not(failed('DeployInfra')),
+        ne(variables['Build.Reason'], 'PullRequest')
+      )
     jobs:
       - deployment: DeployToAzure
         displayName: "Deploy to Container Apps"
