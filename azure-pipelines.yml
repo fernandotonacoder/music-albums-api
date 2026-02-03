@@ -1,23 +1,19 @@
 # ============================================================================
 # Music Albums API - Azure DevOps Pipeline
 # ============================================================================
-# This pipeline builds and deploys the Music Albums API to Azure Container Apps
 #
-# Pipeline Variables (set in Azure DevOps UI):
-# - ACR_NAME: Azure Container Registry name
-# - RESOURCE_GROUP: Azure resource group name
-# - DeployInfra: Set to 'true' to deploy infrastructure (default: false)
+# PREREQUISITES (one-time manual setup - see README.md for details):
+#   1. Resource Group: music-albums
+#   2. Key Vault: music-albums-kv (with 4 INPUT secrets)
+#   3. Variable Group: music-albums-keyvault (linked to Key Vault on Azure DevOps)
+#   4. Service Connections: acr-service-connection, azure-service-connection
 #
-# Secrets from Key Vault (via Variable Group 'music-albums-keyvault'):
-# - pg-admin-login: PostgreSQL admin username
-# - pg-admin-password: PostgreSQL admin password
-# - jwt-key: JWT signing key
-# - api-key: Admin API key
-# - db-connection-string: PostgreSQL connection string (used by Container App)
+# PIPELINE VARIABLES (Azure DevOps UI):
+#   - ACR_NAME, RESOURCE_GROUP, DeployInfra
 #
-# Required Service Connections:
-# - acr-service-connection: Docker Registry connection to ACR
-# - azure-service-connection: Azure Resource Manager connection
+# SECRETS (from Key Vault via Variable Group):
+#   - pg-admin-login, pg-admin-password, jwt-key, api-key
+#
 # ============================================================================
 
 trigger:

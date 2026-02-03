@@ -1,7 +1,16 @@
 // ============================================================================
 // Music Albums API - Azure Infrastructure
 // ============================================================================
-// Deploy with: az deployment group create -g <resource-group> -f main.bicep -p main.bicepparam
+//
+// PREREQUISITES: Key Vault must exist with these INPUT secrets:
+//   pg-admin-login, pg-admin-password, jwt-key, api-key
+//
+// This template creates all other resources and DERIVED secrets:
+//   db-connection-string, acr-password, jwt-key, api-key (copied to runtime KV)
+//
+// Deploy: az deployment group create -g music-albums -f main.bicep --parameters ...
+// See README.md and azure-pipelines.yml for full setup instructions.
+//
 // ============================================================================
 
 @description('Location for all resources')
