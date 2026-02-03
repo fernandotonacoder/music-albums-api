@@ -289,7 +289,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: 'Production'
             }
             {
-              name: 'ConnectionStrings__DefaultConnection'
+              name: 'Database__ConnectionString'
               secretRef: 'db-connection-string'
             }
             {
