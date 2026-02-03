@@ -255,8 +255,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       secrets: [
         {
           name: 'acr-password'
-          keyVaultUrl: secretAcrPassword.properties.secretUri
-          identity: 'system'
+          value: acr.listCredentials().passwords[0].value
         }
         {
           name: 'db-connection-string'
