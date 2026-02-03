@@ -62,6 +62,7 @@ stages:
               repository: '$(imageRepository)'
               command: build
               Dockerfile: '$(dockerfilePath)'
+              addPipelineData: false
               tags: |
                 $(tag)
                 latest
