@@ -3,14 +3,17 @@
 # ============================================================================
 # This pipeline builds and deploys the Music Albums API to Azure Container Apps
 #
-# Required Variables (set in Azure DevOps Pipeline Variables or Variable Groups):
+# Pipeline Variables (set in Azure DevOps UI):
 # - ACR_NAME: Azure Container Registry name
 # - RESOURCE_GROUP: Azure resource group name
-# - PG_ADMIN_LOGIN: PostgreSQL admin username
-# - PG_ADMIN_PASSWORD: PostgreSQL admin password (secret)
-# - JWT_KEY: JWT signing key (secret)
-# - API_KEY: Admin API key (secret)
 # - DeployInfra: Set to 'true' to deploy infrastructure (default: false)
+#
+# Secrets from Key Vault (via Variable Group 'music-albums-keyvault'):
+# - pg-admin-login: PostgreSQL admin username
+# - pg-admin-password: PostgreSQL admin password
+# - jwt-key: JWT signing key
+# - api-key: Admin API key
+# - db-connection-string: PostgreSQL connection string (used by Container App)
 #
 # Required Service Connections:
 # - acr-service-connection: Docker Registry connection to ACR
@@ -41,9 +44,13 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  imageRepository: music-albums-api
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
+  - group: music-albums-keyvault
+  - name: imageRepository
+    value: music-albums-api
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/Dockerfile'
+  - name: tag
+    value: '$(Build.BuildId)'
 
 stages:
   # ============================================================================
@@ -130,10 +137,10 @@ stages:
                   --template-file infra/main.bicep \
                   --parameters \
                     acrName='$(ACR_NAME)' \
-                    postgresAdminLogin='$(PG_ADMIN_LOGIN)' \
-                    postgresAdminPassword='$(PG_ADMIN_PASSWORD)' \
-                    jwtKey='$(JWT_KEY)' \
-                    apiKey='$(API_KEY)' \
+                    postgresAdminLogin='$(pg-admin-login)' \
+                    postgresAdminPassword='$(pg-admin-password)' \
+                    jwtKey='$(jwt-key)' \
+                    apiKey='$(api-key)' \
                     imageTag='$(tag)'
 
   # ============================================================================
