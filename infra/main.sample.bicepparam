@@ -3,6 +3,9 @@
 // ============================================================================
 // Copy this file to main.bicepparam and fill in your values
 // NEVER commit main.bicepparam to source control!
+// 
+// Note: These secrets are only used during initial deployment to populate
+// Azure Key Vault. After that, secrets can be rotated directly in Key Vault.
 // ============================================================================
 
 using 'main.bicep'

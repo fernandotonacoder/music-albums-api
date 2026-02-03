@@ -46,6 +46,7 @@ var environmentName = '${baseName}-dev'
 var postgresServerName = '${baseName}-db'
 var appInsightsName = '${baseName}-insights'
 var logAnalyticsName = '${baseName}-logs'
+var keyVaultName = '${baseName}-kv'
 
 // ============================================================================
 // Log Analytics Workspace
@@ -89,6 +90,76 @@ resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
   properties: {
     adminUserEnabled: true
     publicNetworkAccess: 'Enabled'
+  }
+}
+
+// ============================================================================
+// Key Vault
+// ============================================================================
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+  name: keyVaultName
+  location: location
+  properties: {
+    tenantId: subscription().tenantId
+    sku: {
+      family: 'A'
+      name: 'standard'
+    }
+    enableRbacAuthorization: true
+    enableSoftDelete: true
+    softDeleteRetentionInDays: 30
+    enablePurgeProtection: true
+    publicNetworkAccess: 'Enabled'
+    networkAcls: {
+      defaultAction: 'Allow'
+      bypass: 'AzureServices'
+    }
+  }
+}
+
+// Secrets stored in Key Vault
+resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'db-connection-string'
+  properties: {
+    value: 'Server=${postgres.properties.fullyQualifiedDomainName};Database=postgres;Port=5432;User Id=${postgresAdminLogin};Password=${postgresAdminPassword};Ssl Mode=Require;'
+  }
+}
+
+resource secretJwtKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'jwt-key'
+  properties: {
+    value: jwtKey
+  }
+}
+
+resource secretApiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'api-key'
+  properties: {
+    value: apiKey
+  }
+}
+
+resource secretAcrPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'acr-password'
+  properties: {
+    value: acr.listCredentials().passwords[0].value
+  }
+}
+
+// Role assignment: Container App can read secrets from Key Vault
+// Key Vault Secrets User role
+resource keyVaultSecretUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  name: guid(keyVault.id, containerApp.id, 'Key Vault Secrets User')
+  scope: keyVault
+  properties: {
+    principalId: containerApp.identity.principalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
   }
 }
 
@@ -178,19 +249,23 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       secrets: [
         {
           name: 'acr-password'
-          value: acr.listCredentials().passwords[0].value
+          keyVaultUrl: secretAcrPassword.properties.secretUri
+          identity: 'system'
         }
         {
           name: 'db-connection-string'
-          value: 'Server=${postgres.properties.fullyQualifiedDomainName};Database=postgres;Port=5432;User Id=${postgresAdminLogin};Password=${postgresAdminPassword};Ssl Mode=Require;'
+          keyVaultUrl: secretDbConnection.properties.secretUri
+          identity: 'system'
         }
         {
           name: 'jwt-key'
-          value: jwtKey
+          keyVaultUrl: secretJwtKey.properties.secretUri
+          identity: 'system'
         }
         {
           name: 'api-key'
-          value: apiKey
+          keyVaultUrl: secretApiKey.properties.secretUri
+          identity: 'system'
         }
       ]
     }
@@ -258,3 +333,9 @@ output postgresServer string = postgres.properties.fullyQualifiedDomainName
 
 @description('Application Insights connection string')
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
+
+@description('Key Vault URI')
+output keyVaultUri string = keyVault.properties.vaultUri
+
+@description('Key Vault name')
+output keyVaultName string = keyVault.name
