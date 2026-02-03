@@ -1,20 +1,19 @@
 # ============================================================================
 # Music Albums API - Azure DevOps Pipeline
 # ============================================================================
-# This pipeline builds and deploys the Music Albums API to Azure Container Apps
 #
-# Required Variables (set in Azure DevOps Pipeline Variables or Variable Groups):
-# - ACR_NAME: Azure Container Registry name
-# - RESOURCE_GROUP: Azure resource group name
-# - PG_ADMIN_LOGIN: PostgreSQL admin username
-# - PG_ADMIN_PASSWORD: PostgreSQL admin password (secret)
-# - JWT_KEY: JWT signing key (secret)
-# - API_KEY: Admin API key (secret)
-# - DeployInfra: Set to 'true' to deploy infrastructure (default: false)
+# PREREQUISITES (one-time manual setup - see README.md for details):
+#   1. Resource Group: music-albums
+#   2. Key Vault: music-albums-kv (with 4 INPUT secrets)
+#   3. Variable Group: music-albums-keyvault (linked to Key Vault on Azure DevOps)
+#   4. Service Connections: acr-service-connection, azure-service-connection
 #
-# Required Service Connections:
-# - acr-service-connection: Docker Registry connection to ACR
-# - azure-service-connection: Azure Resource Manager connection
+# PIPELINE VARIABLES (Azure DevOps UI):
+#   - ACR_NAME, RESOURCE_GROUP, DeployInfra
+#
+# SECRETS (from Key Vault via Variable Group):
+#   - pg-admin-login, pg-admin-password, jwt-key, api-key
+#
 # ============================================================================
 
 trigger:
@@ -41,9 +40,13 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  imageRepository: music-albums-api
-  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
-  tag: '$(Build.BuildId)'
+  - group: music-albums-keyvault
+  - name: imageRepository
+    value: music-albums-api
+  - name: dockerfilePath
+    value: '$(Build.SourcesDirectory)/Dockerfile'
+  - name: tag
+    value: '$(Build.BuildId)'
 
 stages:
   # ============================================================================
@@ -130,10 +133,10 @@ stages:
                   --template-file infra/main.bicep \
                   --parameters \
                     acrName='$(ACR_NAME)' \
-                    postgresAdminLogin='$(PG_ADMIN_LOGIN)' \
-                    postgresAdminPassword='$(PG_ADMIN_PASSWORD)' \
-                    jwtKey='$(JWT_KEY)' \
-                    apiKey='$(API_KEY)' \
+                    postgresAdminLogin='$(pg-admin-login)' \
+                    postgresAdminPassword='$(pg-admin-password)' \
+                    jwtKey='$(jwt-key)' \
+                    apiKey='$(api-key)' \
                     imageTag='$(tag)'
 
   # ============================================================================

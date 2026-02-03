@@ -1,7 +1,7 @@
 // ============================================================================
 // Music Albums API - Azure Infrastructure
 // ============================================================================
-// Deploy with: az deployment group create -g <resource-group> -f main.bicep -p main.bicepparam
+// Prerequisites and setup instructions: see README.md
 // ============================================================================
 
 @description('Location for all resources')

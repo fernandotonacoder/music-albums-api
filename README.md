@@ -91,40 +91,57 @@ Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
 
 ## ☁️ Cloud Deployment (Azure Container Apps)
 
-The API is cloud-ready with the following features:
+### Prerequisites (one-time manual setup)
 
-**Azure Key Vault Integration:**
-
-All secrets are stored securely in Azure Key Vault and accessed via Managed Identity:
-- `db-connection-string` - PostgreSQL connection string
-- `jwt-key` - JWT signing key
-- `api-key` - Admin API key
-- `acr-password` - Container Registry password
-
-The Container App uses System-Assigned Managed Identity with the "Key Vault Secrets User" role - **no secrets in code or environment variables!**
-
-**Health Check Endpoints:**
-
-- `/_health` - General health status
-- `/_health/live` - Liveness probe (app is running)
-- `/_health/ready` - Readiness probe (database is accessible)
-
-**Database Resilience:**
-
-- Automatic retry on startup (5 attempts with exponential backoff)
-- Handles transient database connection failures
-
-**Infrastructure as Code:**
-
-Deploy the complete infrastructure with Bicep:
+Before running the pipeline with `DeployInfra=true` for the first time:
 
 ```bash
-# First deployment (creates Key Vault with initial secrets)
-az deployment group create -g <resource-group> -f infra/main.bicep -p infra/main.bicepparam
+# 1. Create Resource Group and Key Vault
+az group create -n music-albums -l westeurope
+az keyvault create -n music-albums-kv -g music-albums -l westeurope --enable-rbac-authorization
 
-# After first deployment, rotate secrets directly in Key Vault
-az keyvault secret set --vault-name music-albums-kv --name jwt-key --value "new-secret-value"
+# 2. Grant your Azure DevOps Service Principal access
+az role assignment create --assignee <sp-object-id> --role "Key Vault Secrets User" \
+  --scope "/subscriptions/<sub-id>/resourceGroups/music-albums/providers/Microsoft.KeyVault/vaults/music-albums-kv"
+
+# 3. Add the 4 INPUT secrets (these are never managed by Bicep)
+az keyvault secret set --vault-name music-albums-kv --name pg-admin-login --value "<value>"
+az keyvault secret set --vault-name music-albums-kv --name pg-admin-password --value "<value>"
+az keyvault secret set --vault-name music-albums-kv --name jwt-key --value "<value>"
+az keyvault secret set --vault-name music-albums-kv --name api-key --value "<value>"
+
+# 4. In Azure DevOps: create Variable Group 'music-albums-keyvault' linked to the Key Vault
 ```
+
+After this setup, the pipeline can deploy and recreate all infrastructure.
+
+### How it works
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│  music-albums-kv (Key Vault)                                │
+│  ├── pg-admin-login      ← YOU create (manual)              │
+│  ├── pg-admin-password   ← YOU create (manual)              │
+│  ├── jwt-key             ← YOU create (manual)              │
+│  ├── api-key             ← YOU create (manual)              │
+│  ├── db-connection-string ← BICEP creates (derived)         │
+│  └── acr-password         ← BICEP creates (derived)         │
+└─────────────────────────────────────────────────────────────┘
+                              │
+          Azure DevOps reads via Variable Group
+                              │
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  Pipeline deploys: PostgreSQL, ACR, Container App, etc.    │
+│  Container App reads secrets via Managed Identity          │
+└─────────────────────────────────────────────────────────────┘
+```
+
+### Health Endpoints
+
+- `/_health` - General health status
+- `/_health/live` - Liveness probe
+- `/_health/ready` - Readiness probe (checks database)
 
 **Build Docker Image:**
 
