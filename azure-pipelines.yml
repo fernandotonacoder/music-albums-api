@@ -38,40 +38,41 @@ pr:
       - infra/**
 
 pool:
-  vmImage: "ubuntu-latest"
+  vmImage: ubuntu-latest
 
 variables:
-  imageRepository: "music-albums-api"
-  dockerfilePath: "$(Build.SourcesDirectory)/Dockerfile"
-  tag: "$(Build.BuildId)"
+  imageRepository: music-albums-api
+  dockerfilePath: '$(Build.SourcesDirectory)/Dockerfile'
+  tag: '$(Build.BuildId)'
 
 stages:
   # ============================================================================
   # Build Stage
   # ============================================================================
   - stage: Build
-    displayName: "Build and Push"
+    displayName: Build and Push
     jobs:
       - job: Build
-        displayName: "Build Docker Image"
+        displayName: Build Docker Image
         steps:
           - task: Docker@2
-            displayName: "Build Docker image"
+            displayName: Build Docker image
             inputs:
-              containerRegistry: "acr-service-connection"
-              repository: "$(imageRepository)"
-              command: "build"
-              Dockerfile: "$(dockerfilePath)"
+              containerRegistry: acr-service-connection
+              repository: '$(imageRepository)'
+              command: build
+              Dockerfile: '$(dockerfilePath)'
+              addPipelineData: false
               tags: |
                 $(tag)
                 latest
 
           - task: Docker@2
-            displayName: "Push to ACR"
+            displayName: Push to ACR
             inputs:
-              containerRegistry: "acr-service-connection"
-              repository: "$(imageRepository)"
-              command: "push"
+              containerRegistry: acr-service-connection
+              repository: '$(imageRepository)'
+              command: push
               tags: |
                 $(tag)
                 latest
@@ -109,37 +110,37 @@ stages:
   # Deploy Infrastructure Stage (optional - run manually or on infra changes)
   # ============================================================================
   - stage: DeployInfra
-    displayName: "Deploy Infrastructure"
-    dependsOn: Build # TODO: Change to Test when tests are implemented
+    displayName: Deploy Infrastructure
+    dependsOn: Build
     condition: and(succeeded(), eq(variables['DeployInfra'], 'true'))
     jobs:
       - job: DeployBicep
-        displayName: "Deploy Bicep Template"
+        displayName: Deploy Bicep Template
         steps:
           - task: AzureCLI@2
-            displayName: "Deploy infrastructure"
+            displayName: Deploy infrastructure
             inputs:
-              azureSubscription: "azure-service-connection"
-              scriptType: "bash"
-              scriptLocation: "inlineScript"
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
               inlineScript: |
                 az deployment group create \
-                  --resource-group $(RESOURCE_GROUP) \
+                  --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/main.bicep \
                   --parameters \
-                    acrName=$(ACR_NAME) \
-                    postgresAdminLogin=$(PG_ADMIN_LOGIN) \
-                    postgresAdminPassword=$(PG_ADMIN_PASSWORD) \
-                    jwtKey=$(JWT_KEY) \
-                    apiKey=$(API_KEY) \
-                    imageTag=$(tag)
+                    acrName='$(ACR_NAME)' \
+                    postgresAdminLogin='$(PG_ADMIN_LOGIN)' \
+                    postgresAdminPassword='$(PG_ADMIN_PASSWORD)' \
+                    jwtKey='$(JWT_KEY)' \
+                    apiKey='$(API_KEY)' \
+                    imageTag='$(tag)'
 
   # ============================================================================
   # Deploy Application Stage
   # ============================================================================
   - stage: DeployApp
-    displayName: "Deploy Application"
-    dependsOn: 
+    displayName: Deploy Application
+    dependsOn:
       - Build
       - DeployInfra
     condition: |
@@ -150,8 +151,8 @@ stages:
       )
     jobs:
       - deployment: DeployToAzure
-        displayName: "Deploy to Container Apps"
-        environment: "production"
+        displayName: Deploy to Container Apps
+        environment: production
         strategy:
           runOnce:
             deploy:
@@ -159,33 +160,33 @@ stages:
                 - checkout: self
 
                 - task: AzureCLI@2
-                  displayName: "Update Container App"
+                  displayName: Update Container App
                   inputs:
-                    azureSubscription: "azure-service-connection"
-                    scriptType: "bash"
-                    scriptLocation: "inlineScript"
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
                     inlineScript: |
                       az containerapp update \
-                        --name music-albums-api \
-                        --resource-group $(RESOURCE_GROUP) \
-                        --image $(ACR_NAME).azurecr.io/$(imageRepository):$(tag)
+                        --name 'music-albums-api' \
+                        --resource-group '$(RESOURCE_GROUP)' \
+                        --image '$(ACR_NAME).azurecr.io/$(imageRepository):$(tag)'
 
                 - task: AzureCLI@2
-                  displayName: "Verify deployment"
+                  displayName: Verify deployment
                   inputs:
-                    azureSubscription: "azure-service-connection"
-                    scriptType: "bash"
-                    scriptLocation: "inlineScript"
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
                     inlineScript: |
                       # Wait for deployment to stabilize
                       sleep 30
 
                       # Get the app URL and check health
                       APP_URL=$(az containerapp show \
-                        --name music-albums-api \
-                        --resource-group $(RESOURCE_GROUP) \
-                        --query "properties.configuration.ingress.fqdn" -o tsv)
+                        --name 'music-albums-api' \
+                        --resource-group '$(RESOURCE_GROUP)' \
+                        --query 'properties.configuration.ingress.fqdn' -o tsv)
 
                       echo "Checking health at https://$APP_URL/_health"
                       curl -f "https://$APP_URL/_health" || exit 1
-                      echo "Deployment successful!"
+                      echo 'Deployment successful!'
