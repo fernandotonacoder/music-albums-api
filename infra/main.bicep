@@ -397,7 +397,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'
-              value: 'Production'
+              value: 'Development'
             }
             {
               name: 'Database__ConnectionString'
