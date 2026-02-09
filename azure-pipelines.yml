@@ -6,10 +6,10 @@
 #   1. Resource Group: music-albums
 #   2. Key Vault: music-albums-kv (with 4 INPUT secrets)
 #   3. Variable Group: music-albums-keyvault (linked to Key Vault on Azure DevOps)
-#   4. Service Connections: acr-service-connection, azure-service-connection
+#   4. Service Connection: azure-service-connection
 #
 # PIPELINE VARIABLES (Azure DevOps UI):
-#   - ACR_NAME, RESOURCE_GROUP, DeployInfra
+#   - RESOURCE_GROUP, DeployInfra
 #
 # SECRETS (from Key Vault via Variable Group):
 #   - pg-admin-login, pg-admin-password, jwt-key, api-key
@@ -42,7 +42,9 @@ pool:
 variables:
   - group: music-albums-keyvault
   - name: imageRepository
-    value: music-albums-api
+    value: fernandotonacoder/music-albums-api
+  - name: containerRegistry
+    value: github-ghcr
   - name: dockerfilePath
     value: '$(Build.SourcesDirectory)/Dockerfile'
   - name: tag
@@ -63,7 +65,7 @@ stages:
           - task: Docker@2
             displayName: Build Docker image
             inputs:
-              containerRegistry: acr-service-connection
+              containerRegistry: $(containerRegistry)
               repository: '$(imageRepository)'
               command: build
               Dockerfile: '$(dockerfilePath)'
@@ -72,9 +74,9 @@ stages:
                 latest
 
           - task: Docker@2
-            displayName: Push to ACR
+            displayName: Push to GitHub Container Registry
             inputs:
-              containerRegistry: acr-service-connection
+              containerRegistry: $(containerRegistry)
               repository: '$(imageRepository)'
               command: push
               tags: |
@@ -132,7 +134,6 @@ stages:
                   --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/main.bicep \
                   --parameters \
-                    acrName='$(ACR_NAME)' \
                     postgresAdminLogin='$(pg-admin-login)' \
                     postgresAdminPassword='$(pg-admin-password)' \
                     jwtKey='$(jwt-key)' \
@@ -173,7 +174,7 @@ stages:
                       az containerapp update \
                         --name 'music-albums-api' \
                         --resource-group '$(RESOURCE_GROUP)' \
-                        --image '$(ACR_NAME).azurecr.io/$(imageRepository):$(tag)'
+                        --image 'ghcr.io/$(imageRepository):$(tag)'
 
                 - task: AzureCLI@2
                   displayName: Verify deployment

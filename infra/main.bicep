@@ -10,8 +10,8 @@ param location string = 'westeurope'
 @description('Base name for all resources')
 param baseName string = 'music-albums'
 
-@description('Container Registry name (must be globally unique, alphanumeric only)')
-param acrName string
+// @description('Container Registry name')
+// param acrName string
 
 @description('PostgreSQL administrator login')
 param postgresAdminLogin string
@@ -47,6 +47,7 @@ var postgresServerName = '${baseName}-db'
 var appInsightsName = '${baseName}-insights'
 var logAnalyticsName = '${baseName}-logs'
 var keyVaultName = '${baseName}-kv'
+var containerImage = 'ghcr.io/fernandotonacoder/music-albums-api:${imageTag}'
 
 // ============================================================================
 // Log Analytics Workspace
@@ -81,17 +82,18 @@ resource appInsights 'Microsoft.Insights/components@2020-02-02' = {
 // Container Registry
 // ============================================================================
 
-resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
-  name: acrName
-  location: location
-  sku: {
-    name: 'Basic'
-  }
-  properties: {
-    adminUserEnabled: true
-    publicNetworkAccess: 'Enabled'
-  }
-}
+// Note: Azure Container Registry deactivated for cost saving. Using Github Container Registry instead.
+// resource acr 'Microsoft.ContainerRegistry/registries@2023-07-01' = {
+//   name: acrName
+//   location: location
+//   sku: {
+//     name: 'Basic'
+//   }
+//   properties: {
+//     adminUserEnabled: true
+//     publicNetworkAccess: 'Enabled'
+//   }
+// }
 
 // ============================================================================
 // Key Vault
@@ -143,13 +145,13 @@ resource secretApiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource secretAcrPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
-  parent: keyVault
-  name: 'acr-password'
-  properties: {
-    value: acr.listCredentials().passwords[0].value
-  }
-}
+// resource secretAcrPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+//   parent: keyVault
+//   name: 'acr-password'
+//   properties: {
+//     value: acr.listCredentials().passwords[0].value
+//   }
+// }
 
 // Role assignment: Container App can read secrets from Key Vault
 // Key Vault Secrets User role
@@ -230,6 +232,101 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 // Container App
 // ============================================================================
 
+// resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
+//   name: containerAppName
+//   location: location
+//   identity: {
+//     type: 'SystemAssigned'
+//   }
+//   properties: {
+//     managedEnvironmentId: containerEnv.id
+//     configuration: {
+//       ingress: {
+//         external: true
+//         targetPort: 8080
+//         transport: 'auto'
+//         allowInsecure: false
+//       }
+//       registries: [
+//         {
+//           server: '${acrName}.azurecr.io'
+//           username: acr.listCredentials().username
+//           passwordSecretRef: 'acr-password'
+//         }
+//       ]
+//       secrets: [
+//         {
+//           name: 'acr-password'
+//           value: acr.listCredentials().passwords[0].value
+//         }
+//         {
+//           name: 'db-connection-string'
+//           keyVaultUrl: secretDbConnection.properties.secretUri
+//           identity: 'system'
+//         }
+//         {
+//           name: 'jwt-key'
+//           keyVaultUrl: secretJwtKey.properties.secretUri
+//           identity: 'system'
+//         }
+//         {
+//           name: 'api-key'
+//           keyVaultUrl: secretApiKey.properties.secretUri
+//           identity: 'system'
+//         }
+//       ]
+//     }
+//     template: {
+//       containers: [
+//         {
+//           name: containerAppName
+//           image: '${acrName}.azurecr.io/${containerAppName}:${imageTag}'
+//           resources: {
+//             cpu: json('0.25')
+//             memory: '0.5Gi'
+//           }
+//           env: [
+//             {
+//               name: 'ASPNETCORE_ENVIRONMENT'
+//               value: 'Production'
+//             }
+//             {
+//               name: 'Database__ConnectionString'
+//               secretRef: 'db-connection-string'
+//             }
+//             {
+//               name: 'Jwt__Key'
+//               secretRef: 'jwt-key'
+//             }
+//             {
+//               name: 'Jwt__Issuer'
+//               value: jwtIssuer
+//             }
+//             {
+//               name: 'Jwt__Audience'
+//               value: jwtAudience
+//             }
+//             {
+//               name: 'ApiKey'
+//               secretRef: 'api-key'
+//             }
+//             {
+//               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
+//               value: appInsights.properties.ConnectionString
+//             }
+//           ]
+//         }
+//       ]
+//       scale: {
+//         minReplicas: 0
+//         maxReplicas: 3
+//       }
+//     }
+//   }
+// }
+
+// NOTE: Updated to use GitHub Container Registry instead of Azure Container Registry for cost saving.
+// Image is public, so no registry credentials needed. Secrets related to ACR removed.
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: containerAppName
   location: location
@@ -245,18 +342,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
         allowInsecure: false
       }
-      registries: [
-        {
-          server: '${acrName}.azurecr.io'
-          username: acr.listCredentials().username
-          passwordSecretRef: 'acr-password'
-        }
-      ]
+      registries: [] 
       secrets: [
-        {
-          name: 'acr-password'
-          value: acr.listCredentials().passwords[0].value
-        }
         {
           name: 'db-connection-string'
           keyVaultUrl: secretDbConnection.properties.secretUri
@@ -278,7 +365,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       containers: [
         {
           name: containerAppName
-          image: '${acrName}.azurecr.io/${containerAppName}:${imageTag}'
+          image: containerImage
           resources: {
             cpu: json('0.25')
             memory: '0.5Gi'
@@ -330,8 +417,9 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 @description('Container App URL')
 output containerAppUrl string = 'https://${containerApp.properties.configuration.ingress.fqdn}'
 
-@description('Container Registry login server')
-output acrLoginServer string = acr.properties.loginServer
+// Note: Azure Container Registry deactivated for cost saving. Using Github Container Registry instead.
+// @description('Container Registry login server')
+// output acrLoginServer string = acr.properties.loginServer
 
 @description('PostgreSQL server FQDN')
 output postgresServer string = postgres.properties.fullyQualifiedDomainName
