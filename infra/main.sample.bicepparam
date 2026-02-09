@@ -13,7 +13,7 @@ using 'main.bicep'
 // Resource naming
 param location = 'westeurope'
 param baseName = 'music-albums'
-param acrName = 'YOUR_UNIQUE_ACR_NAME' // Must be globally unique, alphanumeric only
+// param acrName = 'YOUR_UNIQUE_ACR_NAME'
 
 // PostgreSQL
 param postgresAdminLogin = 'YOUR_ADMIN_USERNAME'

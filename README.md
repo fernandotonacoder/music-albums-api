@@ -124,16 +124,16 @@ After this setup, the pipeline can deploy and recreate all infrastructure.
 │  ├── pg-admin-password   ← YOU create (manual)              │
 │  ├── jwt-key             ← YOU create (manual)              │
 │  ├── api-key             ← YOU create (manual)              │
-│  ├── db-connection-string ← BICEP creates (derived)         │
-│  └── acr-password         ← BICEP creates (derived)         │
+│  └── db-connection-string ← BICEP creates (derived)         │
 └─────────────────────────────────────────────────────────────┘
                               │
           Azure DevOps reads via Variable Group
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐
-│  Pipeline deploys: PostgreSQL, ACR, Container App, etc.    │
+│  Pipeline deploys: PostgreSQL, Container App, etc.         │
 │  Container App reads secrets via Managed Identity          │
+│  Images pulled from GitHub Container Registry (GHCR)      │
 └─────────────────────────────────────────────────────────────┘
 ```
 
