@@ -69,6 +69,7 @@ stages:
               repository: '$(imageRepository)'
               command: build
               Dockerfile: '$(dockerfilePath)'
+              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(tag)
                 latest
