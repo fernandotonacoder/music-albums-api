@@ -374,13 +374,13 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               type: 'Startup'
               httpGet: {
-                path: '/_health/ready'
+                path: '/_health/live'
                 port: 8080
               }
-              initialDelaySeconds: 10
-              periodSeconds: 5
-              timeoutSeconds: 3
-              failureThreshold: 30
+              initialDelaySeconds: 15
+              periodSeconds: 10
+              timeoutSeconds: 5
+              failureThreshold: 60
             }
             {
               type: 'Liveness'
