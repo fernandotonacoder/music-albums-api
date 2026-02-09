@@ -370,6 +370,30 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             cpu: json('0.25')
             memory: '0.5Gi'
           }
+          probes: [
+            {
+              type: 'Startup'
+              httpGet: {
+                path: '/_health/ready'
+                port: 8080
+              }
+              initialDelaySeconds: 10
+              periodSeconds: 5
+              timeoutSeconds: 3
+              failureThreshold: 30
+            }
+            {
+              type: 'Liveness'
+              httpGet: {
+                path: '/_health'
+                port: 8080
+              }
+              initialDelaySeconds: 30
+              periodSeconds: 10
+              timeoutSeconds: 3
+              failureThreshold: 3
+            }
+          ]
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'
