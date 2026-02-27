@@ -13,6 +13,7 @@ using 'main.bicep'
 // Resource naming
 param location = 'westeurope'
 param baseName = 'music-albums'
+param deploymentSuffix = 'dev'
 // param acrName = 'YOUR_UNIQUE_ACR_NAME'
 
 // PostgreSQL
@@ -21,6 +22,9 @@ param postgresAdminPassword = 'YOUR_SECURE_PASSWORD'
 
 // Container image
 param imageTag = 'latest'
+
+// .NET environment inside container app (Development | Staging | Production)
+param aspNetCoreEnvironment = 'Development'
 
 // JWT Configuration (must match Identity API)
 param jwtKey = 'YOUR_JWT_SECRET_MIN_32_CHARS'

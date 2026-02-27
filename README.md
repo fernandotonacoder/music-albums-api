@@ -91,43 +91,65 @@ Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
 
 ## ☁️ Cloud Deployment (Azure Container Apps)
 
-### Prerequisites (one-time manual setup)
+### Zero-to-Hero Setup (pipeline-first)
 
-Before running the pipeline with `DeployInfra=true` for the first time:
+No manual Key Vault bootstrap is required.
 
-```bash
-# 1. Create Resource Group and Key Vault
-az group create -n music-albums -l westeurope
-az keyvault create -n music-albums-kv -g music-albums -l westeurope --enable-rbac-authorization
+Create two Azure DevOps Variable Groups (regular groups, **not linked to Key Vault**):
 
-# 2. Grant your Azure DevOps Service Principal access
-az role assignment create --assignee <sp-object-id> --role "Key Vault Secrets User" \
-  --scope "/subscriptions/<sub-id>/resourceGroups/music-albums/providers/Microsoft.KeyVault/vaults/music-albums-kv"
+- `music-albums-dev`
+- `music-albums-prod`
 
-# 3. Add the 4 INPUT secrets (these are never managed by Bicep)
-az keyvault secret set --vault-name music-albums-kv --name pg-admin-login --value "<value>"
-az keyvault secret set --vault-name music-albums-kv --name pg-admin-password --value "<value>"
-az keyvault secret set --vault-name music-albums-kv --name jwt-key --value "<value>"
-az keyvault secret set --vault-name music-albums-kv --name api-key --value "<value>"
+In each group, define:
 
-# 4. In Azure DevOps: create Variable Group 'music-albums-keyvault' linked to the Key Vault
-```
+- `RESOURCE_GROUP` (example: `music-albums-rg-dev` / `music-albums-rg-prod`)
+- `LOCATION` (optional, defaults to `westeurope`)
+- `BASE_NAME` (example: `music-albums`)
+- `aspNetCoreEnvironment` (`Development` for dev, `Production` for prod)
+- `pg-admin-login` (**secret**)
+- `pg-admin-password` (**secret**)
+- `jwt-key` (**secret**)
+- `api-key` (**secret**)
 
-After this setup, the pipeline can deploy and recreate all infrastructure.
+Then run the pipeline manually and select parameters:
+
+- `targetEnvironment` (`dev` or `prod`)
+- `deployInfra` (`false` by default)
+
+Infrastructure deployment runs only when:
+
+1. The pipeline run is **manual**
+2. `deployInfra` is set to `true`
+
+Resource names are generated as `<baseName>-<resource>-<suffix>` (for example: `music-albums-api-dev`, `music-albums-api-prod`).
+
+On first run, the pipeline:
+
+1. Ensures the Resource Group exists
+2. Deploys `infra/main.bicep`
+3. Creates Key Vault and writes seed secrets (`pg-admin-login`, `pg-admin-password`, `jwt-key`, `api-key`)
+4. Creates derived secret `db-connection-string`
+5. Deploys/updates Container App with the new image
 
 ### How it works
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│  music-albums-kv (Key Vault)                                │
-│  ├── pg-admin-login      ← YOU create (manual)              │
-│  ├── pg-admin-password   ← YOU create (manual)              │
-│  ├── jwt-key             ← YOU create (manual)              │
-│  ├── api-key             ← YOU create (manual)              │
-│  └── db-connection-string ← BICEP creates (derived)         │
+│  Azure DevOps Pipeline                                       │
+│  ├── Reads secret variables (pg/jwt/api)                     │
+│  ├── Ensures Resource Group exists                           │
+│  └── Deploys Bicep                                            │
 └─────────────────────────────────────────────────────────────┘
                               │
-          Azure DevOps reads via Variable Group
+                              ▼
+┌─────────────────────────────────────────────────────────────┐
+│  music-albums-kv (Key Vault)                                │
+│  ├── pg-admin-login      ← BICEP writes                     │
+│  ├── pg-admin-password   ← BICEP writes                     │
+│  ├── jwt-key             ← BICEP writes                     │
+│  ├── api-key             ← BICEP writes                     │
+│  └── db-connection-string ← BICEP writes (derived)          │
+└─────────────────────────────────────────────────────────────┘
                               │
                               ▼
 ┌─────────────────────────────────────────────────────────────┐

@@ -10,6 +10,13 @@ param location string = 'westeurope'
 @description('Base name for all resources')
 param baseName string = 'music-albums'
 
+@allowed([
+  'dev'
+  'prod'
+])
+@description('Deployment suffix used in resource names')
+param deploymentSuffix string = 'dev'
+
 // @description('Container Registry name')
 // param acrName string
 
@@ -22,6 +29,14 @@ param postgresAdminPassword string
 
 @description('Container image tag')
 param imageTag string = 'latest'
+
+@allowed([
+  'Development'
+  'Staging'
+  'Production'
+])
+@description('.NET runtime environment for the container app')
+param aspNetCoreEnvironment string = 'Development'
 
 @secure()
 @description('JWT signing key (min 32 characters)')
@@ -41,12 +56,12 @@ param apiKey string
 // Variables
 // ============================================================================
 
-var containerAppName = '${baseName}-api'
-var environmentName = '${baseName}-dev'
-var postgresServerName = '${baseName}-db'
-var appInsightsName = '${baseName}-insights'
-var logAnalyticsName = '${baseName}-logs'
-var keyVaultName = '${baseName}-kv'
+var containerAppName = '${baseName}-api-${deploymentSuffix}'
+var environmentName = '${baseName}-env-${deploymentSuffix}'
+var postgresServerName = '${baseName}-db-${deploymentSuffix}'
+var appInsightsName = '${baseName}-insights-${deploymentSuffix}'
+var logAnalyticsName = '${baseName}-logs-${deploymentSuffix}'
+var keyVaultName = '${baseName}-kv-${deploymentSuffix}'
 var containerImage = 'ghcr.io/fernandotonacoder/music-albums-api:${imageTag}'
 
 // ============================================================================
@@ -126,6 +141,22 @@ resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   name: 'db-connection-string'
   properties: {
     value: 'Server=${postgres.properties.fullyQualifiedDomainName};Database=postgres;Port=5432;User Id=${postgresAdminLogin};Password=${postgresAdminPassword};Ssl Mode=Require;'
+  }
+}
+
+resource secretPostgresAdminLogin 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'pg-admin-login'
+  properties: {
+    value: postgresAdminLogin
+  }
+}
+
+resource secretPostgresAdminPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+  parent: keyVault
+  name: 'pg-admin-password'
+  properties: {
+    value: postgresAdminPassword
   }
 }
 
@@ -397,7 +428,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
           env: [
             {
               name: 'ASPNETCORE_ENVIRONMENT'
-              value: 'Development'
+              value: aspNetCoreEnvironment
             }
             {
               name: 'Database__ConnectionString'

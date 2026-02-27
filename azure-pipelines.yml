@@ -2,19 +2,34 @@
 # Music Albums API - Azure DevOps Pipeline
 # ============================================================================
 #
-# PREREQUISITES (one-time manual setup - see README.md for details):
-#   1. Resource Group: music-albums
-#   2. Key Vault: music-albums-kv (with 4 INPUT secrets)
-#   3. Variable Group: music-albums-keyvault (linked to Key Vault on Azure DevOps)
-#   4. Service Connection: azure-service-connection
+# PREREQUISITES (Azure DevOps project setup):
+#   1. Service Connection: azure-service-connection
+#   2. Variable groups:
+#      - music-albums-dev
+#      - music-albums-prod
+#   3. Each group should define:
+#      - RESOURCE_GROUP, LOCATION, BASE_NAME, aspNetCoreEnvironment
+#      - pg-admin-login, pg-admin-password, jwt-key, api-key (mark as secrets)
 #
-# PIPELINE VARIABLES (Azure DevOps UI):
-#   - RESOURCE_GROUP, DeployInfra
-#
-# SECRETS (from Key Vault via Variable Group):
-#   - pg-admin-login, pg-admin-password, jwt-key, api-key
+# PIPELINE RUNTIME:
+#   - Choose parameter: targetEnvironment (dev | prod)
+#   - Choose parameter: deployInfra (default false)
+#   - Pipeline loads matching variable group automatically
 #
 # ============================================================================
+
+parameters:
+  - name: deployInfra
+    displayName: Deploy infrastructure (Bicep)
+    type: boolean
+    default: false
+  - name: targetEnvironment
+    displayName: Target environment
+    type: string
+    default: dev
+    values:
+      - dev
+      - prod
 
 trigger:
   branches:
@@ -40,15 +55,30 @@ pool:
   vmImage: ubuntu-latest
 
 variables:
-  - group: music-albums-keyvault
   - name: imageRepository
     value: fernandotonacoder/music-albums-api
   - name: containerRegistry
     value: github-ghcr
   - name: dockerfilePath
-    value: '$(Build.SourcesDirectory)/Dockerfile'
+    value: "$(Build.SourcesDirectory)/Dockerfile"
   - name: tag
-    value: '$(Build.BuildId)'
+    value: "$(Build.BuildId)"
+  - name: location
+    value: "westeurope"
+  - name: baseName
+    value: "music-albums"
+  - name: aspNetCoreEnvironment
+    value: "Development"
+  - ${{ if eq(parameters.targetEnvironment, 'dev') }}:
+      - group: music-albums-dev
+      - name: deploymentEnvironmentName
+        value: Development
+  - ${{ if eq(parameters.targetEnvironment, 'prod') }}:
+      - group: music-albums-prod
+      - name: deploymentEnvironmentName
+        value: Production
+  - name: containerAppName
+    value: "$(baseName)-api-${{ parameters.targetEnvironment }}"
 
 stages:
   # ============================================================================
@@ -66,9 +96,9 @@ stages:
             displayName: Build Docker image
             inputs:
               containerRegistry: $(containerRegistry)
-              repository: '$(imageRepository)'
+              repository: "$(imageRepository)"
               command: build
-              Dockerfile: '$(dockerfilePath)'
+              Dockerfile: "$(dockerfilePath)"
               arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(tag)
@@ -78,7 +108,7 @@ stages:
             displayName: Push to GitHub Container Registry
             inputs:
               containerRegistry: $(containerRegistry)
-              repository: '$(imageRepository)'
+              repository: "$(imageRepository)"
               command: push
               tags: |
                 $(tag)
@@ -119,11 +149,22 @@ stages:
   - stage: DeployInfra
     displayName: Deploy Infrastructure
     dependsOn: Build
-    condition: and(succeeded(), eq(variables['DeployInfra'], 'true'))
+    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
       - job: DeployBicep
         displayName: Deploy Bicep Template
         steps:
+          - task: AzureCLI@2
+            displayName: Ensure resource group exists
+            inputs:
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create \
+                  --name '$(RESOURCE_GROUP)' \
+                  --location '$(location)'
+
           - task: AzureCLI@2
             displayName: Deploy infrastructure
             inputs:
@@ -135,6 +176,10 @@ stages:
                   --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/main.bicep \
                   --parameters \
+                    location='$(location)' \
+                    baseName='$(baseName)' \
+                    deploymentSuffix='${{ parameters.targetEnvironment }}' \
+                    aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
                     postgresAdminLogin='$(pg-admin-login)' \
                     postgresAdminPassword='$(pg-admin-password)' \
                     jwtKey='$(jwt-key)' \
@@ -158,7 +203,7 @@ stages:
     jobs:
       - deployment: DeployToAzure
         displayName: Deploy to Container Apps
-        environment: production
+        environment: $(deploymentEnvironmentName)
         strategy:
           runOnce:
             deploy:
@@ -173,7 +218,7 @@ stages:
                     scriptLocation: inlineScript
                     inlineScript: |
                       az containerapp update \
-                        --name 'music-albums-api' \
+                        --name '$(containerAppName)' \
                         --resource-group '$(RESOURCE_GROUP)' \
                         --image 'ghcr.io/$(imageRepository):$(tag)'
 
@@ -189,7 +234,7 @@ stages:
 
                       # Get the app URL and check health
                       APP_URL=$(az containerapp show \
-                        --name 'music-albums-api' \
+                        --name '$(containerAppName)' \
                         --resource-group '$(RESOURCE_GROUP)' \
                         --query 'properties.configuration.ingress.fqdn' -o tsv)
 
