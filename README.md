@@ -102,7 +102,7 @@ Create two Azure DevOps Variable Groups (regular groups, **not linked to Key Vau
 
 In each group, define:
 
-- `RESOURCE_GROUP` (example: `music-albums-dev-rg` / `music-albums-prod-rg`)
+- `RESOURCE_GROUP` (example: `music-albums-rg-dev` / `music-albums-rg-prod`)
 - `LOCATION` (optional, defaults to `westeurope`)
 - `BASE_NAME` (example: `music-albums`)
 - `aspNetCoreEnvironment` (`Development` for dev, `Production` for prod)

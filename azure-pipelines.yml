@@ -60,25 +60,25 @@ variables:
   - name: containerRegistry
     value: github-ghcr
   - name: dockerfilePath
-    value: '$(Build.SourcesDirectory)/Dockerfile'
+    value: "$(Build.SourcesDirectory)/Dockerfile"
   - name: tag
-    value: '$(Build.BuildId)'
+    value: "$(Build.BuildId)"
   - name: location
-    value: 'westeurope'
+    value: "westeurope"
   - name: baseName
-    value: 'music-albums'
+    value: "music-albums"
   - name: aspNetCoreEnvironment
-    value: 'Development'
+    value: "Development"
   - ${{ if eq(parameters.targetEnvironment, 'dev') }}:
-    - group: music-albums-dev
-    - name: deploymentEnvironmentName
-      value: Development
+      - group: music-albums-dev
+      - name: deploymentEnvironmentName
+        value: Development
   - ${{ if eq(parameters.targetEnvironment, 'prod') }}:
-    - group: music-albums-prod
-    - name: deploymentEnvironmentName
-      value: Production
+      - group: music-albums-prod
+      - name: deploymentEnvironmentName
+        value: Production
   - name: containerAppName
-    value: '$(baseName)-api-${{ parameters.targetEnvironment }}'
+    value: "$(baseName)-api-${{ parameters.targetEnvironment }}"
 
 stages:
   # ============================================================================
@@ -96,9 +96,9 @@ stages:
             displayName: Build Docker image
             inputs:
               containerRegistry: $(containerRegistry)
-              repository: '$(imageRepository)'
+              repository: "$(imageRepository)"
               command: build
-              Dockerfile: '$(dockerfilePath)'
+              Dockerfile: "$(dockerfilePath)"
               arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(tag)
@@ -108,7 +108,7 @@ stages:
             displayName: Push to GitHub Container Registry
             inputs:
               containerRegistry: $(containerRegistry)
-              repository: '$(imageRepository)'
+              repository: "$(imageRepository)"
               command: push
               tags: |
                 $(tag)
