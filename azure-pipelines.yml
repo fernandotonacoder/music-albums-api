@@ -8,11 +8,12 @@
 #      - music-albums-dev
 #      - music-albums-prod
 #   3. Each group should define:
-#      - RESOURCE_GROUP, DeployInfra, LOCATION, BASE_NAME, aspNetCoreEnvironment
+#      - RESOURCE_GROUP, LOCATION, BASE_NAME, aspNetCoreEnvironment
 #      - pg-admin-login, pg-admin-password, jwt-key, api-key (mark as secrets)
 #
 # PIPELINE RUNTIME:
 #   - Choose parameter: targetEnvironment (dev | prod)
+#   - Choose parameter: deployInfra (default false)
 #   - Pipeline loads matching variable group automatically
 #
 # ============================================================================
@@ -25,6 +26,10 @@ parameters:
     values:
       - dev
       - prod
+  - name: deployInfra
+    displayName: Deploy infrastructure
+    type: boolean
+    default: false
 
 trigger:
   branches:
@@ -144,7 +149,7 @@ stages:
   - stage: DeployInfra
     displayName: Deploy Infrastructure
     dependsOn: Build
-    condition: and(succeeded(), eq(variables['DeployInfra'], 'true'))
+    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
       - job: DeployBicep
         displayName: Deploy Bicep Template

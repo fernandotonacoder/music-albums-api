@@ -103,7 +103,6 @@ Create two Azure DevOps Variable Groups (regular groups, **not linked to Key Vau
 In each group, define:
 
 - `RESOURCE_GROUP` (example: `music-albums-dev-rg` / `music-albums-prod-rg`)
-- `DeployInfra` (`true` to provision/update infra)
 - `LOCATION` (optional, defaults to `westeurope`)
 - `BASE_NAME` (example: `music-albums`)
 - `aspNetCoreEnvironment` (`Development` for dev, `Production` for prod)
@@ -112,7 +111,15 @@ In each group, define:
 - `jwt-key` (**secret**)
 - `api-key` (**secret**)
 
-Then run the pipeline and select parameter `targetEnvironment` (`dev` or `prod`).
+Then run the pipeline manually and select parameters:
+
+- `targetEnvironment` (`dev` or `prod`)
+- `deployInfra` (`false` by default)
+
+Infrastructure deployment runs only when:
+
+1. The pipeline run is **manual**
+2. `deployInfra` is set to `true`
 
 Resource names are generated as `<baseName>-<resource>-<suffix>` (for example: `music-albums-api-dev`, `music-albums-api-prod`).
 
