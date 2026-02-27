@@ -66,8 +66,12 @@ variables:
     value: 'Development'
   - ${{ if eq(parameters.targetEnvironment, 'dev') }}:
     - group: music-albums-dev
+    - name: deploymentEnvironmentName
+      value: Development
   - ${{ if eq(parameters.targetEnvironment, 'prod') }}:
     - group: music-albums-prod
+    - name: deploymentEnvironmentName
+      value: Production
   - name: containerAppName
     value: '$(baseName)-api-${{ parameters.targetEnvironment }}'
 
@@ -194,7 +198,7 @@ stages:
     jobs:
       - deployment: DeployToAzure
         displayName: Deploy to Container Apps
-        environment: ${{ parameters.targetEnvironment }}
+        environment: $(deploymentEnvironmentName)
         strategy:
           runOnce:
             deploy:
