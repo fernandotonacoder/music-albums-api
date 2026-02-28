@@ -39,3 +39,5 @@ Properties/launchSettings.json
 parameters.json
 *.bicepparam
 !*.sample.bicepparam
+
+.vscode/settings.json

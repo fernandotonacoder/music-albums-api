@@ -17,7 +17,7 @@ param baseName string = 'music-albums'
 @description('Deployment suffix used in resource names')
 param deploymentSuffix string = 'dev'
 
-// @description('Container Registry name')
+// @description('Azure Container Registry name')
 // param acrName string
 
 @description('PostgreSQL administrator login')
@@ -176,6 +176,7 @@ resource secretApiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
+// Note: Azure Container Registry deactivated for cost saving. Using Github Container Registry instead.
 // resource secretAcrPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 //   parent: keyVault
 //   name: 'acr-password'
@@ -184,15 +185,16 @@ resource secretApiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
 //   }
 // }
 
-// Role assignment: Container App can read secrets from Key Vault
-// Key Vault Secrets User role
 resource keyVaultSecretUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, containerApp.id, 'Key Vault Secrets User')
   scope: keyVault
+  name: guid(keyVault.id, containerApp.id, 'Key Vault Secrets User')
   properties: {
     principalId: containerApp.identity.principalId
     principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId('Microsoft.Authorization/roleDefinitions', '4633458b-17de-408a-b874-0445c86b69e6')
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '4633458b-17de-408a-b874-0445c86b69e6'
+    )
   }
 }
 
@@ -263,99 +265,6 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 // Container App
 // ============================================================================
 
-// resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-//   name: containerAppName
-//   location: location
-//   identity: {
-//     type: 'SystemAssigned'
-//   }
-//   properties: {
-//     managedEnvironmentId: containerEnv.id
-//     configuration: {
-//       ingress: {
-//         external: true
-//         targetPort: 8080
-//         transport: 'auto'
-//         allowInsecure: false
-//       }
-//       registries: [
-//         {
-//           server: '${acrName}.azurecr.io'
-//           username: acr.listCredentials().username
-//           passwordSecretRef: 'acr-password'
-//         }
-//       ]
-//       secrets: [
-//         {
-//           name: 'acr-password'
-//           value: acr.listCredentials().passwords[0].value
-//         }
-//         {
-//           name: 'db-connection-string'
-//           keyVaultUrl: secretDbConnection.properties.secretUri
-//           identity: 'system'
-//         }
-//         {
-//           name: 'jwt-key'
-//           keyVaultUrl: secretJwtKey.properties.secretUri
-//           identity: 'system'
-//         }
-//         {
-//           name: 'api-key'
-//           keyVaultUrl: secretApiKey.properties.secretUri
-//           identity: 'system'
-//         }
-//       ]
-//     }
-//     template: {
-//       containers: [
-//         {
-//           name: containerAppName
-//           image: '${acrName}.azurecr.io/${containerAppName}:${imageTag}'
-//           resources: {
-//             cpu: json('0.25')
-//             memory: '0.5Gi'
-//           }
-//           env: [
-//             {
-//               name: 'ASPNETCORE_ENVIRONMENT'
-//               value: 'Production'
-//             }
-//             {
-//               name: 'Database__ConnectionString'
-//               secretRef: 'db-connection-string'
-//             }
-//             {
-//               name: 'Jwt__Key'
-//               secretRef: 'jwt-key'
-//             }
-//             {
-//               name: 'Jwt__Issuer'
-//               value: jwtIssuer
-//             }
-//             {
-//               name: 'Jwt__Audience'
-//               value: jwtAudience
-//             }
-//             {
-//               name: 'ApiKey'
-//               secretRef: 'api-key'
-//             }
-//             {
-//               name: 'APPLICATIONINSIGHTS_CONNECTION_STRING'
-//               value: appInsights.properties.ConnectionString
-//             }
-//           ]
-//         }
-//       ]
-//       scale: {
-//         minReplicas: 0
-//         maxReplicas: 3
-//       }
-//     }
-//   }
-// }
-
 // NOTE: Updated to use GitHub Container Registry instead of Azure Container Registry for cost saving.
 // Image is public, so no registry credentials needed. Secrets related to ACR removed.
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
@@ -373,8 +282,18 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         transport: 'auto'
         allowInsecure: false
       }
-      registries: [] 
+      // registries: [
+      //   {
+      //     server: '${acrName}.azurecr.io'
+      //     username: acr.listCredentials().username
+      //     passwordSecretRef: 'acr-password'
+      //   }
+      // ]
       secrets: [
+        // {
+        //   name: 'acr-password'
+        //   value: acr.listCredentials().passwords[0].value
+        // }
         {
           name: 'db-connection-string'
           keyVaultUrl: secretDbConnection.properties.secretUri
