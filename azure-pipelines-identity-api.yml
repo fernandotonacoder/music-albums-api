@@ -1,0 +1,167 @@
+# ============================================================================
+# Identity API - Azure DevOps Pipeline
+# ============================================================================
+# Builds on push to main (when Identity API files change).
+# Deploy/destroy infrastructure is manual only.
+#
+# Use this to generate JWT tokens when testing remotely.
+# Remember to destroy resources when done to save costs!
+# ============================================================================
+
+trigger:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - infra/optional-identity-api-helper-tool/**
+      - tools/Identity.Api/**
+
+pr:
+  branches:
+    include:
+      - main
+  paths:
+    include:
+      - infra/optional-identity-api-helper-tool/**
+      - tools/Identity.Api/**
+
+parameters:
+  - name: deployInfra
+    displayName: Deploy infrastructure (Bicep)
+    type: boolean
+    default: false
+  - name: destroyInfra
+    displayName: Destroy infrastructure (cleanup)
+    type: boolean
+    default: false
+  - name: environment
+    displayName: "Environment"
+    type: string
+    values:
+      - dev
+      - prod
+    default: dev
+
+variables:
+  - ${{ if eq(parameters.environment, 'dev') }}:
+      - group: music-albums-dev
+  - ${{ if eq(parameters.environment, 'prod') }}:
+      - group: music-albums-prod
+  - name: imageTag
+    value: "$(Build.BuildId)"
+  - name: containerImage
+    value: "ghcr.io/fernandotonacoder/identity-api:$(imageTag)"
+
+pool:
+  vmImage: "ubuntu-latest"
+
+stages:
+  # ============================================================================
+  # Build Stage
+  # ============================================================================
+  - stage: Build
+    displayName: Build and Push
+    jobs:
+      - job: Build
+        displayName: Build Docker Image
+        steps:
+          - checkout: self
+
+          - task: Docker@2
+            displayName: Build Docker image
+            inputs:
+              containerRegistry: github-ghcr
+              repository: fernandotonacoder/identity-api
+              command: build
+              dockerfile: tools/Identity.Api/Dockerfile
+              tags: |
+                $(imageTag)
+                latest
+
+          - task: Docker@2
+            displayName: Push to GitHub Container Registry
+            inputs:
+              containerRegistry: github-ghcr
+              repository: fernandotonacoder/identity-api
+              command: push
+              tags: |
+                $(imageTag)
+                latest
+
+  # ============================================================================
+  # Deploy Infrastructure Stage (manual only)
+  # ============================================================================
+  - stage: DeployInfra
+    displayName: Deploy Infrastructure
+    dependsOn: Build
+    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - job: DeployBicep
+        displayName: Deploy Bicep Template
+        steps:
+          - task: AzureCLI@2
+            displayName: Ensure resource group exists
+            inputs:
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az group create \
+                  --name '$(RESOURCE_GROUP)' \
+                  --location westeurope
+
+          - task: AzureCLI@2
+            displayName: Deploy infrastructure
+            inputs:
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group create \
+                  --resource-group '$(RESOURCE_GROUP)' \
+                  --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
+                  --parameters \
+                    deploymentSuffix=${{ parameters.environment }} \
+                    containerImage=$(containerImage) \
+                    jwtSecret='$(jwt-key)'
+
+          - task: AzureCLI@2
+            displayName: Print Identity API URL
+            inputs:
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az deployment group show \
+                  --resource-group '$(RESOURCE_GROUP)' \
+                  --name optional-identity-api-helper-tool \
+                  --query 'properties.outputs.identityApiUrl.value' -o tsv
+
+  # ============================================================================
+  # Destroy Infrastructure Stage (manual only)
+  # ============================================================================
+  - stage: DestroyInfra
+    displayName: Destroy Infrastructure
+    dependsOn: []
+    condition: and(eq('${{ parameters.destroyInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - job: DestroyResources
+        displayName: Delete Identity API Resources
+        steps:
+          - task: AzureCLI@2
+            displayName: Delete Container App & Environment
+            inputs:
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az containerapp delete \
+                  --name identity-api-${{ parameters.environment }} \
+                  --resource-group '$(RESOURCE_GROUP)' \
+                  --yes || true
+
+                az containerapp env delete \
+                  --name identity-api-env-${{ parameters.environment }} \
+                  --resource-group '$(RESOURCE_GROUP)' \
+                  --yes || true

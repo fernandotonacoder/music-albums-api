@@ -3,7 +3,7 @@
 [![Build Status](https://dev.azure.com/fernandotonadev/music-albums-api/_apis/build/status%2FMusic%20Albums%20API%20Build%20and%20Deploy?branchName=main)](https://dev.azure.com/fernandotonadev/music-albums-api/_build/latest?definitionId=1&branchName=main)
 [![Azure Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078D4?logo=microsoft-azure&logoColor=white)](https://music-albums-api.calmbay-fee7a82b.westeurope.azurecontainerapps.io/swagger/index.html)
 [![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)](Dockerfile)
-[![Bicep](https://img.shields.io/badge/Bicep-IaC-orange?logo=microsoft-azure&logoColor=white)](infra/main.bicep)
+[![Bicep](https://img.shields.io/badge/Bicep-IaC-orange?logo=microsoft-azure&logoColor=white)](infra/main/main.bicep)
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -126,7 +126,7 @@ Resource names are generated as `<baseName>-<resource>-<suffix>` (for example: `
 On first run, the pipeline:
 
 1. Ensures the Resource Group exists
-2. Deploys `infra/main.bicep`
+2. Deploys `infra/main/main.bicep`
 3. Creates Key Vault and writes seed secrets (`pg-admin-login`, `pg-admin-password`, `jwt-key`, `api-key`)
 4. Creates derived secret `db-connection-string`
 5. Deploys/updates Container App with the new image
