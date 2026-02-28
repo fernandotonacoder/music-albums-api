@@ -44,6 +44,9 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: 'identity-api-${deploymentSuffix}'
   location: location
+  identity: {
+    type: 'SystemAssigned'
+  }
   properties: {
     managedEnvironmentId: containerEnv.id
     configuration: {

@@ -133,6 +133,8 @@ module security './modules/security.bicep' = {
     postgresAdminPassword: postgresAdminPassword
     jwtKey: jwtKey
     apiKey: apiKey
+    privateEndpointSubnetId: network.outputs.privateEndpointsSubnetId
+    keyVaultDnsZoneId: network.outputs.keyVaultDnsZoneId
     tags: commonTags
   }
 }

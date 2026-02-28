@@ -34,9 +34,18 @@ param apiKey string
 @description('Tags to apply to security resources')
 param tags object = {}
 
+@description('Resource ID of the subnet for the Key Vault private endpoint')
+param privateEndpointSubnetId string
+
+@description('Resource ID of the Private DNS Zone for Key Vault')
+param keyVaultDnsZoneId string
+
 // ============================================================================
 // Key Vault
 // ============================================================================
+// Public network access is disabled. Access is only allowed via the private
+// endpoint within the VNet. The Container App (in the same VNet) reaches
+// Key Vault through the private endpoint for secret references.
 
 resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
   name: keyVaultName
@@ -52,11 +61,50 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     enableSoftDelete: true
     softDeleteRetentionInDays: 30
     enablePurgeProtection: true
-    publicNetworkAccess: 'Enabled'
+    publicNetworkAccess: 'Disabled'
     networkAcls: {
-      defaultAction: 'Allow'
+      defaultAction: 'Deny'
       bypass: 'AzureServices'
     }
+  }
+}
+
+// ============================================================================
+// Key Vault Private Endpoint
+// ============================================================================
+
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-09-01' = {
+  name: '${keyVaultName}-pe'
+  location: location
+  tags: tags
+  properties: {
+    subnet: {
+      id: privateEndpointSubnetId
+    }
+    privateLinkServiceConnections: [
+      {
+        name: '${keyVaultName}-plsc'
+        properties: {
+          privateLinkServiceId: keyVault.id
+          groupIds: ['vault']
+        }
+      }
+    ]
+  }
+}
+
+resource keyVaultPrivateDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-09-01' = {
+  parent: keyVaultPrivateEndpoint
+  name: 'default'
+  properties: {
+    privateDnsZoneConfigs: [
+      {
+        name: 'privatelink-vaultcore-azure-net'
+        properties: {
+          privateDnsZoneId: keyVaultDnsZoneId
+        }
+      }
+    ]
   }
 }
 

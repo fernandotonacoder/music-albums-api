@@ -64,6 +64,9 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     name: skuName
     tier: skuTier
   }
+  identity: {
+    type: 'SystemAssigned'
+  }
   tags: tags
   properties: {
     version: postgresVersion
