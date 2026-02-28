@@ -139,6 +139,42 @@ stages:
                   --query 'properties.outputs.identityApiUrl.value' -o tsv
 
   # ============================================================================
+  # Deploy Application Stage
+  # ============================================================================
+  - stage: DeployApp
+    displayName: Deploy Application
+    dependsOn:
+      - Build
+      - DeployInfra
+    condition: |
+      and(
+        not(failed('Build')),
+        not(failed('DeployInfra')),
+        ne(variables['Build.Reason'], 'PullRequest')
+      )
+    jobs:
+      - deployment: DeployToAzure
+        displayName: Deploy to Container Apps
+        environment: ${{ parameters.environment }}
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: AzureCLI@2
+                  displayName: Update Container App
+                  inputs:
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az containerapp update \
+                        --name 'identity-api-${{ parameters.environment }}' \
+                        --resource-group '$(RESOURCE_GROUP)' \
+                        --image '$(containerImage)'
+
+  # ============================================================================
   # Destroy Infrastructure Stage (manual only)
   # ============================================================================
   - stage: DestroyInfra
