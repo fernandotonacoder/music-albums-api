@@ -46,8 +46,12 @@ parameters:
 variables:
   - ${{ if eq(parameters.environment, 'dev') }}:
       - group: music-albums-dev
+      - name: deploymentEnvironmentName
+        value: Development
   - ${{ if eq(parameters.environment, 'prod') }}:
       - group: music-albums-prod
+      - name: deploymentEnvironmentName
+        value: Production
   - name: imageTag
     value: "$(Build.BuildId)"
   - name: containerImage
@@ -155,7 +159,7 @@ stages:
     jobs:
       - deployment: DeployToAzure
         displayName: Deploy to Container Apps
-        environment: ${{ parameters.environment }}
+        environment: $(deploymentEnvironmentName)
         strategy:
           runOnce:
             deploy:
