@@ -39,8 +39,23 @@ param backupRetentionDays int = 7
 param tags object = {}
 
 // ============================================================================
+// VNet Integration Parameters
+// ============================================================================
+
+@description('Resource ID of the delegated subnet for PostgreSQL Flexible Server')
+param postgresSubnetId string
+
+@description('Resource ID of the Private DNS Zone for PostgreSQL')
+param postgresDnsZoneId string
+
+// ============================================================================
 // PostgreSQL Flexible Server
 // ============================================================================
+// The server is deployed into a delegated subnet (VNet integration).
+// No public access or firewall rules are needed. All connectivity is private.
+// Resources in the same VNet (e.g., Container App) can reach the server directly.
+// To connect from your laptop, use a VPN/bastion or temporarily add a firewall
+// rule in the Azure portal.
 
 resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
   name: postgresServerName
@@ -64,20 +79,11 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     highAvailability: {
       mode: 'Disabled'
     }
-  }
-}
-
-// ============================================================================
-// Firewall Rules
-// ============================================================================
-
-// Allow Azure services to access the server
-resource postgresFirewallAzure 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = {
-  parent: postgres
-  name: 'AllowAzureServices'
-  properties: {
-    startIpAddress: '0.0.0.0'
-    endIpAddress: '0.0.0.0'
+    network: {
+      delegatedSubnetResourceId: postgresSubnetId
+      privateDnsZoneArmResourceId: postgresDnsZoneId
+      publicNetworkAccess: 'Disabled'
+    }
   }
 }
 

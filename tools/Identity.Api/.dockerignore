@@ -1,0 +1,12 @@
+bin/
+obj/
+*.md
+*.env
+.git/
+.vscode/
+*.user
+*.suo
+*.pfx
+*.key
+*.json
+secrets.json

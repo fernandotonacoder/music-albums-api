@@ -4,10 +4,11 @@
 // Prerequisites and setup instructions: see README.md
 // 
 // This file orchestrates the deployment of all infrastructure modules:
+// - Network: VNet, Subnets, Private DNS
 // - Monitoring: Log Analytics & Application Insights
-// - Database: PostgreSQL Flexible Server
+// - Database: PostgreSQL Flexible Server (VNet-integrated, private access)
 // - Security: Key Vault & Secrets
-// - Compute: Container Apps Environment & Container App
+// - Compute: Container Apps Environment & Container App (VNet-integrated)
 // ============================================================================
 
 @description('Location for all resources')
@@ -74,6 +75,19 @@ var commonTags = {
 }
 
 // ============================================================================
+// Module: Network (VNet, Subnets, Private DNS)
+// ============================================================================
+
+module network './modules/network.bicep' = {
+  name: 'network-deployment'
+  params: {
+    location: location
+    vnetName: '${baseName}-vnet-${deploymentSuffix}'
+    tags: commonTags
+  }
+}
+
+// ============================================================================
 // Module: Monitoring (Log Analytics & Application Insights)
 // ============================================================================
 
@@ -98,6 +112,8 @@ module database './modules/database.bicep' = {
     postgresServerName: resourceNames.postgresServer
     postgresAdminLogin: postgresAdminLogin
     postgresAdminPassword: postgresAdminPassword
+    postgresSubnetId: network.outputs.postgresSubnetId
+    postgresDnsZoneId: network.outputs.postgresDnsZoneId
     tags: commonTags
   }
 }
@@ -141,6 +157,7 @@ module compute './modules/compute.bicep' = {
     jwtIssuer: jwtIssuer
     jwtAudience: jwtAudience
     appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
+    containerAppSubnetId: network.outputs.containerAppSubnetId
     tags: commonTags
   }
 }

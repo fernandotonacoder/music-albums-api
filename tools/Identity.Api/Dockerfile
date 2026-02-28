@@ -11,7 +11,8 @@ FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 EXPOSE 5003
 COPY --from=build /app/publish .
-
+RUN useradd -m appuser
+USER appuser
 ENV ASPNETCORE_URLS=http://+:5003
 
 ENTRYPOINT ["dotnet", "Identity.Api.dll"]
