@@ -14,6 +14,20 @@ param appInsightsName string
 @description('Tags to apply to monitoring resources')
 param tags object = {}
 
+@allowed([
+  'dev'
+  'prod'
+])
+@description('Deployment environment. Controls log retention.')
+param deploymentEnvironment string = 'dev'
+
+// ============================================================================
+// Local Variables
+// ============================================================================
+
+var isProduction = deploymentEnvironment == 'prod'
+var logRetentionDays = isProduction ? 30 : 7
+
 // ============================================================================
 // Log Analytics Workspace
 // ============================================================================
@@ -26,7 +40,7 @@ resource logAnalytics 'Microsoft.OperationalInsights/workspaces@2023-09-01' = {
     sku: {
       name: 'PerGB2018'
     }
-    retentionInDays: 30
+    retentionInDays: logRetentionDays
   }
 }
 

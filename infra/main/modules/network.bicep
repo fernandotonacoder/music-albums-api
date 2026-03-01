@@ -125,6 +125,80 @@ resource keyVaultDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetwo
 }
 
 // ============================================================================
+// Network Security Groups (NSGs)
+// ============================================================================
+// Implement least-privilege network segmentation between subnets.
+
+resource postgresNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+  name: 'nsg-postgres-subnet'
+  location: location
+  tags: tags
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowFromContainerApp'
+        properties: {
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '5432'
+          sourceAddressPrefix: containerAppSubnetPrefix
+          destinationAddressPrefix: postgresSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
+    ]
+  }
+}
+
+resource containerAppNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+  name: 'nsg-containerapp-subnet'
+  location: location
+  tags: tags
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowHttpsFromInternet'
+        properties: {
+          protocol: 'Tcp'
+          sourcePortRange: '*'
+          destinationPortRange: '443'
+          sourceAddressPrefix: 'Internet'
+          destinationAddressPrefix: containerAppSubnetPrefix
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
+    ]
+  }
+}
+
+resource privateEndpointsNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+  name: 'nsg-private-endpoints-subnet'
+  location: location
+  tags: tags
+  properties: {
+    securityRules: [
+      {
+        name: 'AllowVNetTraffic'
+        properties: {
+          protocol: '*'
+          sourcePortRange: '*'
+          destinationPortRange: '*'
+          sourceAddressPrefix: 'VirtualNetwork'
+          destinationAddressPrefix: 'VirtualNetwork'
+          access: 'Allow'
+          priority: 100
+          direction: 'Inbound'
+        }
+      }
+    ]
+  }
+}
+
+// ============================================================================
 // Outputs
 // ============================================================================
 

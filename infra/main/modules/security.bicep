@@ -50,13 +50,18 @@ param keyVaultDnsZoneId string
 // ============================================================================
 // Key Vault
 // ============================================================================
-// Public network access is disabled. Access is only allowed via the private
-// endpoint within the VNet. The Container App (in the same VNet) reaches
-// Key Vault through the private endpoint for secret references.
+// The Container App (in the same VNet) reaches Key Vault through the private
+// endpoint for secret references.
 //
 // Environment-aware settings:
-//   prod → enablePurgeProtection: true,  softDeleteRetentionInDays: 30
-//   dev  → enablePurgeProtection: false, softDeleteRetentionInDays: 7
+//   prod:
+//     - enablePurgeProtection: true, softDeleteRetentionInDays: 30
+//     - publicNetworkAccess: 'Disabled' (locked down)
+//     - networkAcls.defaultAction: 'Deny' (deny by default)
+//   dev:
+//     - enablePurgeProtection: false, softDeleteRetentionInDays: 7
+//     - publicNetworkAccess: 'Enabled' (open for developer Portal/CLI access)
+//     - networkAcls.defaultAction: 'Allow' (allow by default)
 
 var isProduction = deploymentEnvironment == 'prod'
 
@@ -74,9 +79,9 @@ resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = {
     enableSoftDelete: true
     softDeleteRetentionInDays: isProduction ? 30 : 7
     enablePurgeProtection: isProduction
-    publicNetworkAccess: 'Disabled'
+    publicNetworkAccess: isProduction ? 'Disabled' : 'Enabled'
     networkAcls: {
-      defaultAction: 'Deny'
+      defaultAction: isProduction ? 'Deny' : 'Allow'
       bypass: 'AzureServices'
     }
   }
