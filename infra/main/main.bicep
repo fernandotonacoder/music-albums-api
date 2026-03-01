@@ -135,6 +135,7 @@ module security './modules/security.bicep' = {
     apiKey: apiKey
     privateEndpointSubnetId: network.outputs.privateEndpointsSubnetId
     keyVaultDnsZoneId: network.outputs.keyVaultDnsZoneId
+    deploymentEnvironment: deploymentSuffix
     tags: commonTags
   }
 }
