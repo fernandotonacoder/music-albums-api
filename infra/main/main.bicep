@@ -97,6 +97,7 @@ module monitoring './modules/monitoring.bicep' = {
     location: location
     logAnalyticsName: resourceNames.logAnalytics
     appInsightsName: resourceNames.appInsights
+    deploymentEnvironment: deploymentSuffix
     tags: commonTags
   }
 }
@@ -114,6 +115,7 @@ module database './modules/database.bicep' = {
     postgresAdminPassword: postgresAdminPassword
     postgresSubnetId: network.outputs.postgresSubnetId
     postgresDnsZoneId: network.outputs.postgresDnsZoneId
+    deploymentEnvironment: deploymentSuffix
     tags: commonTags
   }
 }

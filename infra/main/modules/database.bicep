@@ -38,9 +38,18 @@ param backupRetentionDays int = 7
 @description('Tags to apply to database resources')
 param tags object = {}
 
+@allowed([
+  'dev'
+  'prod'
+])
+@description('Deployment environment. Controls public network access.')
+param deploymentEnvironment string = 'dev'
+
 // ============================================================================
 // VNet Integration Parameters
 // ============================================================================
+
+var isDevelopment = deploymentEnvironment == 'dev'
 
 @description('Resource ID of the delegated subnet for PostgreSQL Flexible Server')
 param postgresSubnetId string
@@ -85,7 +94,7 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     network: {
       delegatedSubnetResourceId: postgresSubnetId
       privateDnsZoneArmResourceId: postgresDnsZoneId
-      publicNetworkAccess: 'Disabled'
+      publicNetworkAccess: isDevelopment ? 'Enabled' : 'Disabled'
     }
   }
 }
