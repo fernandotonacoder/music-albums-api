@@ -113,9 +113,9 @@ module database './modules/database.bicep' = {
     postgresServerName: resourceNames.postgresServer
     postgresAdminLogin: postgresAdminLogin
     postgresAdminPassword: postgresAdminPassword
+    deploymentEnvironment: deploymentSuffix
     postgresSubnetId: network.outputs.postgresSubnetId
     postgresDnsZoneId: network.outputs.postgresDnsZoneId
-    deploymentEnvironment: deploymentSuffix
     tags: commonTags
   }
 }
