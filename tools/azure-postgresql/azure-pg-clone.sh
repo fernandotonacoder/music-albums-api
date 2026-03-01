@@ -49,7 +49,7 @@ PSQL_STAT=${PIPESTATUS[1]}
 if [[ "$DUMP_STAT" -le 1 ]] && [[ "$PSQL_STAT" -le 1 ]]; then
     echo -e "\n${GREEN}✅ Success! Data successfully migrated to $DEST_HOST${NC}"
 else
-    echo -e "\n${RED}❌ Error detected during transfer.${NC}"
-    echo -e "Dump Status: $DUMP_STAT | Psql Status: $PSQL_STAT"
+    echo -e "\n${RED}❌ Error detected during transfer.${NC}" >&2
+    echo -e "Dump Status: $DUMP_STAT | Psql Status: $PSQL_STAT" >&2
 fi
 unset PGPASSWORD

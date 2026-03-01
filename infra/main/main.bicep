@@ -173,8 +173,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
 }
 
 resource keyVaultSecretUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  scope: keyVault
   name: guid(keyVault.id, resourceNames.containerApp, 'Key Vault Secrets User')
+  scope: keyVault
   properties: {
     principalId: compute.outputs.containerAppPrincipalId
     principalType: 'ServicePrincipal'
