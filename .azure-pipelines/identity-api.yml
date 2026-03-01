@@ -78,7 +78,8 @@ stages:
               containerRegistry: github-ghcr
               repository: fernandotonacoder/identity-api
               command: build
-              dockerfile: tools/Identity.Api/Dockerfile
+              dockerfilePath: "$(Build.SourcesDirectory)/tools/Identity.Api/Dockerfile"
+              buildContext: "$(Build.SourcesDirectory)/tools/Identity.Api"
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
