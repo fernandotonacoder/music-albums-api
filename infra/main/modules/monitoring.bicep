@@ -26,7 +26,9 @@ param deploymentEnvironment string = 'dev'
 // ============================================================================
 
 var isProduction = deploymentEnvironment == 'prod'
-var logRetentionDays = isProduction ? 30 : 7
+// PerGB2018 SKU enforces a minimum of 30 days retention.
+// Use 30 days for dev (minimum allowed) and 90 days for prod.
+var logRetentionDays = isProduction ? 90 : 30
 
 // ============================================================================
 // Log Analytics Workspace

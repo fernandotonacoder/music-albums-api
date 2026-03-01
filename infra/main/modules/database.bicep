@@ -42,29 +42,28 @@ param tags object = {}
   'dev'
   'prod'
 ])
-@description('Deployment environment. Controls public network access.')
+@description('Deployment environment. Prod uses VNet integration; dev uses public access for direct connectivity.')
 param deploymentEnvironment string = 'dev'
 
 // ============================================================================
-// VNet Integration Parameters
+// VNet Integration Parameters (prod only)
 // ============================================================================
 
-var isDevelopment = deploymentEnvironment == 'dev'
+@description('Resource ID of the delegated subnet for PostgreSQL Flexible Server (prod only)')
+param postgresSubnetId string = ''
 
-@description('Resource ID of the delegated subnet for PostgreSQL Flexible Server')
-param postgresSubnetId string
+@description('Resource ID of the Private DNS Zone for PostgreSQL (prod only)')
+param postgresDnsZoneId string = ''
 
-@description('Resource ID of the Private DNS Zone for PostgreSQL')
-param postgresDnsZoneId string
+var isProduction = deploymentEnvironment == 'prod'
 
 // ============================================================================
 // PostgreSQL Flexible Server
 // ============================================================================
-// The server is deployed into a delegated subnet (VNet integration).
-// No public access or firewall rules are needed. All connectivity is private.
-// Resources in the same VNet (e.g., Container App) can reach the server directly.
-// To connect from your laptop, use a VPN/bastion or temporarily add a firewall
-// rule in the Azure portal.
+// prod: VNet integration via delegated subnet + private DNS zone. No public access.
+//       Only resources inside the VNet (Container App) can reach the server.
+// dev:  Public network access enabled. Connect directly from any machine.
+//       No VPN or bastion required.
 
 resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
   name: postgresServerName
@@ -91,10 +90,12 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     highAvailability: {
       mode: 'Disabled'
     }
-    network: {
+    network: isProduction ? {
       delegatedSubnetResourceId: postgresSubnetId
       privateDnsZoneArmResourceId: postgresDnsZoneId
-      publicNetworkAccess: isDevelopment ? 'Enabled' : 'Disabled'
+      publicNetworkAccess: 'Disabled'
+    } : {
+      publicNetworkAccess: 'Enabled'
     }
   }
 }
