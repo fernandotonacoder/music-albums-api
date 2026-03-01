@@ -81,6 +81,8 @@ stages:
               dockerfile: tools/Identity.Api/Dockerfile
               tags: |
                 $(imageTag)
+                $(imageTag)-${{ parameters.environment }}
+                ${{ parameters.environment }}
                 latest
 
           - task: Docker@2
@@ -91,6 +93,8 @@ stages:
               command: push
               tags: |
                 $(imageTag)
+                $(imageTag)-${{ parameters.environment }}
+                ${{ parameters.environment }}
                 latest
 
   # ============================================================================
