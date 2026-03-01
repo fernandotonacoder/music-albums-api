@@ -39,7 +39,7 @@ trigger:
     include:
       - src/**
       - Dockerfile
-      - infra/**
+      - infra/main/**
 
 pr:
   branches:
@@ -174,7 +174,7 @@ stages:
               inlineScript: |
                 az deployment group create \
                   --resource-group '$(RESOURCE_GROUP)' \
-                  --template-file infra/main.bicep \
+                  --template-file infra/main/main.bicep \
                   --parameters \
                     location='$(location)' \
                     baseName='$(baseName)' \

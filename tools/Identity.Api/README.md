@@ -90,10 +90,11 @@ curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
 **Setup (first time):**
 ```bash
 cd tools/Identity.Api
-dotnet user-secrets set "Jwt:Secret" "your-secret-key-min-32-chars"
+export JWT_SECRET="your-secret-key-min-32-chars"
 ```
 
 This secret must match the `Jwt:Key` in the main API for token validation to work.
+Minimum required length is 32 characters.
 
 Tokens expire after 8 hours.
 

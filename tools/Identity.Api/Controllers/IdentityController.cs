@@ -1,6 +1,7 @@
 ﻿using Identity.Api.Contracts;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
+using System.Security.Cryptography;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
@@ -30,9 +31,12 @@ public class IdentityController : ControllerBase
             return BadRequest("Valid userId is required");
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenSecret = _configuration["Jwt:Secret"] 
+        var tokenSecret = Environment.GetEnvironmentVariable("JWT_SECRET")
             ?? throw new InvalidOperationException(
-                "Jwt:Secret is not correctly configured.");
+                "JWT_SECRET environment variable is not correctly configured.");
+        if (tokenSecret.Length < 32)
+            throw new InvalidOperationException(
+                "JWT_SECRET must be at least 32 characters long.");
         var key = Encoding.UTF8.GetBytes(tokenSecret);
 
         var claims = new List<Claim>
@@ -70,6 +74,7 @@ public class IdentityController : ControllerBase
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
+        CryptographicOperations.ZeroMemory(key);
 
         var jwt = tokenHandler.WriteToken(token);
         return Ok(new TokenResponse { Token = jwt });

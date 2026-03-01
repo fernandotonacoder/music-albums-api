@@ -3,7 +3,7 @@
 [![Build Status](https://dev.azure.com/fernandotonadev/music-albums-api/_apis/build/status%2FMusic%20Albums%20API%20Build%20and%20Deploy?branchName=main)](https://dev.azure.com/fernandotonadev/music-albums-api/_build/latest?definitionId=1&branchName=main)
 [![Azure Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078D4?logo=microsoft-azure&logoColor=white)](https://music-albums-api.calmbay-fee7a82b.westeurope.azurecontainerapps.io/swagger/index.html)
 [![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)](Dockerfile)
-[![Bicep](https://img.shields.io/badge/Bicep-IaC-orange?logo=microsoft-azure&logoColor=white)](infra/main.bicep)
+[![Bicep](https://img.shields.io/badge/Bicep-IaC-orange?logo=microsoft-azure&logoColor=white)](infra/main/main.bicep)
 
 [![.NET](https://img.shields.io/badge/.NET-8.0-512BD4?logo=dotnet&logoColor=white)](https://dotnet.microsoft.com/)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
@@ -23,7 +23,9 @@ A live version of this API is deployed on Azure Container Apps:
 
 ## � Documentation
 
-- [API Testing Guide](docs/API_TESTING_GUIDE.md) - Complete collection of HTTP requests for testing all endpoints
+- [API Testing Guide](docs/API_TESTING_GUIDE.md) - HTTP requests for testing all endpoints
+- [Infrastructure](docs/INFRASTRUCTURE.md) - Bicep modules and Azure deployment
+- [Identity API](docs/IDENTITY_API.md) - JWT token generator (helper tool)
 
 ## �🚀 Local Setup
 
@@ -31,18 +33,19 @@ Secrets are stored in **User Secrets** (outside the repo, never committed).
 
 ### First Time Setup:
 
-**1. Configure application secrets (User Secrets):**
+**1. Set your secrets (User Secrets for main API):**
 
 ```bash
-# Set your secrets for the main API
 cd src/MusicAlbums.Api
-dotnet user-secrets set "Database:ConnectionString" "Server=localhost;Port=5433;Database=albums;User ID=dev;Password=yourpass;"
+dotnet user-secrets set "Database:ConnectionString" "Server=localhost;Port=5433;Database=albums;User ID=dev;Password=changeme;"
 dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
 dotnet user-secrets set "ApiKey" "your-api-key"
+```
 
-# Set secrets for Identity API
-cd ../../tools/Identity.Api
-dotnet user-secrets set "Jwt:Secret" "your-secret-key-min-32-chars"
+**2. Set Identity API environment variable (if testing Identity API locally):**
+
+```bash
+export JWT_SECRET="your-secret-key-min-32-chars"
 ```
 
 **2. Configure database credentials (Docker - Optional):**
@@ -91,45 +94,30 @@ Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
 
 ## ☁️ Cloud Deployment (Azure Container Apps)
 
-### Zero-to-Hero Setup (pipeline-first)
+### Setup
 
-No manual Key Vault bootstrap is required.
-
-Create two Azure DevOps Variable Groups (regular groups, **not linked to Key Vault**):
+Create two Azure DevOps variable groups in your project:
 
 - `music-albums-dev`
 - `music-albums-prod`
 
 In each group, define:
 
-- `RESOURCE_GROUP` (example: `music-albums-rg-dev` / `music-albums-rg-prod`)
+- `RESOURCE_GROUP` (example: `music-albums-rg-dev`)
 - `LOCATION` (optional, defaults to `westeurope`)
 - `BASE_NAME` (example: `music-albums`)
-- `aspNetCoreEnvironment` (`Development` for dev, `Production` for prod)
-- `pg-admin-login` (**secret**)
-- `pg-admin-password` (**secret**)
-- `jwt-key` (**secret**)
-- `api-key` (**secret**)
+- `aspNetCoreEnvironment` (`Development` or `Production`)
+- `pg-admin-login` (secret)
+- `pg-admin-password` (secret)
+- `jwt-key` (secret, min 32 chars)
+- `api-key` (secret)
 
-Then run the pipeline manually and select parameters:
+Then queue `azure-pipelines.yml` manually with parameters:
 
-- `targetEnvironment` (`dev` or `prod`)
-- `deployInfra` (`false` by default)
+- `targetEnvironment`: `dev` or `prod`
+- `deployInfra`: `false` by default (set to `true` to deploy/update infrastructure)
 
-Infrastructure deployment runs only when:
-
-1. The pipeline run is **manual**
-2. `deployInfra` is set to `true`
-
-Resource names are generated as `<baseName>-<resource>-<suffix>` (for example: `music-albums-api-dev`, `music-albums-api-prod`).
-
-On first run, the pipeline:
-
-1. Ensures the Resource Group exists
-2. Deploys `infra/main.bicep`
-3. Creates Key Vault and writes seed secrets (`pg-admin-login`, `pg-admin-password`, `jwt-key`, `api-key`)
-4. Creates derived secret `db-connection-string`
-5. Deploys/updates Container App with the new image
+See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for module details and setup.
 
 ### How it works
 
