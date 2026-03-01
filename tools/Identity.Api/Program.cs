@@ -1,12 +1,12 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// User Secrets (local dev) and Environment Variables (production) are loaded automatically
-
-var jwtSecret = Environment.GetEnvironmentVariable("JWT_SECRET");
+// Jwt:Secret is populated from appsettings, User Secrets (local dev),
+// or the Jwt__Secret environment variable on Azure.
+var jwtSecret = builder.Configuration["Jwt:Secret"];
 if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
 {
 	throw new InvalidOperationException(
-		"JWT_SECRET environment variable must be configured and at least 32 characters long.");
+		"Jwt:Secret must be configured and at least 32 characters long.");
 }
 
 builder.Services.AddControllers();
@@ -17,4 +17,4 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.Run();
+await app.RunAsync();
