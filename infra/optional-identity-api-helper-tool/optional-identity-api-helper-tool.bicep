@@ -53,9 +53,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       ingress: {
         external: true
         targetPort: 5003
-        transport: 'auto'
         allowInsecure: false
-        clientCertificateMode: 'None'
       }
       secrets: [
         {
