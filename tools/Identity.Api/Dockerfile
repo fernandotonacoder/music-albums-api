@@ -9,7 +9,6 @@ COPY ["Controllers/", "Controllers/"]
 COPY ["Properties/", "Properties/"]
 COPY ["Program.cs", "./"]
 COPY ["appsettings.json", "./"]
-COPY ["appsettings.Development.json", "./"]
 RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
