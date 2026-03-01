@@ -34,6 +34,13 @@ param apiKey string
 @description('Tags to apply to security resources')
 param tags object = {}
 
+@allowed([
+  'dev'
+  'prod'
+])
+@description('Deployment environment. Controls Key Vault purge protection and soft-delete retention.')
+param deploymentEnvironment string = 'dev'
+
 @description('Resource ID of the subnet for the Key Vault private endpoint')
 param privateEndpointSubnetId string
 
@@ -46,8 +53,14 @@ param keyVaultDnsZoneId string
 // Public network access is disabled. Access is only allowed via the private
 // endpoint within the VNet. The Container App (in the same VNet) reaches
 // Key Vault through the private endpoint for secret references.
+//
+// Environment-aware settings:
+//   prod → enablePurgeProtection: true,  softDeleteRetentionInDays: 30
+//   dev  → enablePurgeProtection: false, softDeleteRetentionInDays: 7
 
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
+var isProduction = deploymentEnvironment == 'prod'
+
+resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = {
   name: keyVaultName
   location: location
   tags: tags
@@ -59,8 +72,8 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
     }
     enableRbacAuthorization: true
     enableSoftDelete: true
-    softDeleteRetentionInDays: 30
-    enablePurgeProtection: true
+    softDeleteRetentionInDays: isProduction ? 30 : 7
+    enablePurgeProtection: isProduction
     publicNetworkAccess: 'Disabled'
     networkAcls: {
       defaultAction: 'Deny'
@@ -73,7 +86,7 @@ resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' = {
 // Key Vault Private Endpoint
 // ============================================================================
 
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-09-01' = {
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
   name: '${keyVaultName}-pe'
   location: location
   tags: tags
@@ -93,7 +106,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2023-09-01'
   }
 }
 
-resource keyVaultPrivateDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2023-09-01' = {
+resource keyVaultPrivateDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
   parent: keyVaultPrivateEndpoint
   name: 'default'
   properties: {
@@ -112,7 +125,7 @@ resource keyVaultPrivateDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZ
 // Secrets
 // ============================================================================
 
-resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
   parent: keyVault
   name: 'db-connection-string'
   properties: {
@@ -120,7 +133,7 @@ resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource secretPostgresAdminLogin 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource secretPostgresAdminLogin 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
   parent: keyVault
   name: 'pg-admin-login'
   properties: {
@@ -128,7 +141,7 @@ resource secretPostgresAdminLogin 'Microsoft.KeyVault/vaults/secrets@2023-07-01'
   }
 }
 
-resource secretPostgresAdminPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource secretPostgresAdminPassword 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
   parent: keyVault
   name: 'pg-admin-password'
   properties: {
@@ -136,7 +149,7 @@ resource secretPostgresAdminPassword 'Microsoft.KeyVault/vaults/secrets@2023-07-
   }
 }
 
-resource secretJwtKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource secretJwtKey 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
   parent: keyVault
   name: 'jwt-key'
   properties: {
@@ -144,7 +157,7 @@ resource secretJwtKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
   }
 }
 
-resource secretApiKey 'Microsoft.KeyVault/vaults/secrets@2023-07-01' = {
+resource secretApiKey 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
   parent: keyVault
   name: 'api-key'
   properties: {
