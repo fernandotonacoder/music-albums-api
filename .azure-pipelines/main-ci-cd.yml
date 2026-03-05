@@ -104,7 +104,6 @@ stages:
                 $(tag)
                 $(tag)-${{ parameters.targetEnvironment }}
                 ${{ parameters.targetEnvironment }}
-                latest
 
           - task: Docker@2
             displayName: Push to GitHub Container Registry
@@ -116,7 +115,30 @@ stages:
                 $(tag)
                 $(tag)-${{ parameters.targetEnvironment }}
                 ${{ parameters.targetEnvironment }}
-                latest
+
+      - job: LintBicep
+        displayName: Lint Bicep Templates
+        steps:
+          - task: AzureCLI@2
+            displayName: Lint Bicep templates
+            inputs:
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az bicep upgrade
+                az bicep version
+
+                echo "Linting infra/main/main.bicep..."
+                az bicep build --file infra/main/main.bicep
+                echo "✓ main.bicep is valid"
+
+                echo "Linting Bicep modules..."
+                for module in infra/main/modules/*.bicep; do
+                  echo "  Linting $module"
+                  az bicep build --file "$module"
+                done
+                echo "✓ All modules are valid"
 
   # # ============================================================================
   # # Test Stage
@@ -148,15 +170,15 @@ stages:
   #             arguments: '--configuration Release --no-restore'
 
   # ============================================================================
-  # Deploy Infrastructure Stage (optional - run manually or on infra changes)
+  # Preview Infrastructure Stage (What-If Analysis)
   # ============================================================================
-  - stage: DeployInfra
-    displayName: Deploy Infrastructure
+  - stage: PreviewInfra
+    displayName: Preview Infrastructure Changes
     dependsOn: Build
     condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
-      - job: DeployBicep
-        displayName: Deploy Bicep Template
+      - job: WhatIf
+        displayName: Run What-If Analysis
         steps:
           - task: AzureCLI@2
             displayName: Ensure resource group exists
@@ -170,13 +192,20 @@ stages:
                   --location '$(location)'
 
           - task: AzureCLI@2
-            displayName: Deploy infrastructure
+            displayName: Run What-If analysis
             inputs:
               azureSubscription: azure-service-connection
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment group create \
+                echo "========================================"
+                echo "Running What-If Analysis"
+                echo "Environment: ${{ parameters.targetEnvironment }}"
+                echo "Resource Group: $(RESOURCE_GROUP)"
+                echo "========================================"
+                echo ""
+
+                az deployment group what-if \
                   --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/main/main.bicep \
                   --parameters \
@@ -188,7 +217,63 @@ stages:
                     postgresAdminPassword='$(pg-admin-password)' \
                     jwtKey='$(jwt-key)' \
                     apiKey='$(api-key)' \
-                    imageTag='$(tag)'
+                    imageTag='$(tag)' \
+                  --result-format ResourceIdOnly
+
+                echo ""
+                echo "========================================"
+                echo "What-If Analysis Complete"
+                echo "Review the changes above before deployment"
+                echo "========================================"
+
+  # ============================================================================
+  # Deploy Infrastructure Stage (optional - run manually or on infra changes)
+  # ============================================================================
+  - stage: DeployInfra
+    displayName: Deploy Infrastructure
+    dependsOn: PreviewInfra
+    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - deployment: DeployBicep
+        displayName: Deploy Bicep Template
+        environment: $(deploymentEnvironmentName)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: AzureCLI@2
+                  displayName: Ensure resource group exists
+                  inputs:
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az group create \
+                        --name '$(RESOURCE_GROUP)' \
+                        --location '$(location)'
+
+                - task: AzureCLI@2
+                  displayName: Deploy infrastructure
+                  inputs:
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az deployment group create \
+                        --resource-group '$(RESOURCE_GROUP)' \
+                        --template-file infra/main/main.bicep \
+                        --parameters \
+                          location='$(location)' \
+                          baseName='$(baseName)' \
+                          deploymentSuffix='${{ parameters.targetEnvironment }}' \
+                          aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
+                          postgresAdminLogin='$(pg-admin-login)' \
+                          postgresAdminPassword='$(pg-admin-password)' \
+                          jwtKey='$(jwt-key)' \
+                          apiKey='$(api-key)' \
+                          imageTag='$(tag)'
 
   # ============================================================================
   # Deploy Application Stage
@@ -197,11 +282,13 @@ stages:
     displayName: Deploy Application
     dependsOn:
       - Build
+      - PreviewInfra
       - DeployInfra
     condition: |
       and(
-        not(failed('Build')),
-        not(failed('DeployInfra')),
+        eq(dependencies.Build.result, 'Succeeded'),
+        in(dependencies.PreviewInfra.result, 'Succeeded', 'Skipped'),
+        in(dependencies.DeployInfra.result, 'Succeeded', 'Skipped'),
         ne(variables['Build.Reason'], 'PullRequest')
       )
     jobs:
@@ -233,15 +320,24 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      # Wait for deployment to stabilize
-                      sleep 30
-
-                      # Get the app URL and check health
+                      # FIX: Replaced brittle sleep 30 with a retry loop.
+                      # Retries up to 10 times with 15s gaps (2.5 min total
+                      # window) before failing the pipeline.
                       APP_URL=$(az containerapp show \
                         --name '$(containerAppName)' \
                         --resource-group '$(RESOURCE_GROUP)' \
                         --query 'properties.configuration.ingress.fqdn' -o tsv)
 
                       echo "Checking health at https://$APP_URL/_health"
-                      curl -f "https://$APP_URL/_health" || exit 1
-                      echo 'Deployment successful!'
+
+                      for i in {1..10}; do
+                        if curl -sf "https://$APP_URL/_health"; then
+                          echo "Deployment successful!"
+                          exit 0
+                        fi
+                        echo "Attempt $i/10 failed, retrying in 15s..."
+                        sleep 15
+                      done
+
+                      echo "Health check failed after all retries."
+                      exit 1
