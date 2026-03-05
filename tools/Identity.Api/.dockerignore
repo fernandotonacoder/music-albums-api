@@ -8,5 +8,6 @@ obj/
 *.suo
 *.pfx
 *.key
-*.json
 secrets.json
+Dockerfile
+.dockerignore
