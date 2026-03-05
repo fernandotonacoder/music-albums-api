@@ -83,7 +83,6 @@ stages:
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
-                latest
 
           - task: Docker@2
             displayName: Push to GitHub Container Registry
@@ -95,18 +94,34 @@ stages:
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
-                latest
+
+      - job: LintBicep
+        displayName: Lint Bicep Templates
+        steps:
+          - task: AzureCLI@2
+            displayName: Lint Bicep templates
+            inputs:
+              azureSubscription: azure-service-connection
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                az bicep upgrade
+                az bicep version
+
+                echo "Linting infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep..."
+                az bicep build --file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep
+                echo "✓ Bicep template is valid"
 
   # ============================================================================
-  # Deploy Infrastructure Stage (manual only)
+  # Preview Infrastructure Stage (What-If Analysis)
   # ============================================================================
-  - stage: DeployInfra
-    displayName: Deploy Infrastructure
+  - stage: PreviewInfra
+    displayName: Preview Infrastructure Changes
     dependsOn: Build
     condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
-      - job: DeployBicep
-        displayName: Deploy Bicep Template
+      - job: WhatIf
+        displayName: Run What-If Analysis
         steps:
           - task: AzureCLI@2
             displayName: Ensure resource group exists
@@ -120,31 +135,88 @@ stages:
                   --location westeurope
 
           - task: AzureCLI@2
-            displayName: Deploy infrastructure
+            displayName: Run What-If analysis
             inputs:
               azureSubscription: azure-service-connection
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az deployment group create \
+                echo "========================================"
+                echo "Running What-If Analysis"
+                echo "Environment: ${{ parameters.environment }}"
+                echo "Resource Group: $(RESOURCE_GROUP)"
+                echo "========================================"
+                echo ""
+
+                az deployment group what-if \
                   --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
                   --parameters \
                     deploymentSuffix=${{ parameters.environment }} \
                     containerImage=$(containerImage) \
-                    jwtSecret='$(jwt-key)'
+                    jwtSecret='$(jwt-key)' \
+                  --result-format ResourceIdOnly
 
-          - task: AzureCLI@2
-            displayName: Print Identity API URL
-            inputs:
-              azureSubscription: azure-service-connection
-              scriptType: bash
-              scriptLocation: inlineScript
-              inlineScript: |
-                az deployment group show \
-                  --resource-group '$(RESOURCE_GROUP)' \
-                  --name optional-identity-api-helper-tool \
-                  --query 'properties.outputs.identityApiUrl.value' -o tsv
+                echo ""
+                echo "========================================"
+                echo "What-If Analysis Complete"
+                echo "Review the changes above before deployment"
+                echo "========================================"
+
+  # ============================================================================
+  # Deploy Infrastructure Stage (manual only)
+  # ============================================================================
+  - stage: DeployInfra
+    displayName: Deploy Infrastructure
+    dependsOn: PreviewInfra
+    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - deployment: DeployBicep
+        displayName: Deploy Bicep Template
+        environment: $(deploymentEnvironmentName)
+        strategy:
+          runOnce:
+            deploy:
+              steps:
+                - checkout: self
+
+                - task: AzureCLI@2
+                  displayName: Ensure resource group exists
+                  inputs:
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az group create \
+                        --name '$(RESOURCE_GROUP)' \
+                        --location westeurope
+
+                - task: AzureCLI@2
+                  displayName: Deploy infrastructure
+                  inputs:
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az deployment group create \
+                        --resource-group '$(RESOURCE_GROUP)' \
+                        --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
+                        --parameters \
+                          deploymentSuffix=${{ parameters.environment }} \
+                          containerImage=$(containerImage) \
+                          jwtSecret='$(jwt-key)'
+
+                - task: AzureCLI@2
+                  displayName: Print Identity API URL
+                  inputs:
+                    azureSubscription: azure-service-connection
+                    scriptType: bash
+                    scriptLocation: inlineScript
+                    inlineScript: |
+                      az deployment group show \
+                        --resource-group '$(RESOURCE_GROUP)' \
+                        --name optional-identity-api-helper-tool \
+                        --query 'properties.outputs.identityApiUrl.value' -o tsv
 
   # ============================================================================
   # Deploy Application Stage
@@ -153,11 +225,13 @@ stages:
     displayName: Deploy Application
     dependsOn:
       - Build
+      - PreviewInfra
       - DeployInfra
     condition: |
       and(
-        not(failed('Build')),
-        not(failed('DeployInfra')),
+        eq(dependencies.Build.result, 'Succeeded'),
+        in(dependencies.PreviewInfra.result, 'Succeeded', 'Skipped'),
+        in(dependencies.DeployInfra.result, 'Succeeded', 'Skipped'),
         ne(variables['Build.Reason'], 'PullRequest')
       )
     jobs:
