@@ -17,7 +17,7 @@ Music Albums REST API written in C# / .NET Core, with Dapper and PostgreSQL
 
 A live version of this API is deployed on Azure Container Apps:
 
-**🔗 [Swagger UI](https://music-albums-api.calmbay-fee7a82b.westeurope.azurecontainerapps.io/swagger/index.html)**
+**🔗 [Swagger UI](https://music-albums-05-api-dev.orangeforest-b7d25f37.swedencentral.azurecontainerapps.io/swagger/index.html)**
 
 > **Note:** This is a demo instance and may be scaled down to zero when not in use. The first request might take a few seconds while the container starts.
 

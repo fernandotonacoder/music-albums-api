@@ -8,6 +8,9 @@
 @description('Location for all resources')
 param location string = resourceGroup().location
 
+@description('Base name for resource naming')
+param baseName string = 'identity-api'
+
 @description('Deployment suffix used in resource names')
 @allowed([ 'dev', 'prod' ])
 param deploymentSuffix string = 'dev'
@@ -28,7 +31,7 @@ param aspNetCoreEnvironment string = 'Development'
 // ============================================================================
 
 resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
-  name: 'identity-api-env-${deploymentSuffix}'
+  name: '${baseName}-env-${deploymentSuffix}'
   location: location
   properties: {
     zoneRedundant: false
@@ -42,7 +45,7 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
 }
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
-  name: 'identity-api-${deploymentSuffix}'
+  name: '${baseName}-${deploymentSuffix}'
   location: location
   identity: {
     type: 'SystemAssigned'
@@ -65,7 +68,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     template: {
       containers: [
         {
-          name: 'identity-api'
+          name: baseName
           image: containerImage
           resources: {
             cpu: json('0.25')
@@ -84,7 +87,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         }
       ]
       scale: {
-        minReplicas: 1
+        minReplicas: 0
         maxReplicas: 1
       }
     }
