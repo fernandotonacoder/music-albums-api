@@ -4,11 +4,11 @@
 // Prerequisites and setup instructions: see README.md
 // 
 // This file orchestrates the deployment of all infrastructure modules:
-// - Network: VNet, Subnets, Private DNS
+// - Network: VNet, Subnets, Private DNS (prod only)
 // - Monitoring: Log Analytics & Application Insights
-// - Database: PostgreSQL Flexible Server (VNet-integrated, private access)
-// - Security: Key Vault & Secrets
-// - Compute: Container Apps Environment & Container App (VNet-integrated)
+// - Database: PostgreSQL Flexible Server (private in prod, public in dev)
+// - Security: Key Vault & Secrets (private endpoint in prod only)
+// - Compute: Container Apps Environment & Container App (VNet in prod only)
 // ============================================================================
 
 @description('Location for all resources')
@@ -75,7 +75,7 @@ var commonTags = {
 }
 
 // ============================================================================
-// Module: Network (VNet, Subnets, Private DNS)
+// Module: Network (VNet, Subnets, Private DNS) — prod only
 // ============================================================================
 
 module network './modules/network.bicep' = {
@@ -83,6 +83,7 @@ module network './modules/network.bicep' = {
   params: {
     location: location
     vnetName: '${baseName}-vnet-${deploymentSuffix}'
+    deploymentEnvironment: deploymentSuffix
     tags: commonTags
   }
 }

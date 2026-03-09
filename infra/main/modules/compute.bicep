@@ -65,8 +65,8 @@ param appInsightsConnectionString string
 @description('Tags to apply to compute resources')
 param tags object = {}
 
-@description('Resource ID of the subnet for the Container Apps Environment')
-param containerAppSubnetId string
+@description('Resource ID of the subnet for the Container Apps Environment (prod only)')
+param containerAppSubnetId string = ''
 
 // ============================================================================
 // Container Apps Environment
@@ -84,10 +84,10 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
         sharedKey: logAnalyticsPrimarySharedKey
       }
     }
-    vnetConfiguration: {
+    vnetConfiguration: !empty(containerAppSubnetId) ? {
       infrastructureSubnetId: containerAppSubnetId
       internal: false
-    }
+    } : null
     zoneRedundant: false
     workloadProfiles: [
       {

@@ -1,11 +1,13 @@
 // ============================================================================
-// Network Module - VNet, Subnets, and Private DNS
+// Network Module - VNet, Subnets, and Private DNS (prod only)
 // ============================================================================
-// Creates the Virtual Network with:
+// In prod, creates the Virtual Network with:
 // - A delegated subnet for PostgreSQL Flexible Server
 // - A subnet for Container Apps Environment (minimum /23 required)
 // - A subnet for private endpoints (Key Vault, etc.)
 // - Private DNS Zones for PostgreSQL and Key Vault name resolution
+//
+// In dev, no resources are created. Outputs return empty strings.
 // ============================================================================
 
 @description('Location for the network resources')
@@ -29,11 +31,20 @@ param privateEndpointsSubnetPrefix string = '10.0.3.0/28'
 @description('Tags to apply to network resources')
 param tags object = {}
 
+@allowed([
+  'dev'
+  'prod'
+])
+@description('Deployment environment. Network resources are only created for prod.')
+param deploymentEnvironment string = 'dev'
+
+var isProduction = deploymentEnvironment == 'prod'
+
 // ============================================================================
 // Virtual Network
 // ============================================================================
 
-resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
+resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = if (isProduction) {
   name: vnetName
   location: location
   tags: tags
@@ -86,13 +97,13 @@ resource vnet 'Microsoft.Network/virtualNetworks@2023-09-01' = {
 // Required for name resolution when services are accessed via private endpoints
 // or VNet integration (PostgreSQL delegated subnet, Key Vault private endpoint).
 
-resource postgresDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+resource postgresDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = if (isProduction) {
   name: 'privatelink.postgres.database.azure.com'
   location: 'global'
   tags: tags
 }
 
-resource postgresDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = {
+resource postgresDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = if (isProduction) {
   parent: postgresDnsZone
   name: '${vnetName}-pg-dns-link'
   location: 'global'
@@ -105,13 +116,13 @@ resource postgresDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetwo
   }
 }
 
-resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = {
+resource keyVaultDnsZone 'Microsoft.Network/privateDnsZones@2024-06-01' = if (isProduction) {
   name: 'privatelink.vaultcore.azure.net'
   location: 'global'
   tags: tags
 }
 
-resource keyVaultDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = {
+resource keyVaultDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetworkLinks@2024-06-01' = if (isProduction) {
   parent: keyVaultDnsZone
   name: '${vnetName}-kv-dns-link'
   location: 'global'
@@ -129,7 +140,7 @@ resource keyVaultDnsZoneVnetLink 'Microsoft.Network/privateDnsZones/virtualNetwo
 // ============================================================================
 // Implement least-privilege network segmentation between subnets.
 
-resource postgresNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource postgresNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = if (isProduction) {
   name: 'nsg-postgres-subnet'
   location: location
   tags: tags
@@ -152,7 +163,7 @@ resource postgresNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
   }
 }
 
-resource containerAppNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource containerAppNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = if (isProduction) {
   name: 'nsg-containerapp-subnet'
   location: location
   tags: tags
@@ -175,7 +186,7 @@ resource containerAppNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = 
   }
 }
 
-resource privateEndpointsNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = {
+resource privateEndpointsNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01' = if (isProduction) {
   name: 'nsg-private-endpoints-subnet'
   location: location
   tags: tags
@@ -199,23 +210,23 @@ resource privateEndpointsNsg 'Microsoft.Network/networkSecurityGroups@2024-05-01
 }
 
 // ============================================================================
-// Outputs
+// Outputs (empty strings in dev)
 // ============================================================================
 
 @description('Resource ID of the PostgreSQL delegated subnet')
-output postgresSubnetId string = vnet.properties.subnets[0].id
+output postgresSubnetId string = isProduction ? '${vnet.id}/subnets/postgres-subnet' : ''
 
 @description('Resource ID of the Container App subnet')
-output containerAppSubnetId string = vnet.properties.subnets[1].id
+output containerAppSubnetId string = isProduction ? '${vnet.id}/subnets/containerapp-subnet' : ''
 
 @description('Resource ID of the Private DNS Zone for PostgreSQL')
-output postgresDnsZoneId string = postgresDnsZone.id
+output postgresDnsZoneId string = isProduction ? postgresDnsZone.id : ''
 
 @description('Resource ID of the private endpoints subnet')
-output privateEndpointsSubnetId string = vnet.properties.subnets[2].id
+output privateEndpointsSubnetId string = isProduction ? '${vnet.id}/subnets/private-endpoints-subnet' : ''
 
 @description('Resource ID of the Private DNS Zone for Key Vault')
-output keyVaultDnsZoneId string = keyVaultDnsZone.id
+output keyVaultDnsZoneId string = isProduction ? keyVaultDnsZone.id : ''
 
 @description('Virtual Network resource ID')
-output vnetId string = vnet.id
+output vnetId string = isProduction ? vnet.id : ''

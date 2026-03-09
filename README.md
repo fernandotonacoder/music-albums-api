@@ -96,56 +96,12 @@ Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
 
 ### Setup
 
-Create two Azure DevOps variable groups in your project:
-
-- `music-albums-dev`
-- `music-albums-prod`
-
-In each group, define:
-
-- `RESOURCE_GROUP` (example: `music-albums-rg-dev`)
-- `LOCATION` (optional, defaults to `westeurope`)
-- `BASE_NAME` (example: `music-albums`)
-- `aspNetCoreEnvironment` (`Development` or `Production`)
-- `pg-admin-login` (secret)
-- `pg-admin-password` (secret)
-- `jwt-key` (secret, min 32 chars)
-- `api-key` (secret)
-
-Then queue `azure-pipelines.yml` manually with parameters:
+Create two Azure DevOps variable groups (`music-albums-dev` / `music-albums-prod`) with the required variables, then queue `.azure-pipelines/main-ci-cd.yml` with parameters:
 
 - `targetEnvironment`: `dev` or `prod`
 - `deployInfra`: `false` by default (set to `true` to deploy/update infrastructure)
 
-See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for module details and setup.
-
-### How it works
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│  Azure DevOps Pipeline                                       │
-│  ├── Reads secret variables (pg/jwt/api)                     │
-│  ├── Ensures Resource Group exists                           │
-│  └── Deploys Bicep                                            │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  music-albums-kv (Key Vault)                                │
-│  ├── pg-admin-login      ← BICEP writes                     │
-│  ├── pg-admin-password   ← BICEP writes                     │
-│  ├── jwt-key             ← BICEP writes                     │
-│  ├── api-key             ← BICEP writes                     │
-│  └── db-connection-string ← BICEP writes (derived)          │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼
-┌─────────────────────────────────────────────────────────────┐
-│  Pipeline deploys: PostgreSQL, Container App, etc.         │
-│  Container App reads secrets via Managed Identity          │
-│  Images pulled from GitHub Container Registry (GHCR)      │
-└─────────────────────────────────────────────────────────────┘
-```
+See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for full details on modules, variable groups, dev vs prod differences, and pipelines.
 
 ### Health Endpoints
 
