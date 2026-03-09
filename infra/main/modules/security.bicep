@@ -61,7 +61,7 @@ param keyVaultDnsZoneId string
 //     - publicNetworkAccess: 'Enabled' (open for developer Portal/CLI access)
 //     - networkAcls.defaultAction: 'Allow' (allow by default)
 //
-// Purge protection is explicitly disabled for both environments.
+// Purge protection is disabled for both environments.
 // This only works for brand-new Key Vault names that were never created
 // with purge protection enabled.
 
@@ -80,7 +80,6 @@ resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = {
     enableRbacAuthorization: true
     enableSoftDelete: true
     softDeleteRetentionInDays: 7
-    enablePurgeProtection: false
     publicNetworkAccess: isProduction ? 'Disabled' : 'Enabled'
     networkAcls: {
       defaultAction: isProduction ? 'Deny' : 'Allow'
