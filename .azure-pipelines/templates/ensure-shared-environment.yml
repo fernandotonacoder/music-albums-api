@@ -1,0 +1,80 @@
+# ============================================================================
+# Template: Ensure Shared Container App Environment
+# ============================================================================
+# Reusable step template called by all pipelines before infrastructure
+# deployment. Checks if the shared Container App Environment exists and
+# provisions it automatically if not.
+#
+# Outputs:
+#   sharedEnvironmentId — pipeline variable with the resolved resource ID
+#                         (empty string when shared variables are not set).
+# ============================================================================
+
+parameters:
+  - name: azureSubscription
+    type: string
+  - name: provision
+    type: boolean
+    default: true
+
+steps:
+  - task: AzureCLI@2
+    displayName: Ensure shared Container App Environment
+    inputs:
+      azureSubscription: ${{ parameters.azureSubscription }}
+      scriptType: bash
+      scriptLocation: inlineScript
+      inlineScript: |
+        if [ -z "$(SHARED_RESOURCE_GROUP)" ] || [ -z "$(SHARED_ENVIRONMENT_NAME)" ]; then
+          echo "SHARED_RESOURCE_GROUP or SHARED_ENVIRONMENT_NAME not set. Skipping shared environment."
+          echo "##vso[task.setvariable variable=sharedEnvironmentId]"
+          exit 0
+        fi
+
+        # Check if shared environment already exists
+        SHARED_ENV_ID=$(az containerapp env show \
+          --name '$(SHARED_ENVIRONMENT_NAME)' \
+          --resource-group '$(SHARED_RESOURCE_GROUP)' \
+          --query id -o tsv 2>/dev/null || echo "")
+
+        if [ -n "$SHARED_ENV_ID" ]; then
+          echo "Shared environment already exists: $SHARED_ENV_ID"
+          echo "##vso[task.setvariable variable=sharedEnvironmentId]$SHARED_ENV_ID"
+          exit 0
+        fi
+
+        # Provision only when allowed (deploy stages, not what-if)
+        if [ "${{ parameters.provision }}" != "True" ]; then
+          echo "WARNING: Shared environment not found. It will be auto-provisioned during deploy."
+          echo "##vso[task.setvariable variable=sharedEnvironmentId]"
+          exit 0
+        fi
+
+        echo "Shared environment not found. Provisioning..."
+
+        # Ensure shared resource group exists
+        if [ "$(az group exists --name '$(SHARED_RESOURCE_GROUP)')" = "true" ]; then
+          echo "Resource group $(SHARED_RESOURCE_GROUP) already exists."
+        else
+          az group create \
+            --name '$(SHARED_RESOURCE_GROUP)' \
+            --location '$(LOCATION)'
+          echo "Created resource group $(SHARED_RESOURCE_GROUP)."
+        fi
+
+        # Deploy shared environment
+        az deployment group create \
+          --resource-group '$(SHARED_RESOURCE_GROUP)' \
+          --template-file infra/shared/shared-environment.bicep \
+          --parameters \
+            location='$(LOCATION)' \
+            environmentName='$(SHARED_ENVIRONMENT_NAME)'
+
+        # Resolve the newly created environment ID
+        SHARED_ENV_ID=$(az containerapp env show \
+          --name '$(SHARED_ENVIRONMENT_NAME)' \
+          --resource-group '$(SHARED_RESOURCE_GROUP)' \
+          --query id -o tsv)
+
+        echo "Shared environment provisioned successfully: $SHARED_ENV_ID"
+        echo "##vso[task.setvariable variable=sharedEnvironmentId]$SHARED_ENV_ID"

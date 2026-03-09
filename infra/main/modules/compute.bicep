@@ -68,11 +68,14 @@ param tags object = {}
 @description('Resource ID of the subnet for the Container Apps Environment (prod only)')
 param containerAppSubnetId string = ''
 
+@description('Resource ID of an existing Container App Environment. When provided, skips creating a new one.')
+param existingEnvironmentId string = ''
+
 // ============================================================================
-// Container Apps Environment
+// Container Apps Environment (created only when no existing environment is provided)
 // ============================================================================
 
-resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = if (empty(existingEnvironmentId)) {
   name: environmentName
   location: location
   tags: tags
@@ -98,6 +101,8 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+var resolvedEnvironmentId = !empty(existingEnvironmentId) ? existingEnvironmentId : containerEnv.id
+
 // ============================================================================
 // Container App
 // ============================================================================
@@ -110,7 +115,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   }
   tags: tags
   properties: {
-    managedEnvironmentId: containerEnv.id
+    managedEnvironmentId: resolvedEnvironmentId
     workloadProfileName: 'Consumption'
     configuration: {
       ingress: {
@@ -214,7 +219,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
 // ============================================================================
 
 @description('Container Apps Environment resource ID')
-output containerEnvId string = containerEnv.id
+output containerEnvId string = resolvedEnvironmentId
 
 @description('Container App resource ID')
 output containerAppId string = containerApp.id

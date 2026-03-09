@@ -133,6 +133,10 @@ stages:
                 az bicep build --file infra/main/main.bicep
                 echo "✓ main.bicep is valid"
 
+                echo "Linting infra/shared/shared-environment.bicep..."
+                az bicep build --file infra/shared/shared-environment.bicep
+                echo "✓ shared-environment.bicep is valid"
+
                 echo "Linting Bicep modules..."
                 for module in infra/main/modules/*.bicep; do
                   echo "  Linting $module"
@@ -199,6 +203,11 @@ stages:
                 az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
                 echo "Resource group $(RESOURCE_GROUP) is ready."
 
+          - template: templates/ensure-shared-environment.yml
+            parameters:
+              azureSubscription: azure-service-connection
+              provision: false
+
           - task: AzureCLI@2
             displayName: Run What-If analysis
             inputs:
@@ -226,6 +235,7 @@ stages:
                     jwtKey='$(jwt-key)' \
                     apiKey='$(api-key)' \
                     imageTag='$(tag)' \
+                    containerAppEnvironmentId="$(sharedEnvironmentId)" \
                   --result-format ResourceIdOnly
 
                 echo ""
@@ -270,6 +280,11 @@ stages:
                       az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
                       echo "Resource group $(RESOURCE_GROUP) is ready."
 
+                - template: templates/ensure-shared-environment.yml
+                  parameters:
+                    azureSubscription: azure-service-connection
+                    provision: true
+
                 - task: AzureCLI@2
                   displayName: Deploy infrastructure
                   inputs:
@@ -291,7 +306,8 @@ stages:
                           postgresAdminPassword='$(pg-admin-password)' \
                           jwtKey='$(jwt-key)' \
                           apiKey='$(api-key)' \
-                          imageTag='$(tag)'
+                          imageTag='$(tag)' \
+                          containerAppEnvironmentId="$(sharedEnvironmentId)"
                       DEPLOY_EXIT_CODE=$?
                       set -e
 
