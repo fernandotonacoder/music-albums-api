@@ -11,7 +11,19 @@ if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
 
 builder.Services.AddControllers();
 
+if (builder.Environment.IsDevelopment())
+{
+	builder.Services.AddEndpointsApiExplorer();
+	builder.Services.AddSwaggerGen();
+}
+
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+	app.UseSwagger();
+	app.UseSwaggerUI();
+}
 
 app.UseAuthorization();
 
