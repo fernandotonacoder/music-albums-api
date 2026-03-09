@@ -277,8 +277,10 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
+                      set +e
                       az deployment group create \
                         --resource-group '$(RESOURCE_GROUP)' \
+                        --name main \
                         --template-file infra/main/main.bicep \
                         --parameters \
                           location='$(LOCATION)' \
@@ -290,6 +292,27 @@ stages:
                           jwtKey='$(jwt-key)' \
                           apiKey='$(api-key)' \
                           imageTag='$(tag)'
+                      DEPLOY_EXIT_CODE=$?
+                      set -e
+
+                      if [ $DEPLOY_EXIT_CODE -ne 0 ]; then
+                        echo "Deployment failed. Fetching deployment operations for diagnostics..."
+                        echo "--- Deployment root error (properties.error) ---"
+                        az deployment group show \
+                          --resource-group '$(RESOURCE_GROUP)' \
+                          --name main \
+                          --query 'properties.error' \
+                          -o jsonc || true
+
+                        echo "--- Failed deployment operations (full statusMessage) ---"
+                        az deployment operation group list \
+                          --resource-group '$(RESOURCE_GROUP)' \
+                          --name main \
+                          --query "[?properties.provisioningState=='Failed'].{operationId:operationId,targetType:properties.targetResource.resourceType,targetName:properties.targetResource.resourceName,error:properties.statusMessage}" \
+                          -o jsonc || true
+
+                        exit $DEPLOY_EXIT_CODE
+                      fi
 
   # ============================================================================
   # Deploy Application Stage
