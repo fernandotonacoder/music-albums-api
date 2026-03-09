@@ -101,9 +101,11 @@ Parameters:
 
 Stages: Build → Preview Infrastructure (What-If) → Deploy Infrastructure → Deploy Application
 
-### Identity API — `.azure-pipelines/identity-api.yml`
+### Identity API — `.azure-pipelines/optional-identity-api.yml`
 
 Manual queue only. Use to deploy a temporary JWT token generator for remote testing.
+
+Uses a dedicated service connection: `azure-service-connection-identity-api`.
 
 Parameters:
 - `deployInfra` / `destroyInfra`: deploy or cleanup
@@ -112,6 +114,8 @@ Parameters:
 ## Azure DevOps Variable Groups
 
 Create two variable groups: `music-albums-dev` and `music-albums-prod`.
+
+### Main API Variables
 
 | Variable | Example | Secret? |
 |---|---|---|
@@ -123,6 +127,15 @@ Create two variable groups: `music-albums-dev` and `music-albums-prod`.
 | `pg-admin-password` | — | Yes |
 | `jwt-key` (min 32 chars) | — | Yes |
 | `api-key` | — | Yes |
+
+### Identity API Variables (same variable groups)
+
+The Identity API pipeline also reads from `music-albums-dev` / `music-albums-prod`. Add these variables to the same groups:
+
+| Variable | Example | Secret? |
+|---|---|---|
+| `IDENTITY_API_RESOURCE_GROUP` | `music-albums-identity-api-rg-dev` | No |
+| `IDENTITY_API_BASE_NAME` | `music-albums-identity-api` | No |
 
 ## Local Deployment
 
