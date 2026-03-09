@@ -6,7 +6,7 @@
 // ============================================================================
 
 @description('Location for all resources')
-param location string = 'westeurope'
+param location string = resourceGroup().location
 
 @description('Deployment suffix used in resource names')
 @allowed([ 'dev', 'prod' ])

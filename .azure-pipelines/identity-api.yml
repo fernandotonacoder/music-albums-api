@@ -162,6 +162,7 @@ stages:
                   --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
                   --parameters \
+                    location='$(LOCATION)' \
                     deploymentSuffix=${{ parameters.environment }} \
                     containerImage=$(containerImage) \
                     jwtSecret='$(jwt-key)' \
@@ -220,6 +221,7 @@ stages:
                         --resource-group '$(RESOURCE_GROUP)' \
                         --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
                         --parameters \
+                          location='$(LOCATION)' \
                           deploymentSuffix=${{ parameters.environment }} \
                           containerImage=$(containerImage) \
                           jwtSecret='$(jwt-key)'
