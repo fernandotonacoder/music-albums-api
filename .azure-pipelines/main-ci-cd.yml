@@ -63,9 +63,9 @@ variables:
     value: "$(Build.SourcesDirectory)/Dockerfile"
   - name: tag
     value: "$(Build.BuildId)"
-  - name: location
+  - name: LOCATION
     value: "westeurope"
-  - name: baseName
+  - name: BASE_NAME
     value: "music-albums"
   - name: aspNetCoreEnvironment
     value: "Development"
@@ -78,7 +78,7 @@ variables:
       - name: deploymentEnvironmentName
         value: Production
   - name: containerAppName
-    value: "$(baseName)-api-${{ parameters.targetEnvironment }}"
+    value: "$(BASE_NAME)-api-${{ parameters.targetEnvironment }}"
 
 stages:
   # ============================================================================
@@ -187,9 +187,13 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az group create \
-                  --name '$(RESOURCE_GROUP)' \
-                  --location '$(location)'
+                if az group exists --name '$(RESOURCE_GROUP)'; then
+                  echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
+                else
+                  az group create \
+                    --name '$(RESOURCE_GROUP)' \
+                    --location '$(LOCATION)'
+                fi
 
           - task: AzureCLI@2
             displayName: Run What-If analysis
@@ -209,8 +213,8 @@ stages:
                   --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/main/main.bicep \
                   --parameters \
-                    location='$(location)' \
-                    baseName='$(baseName)' \
+                    location='$(LOCATION)' \
+                    baseName='$(BASE_NAME)' \
                     deploymentSuffix='${{ parameters.targetEnvironment }}' \
                     aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
                     postgresAdminLogin='$(pg-admin-login)' \
@@ -250,9 +254,13 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      az group create \
-                        --name '$(RESOURCE_GROUP)' \
-                        --location '$(location)'
+                      if az group exists --name '$(RESOURCE_GROUP)'; then
+                        echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
+                      else
+                        az group create \
+                          --name '$(RESOURCE_GROUP)' \
+                          --location '$(LOCATION)'
+                      fi
 
                 - task: AzureCLI@2
                   displayName: Deploy infrastructure
@@ -265,8 +273,8 @@ stages:
                         --resource-group '$(RESOURCE_GROUP)' \
                         --template-file infra/main/main.bicep \
                         --parameters \
-                          location='$(location)' \
-                          baseName='$(baseName)' \
+                          location='$(LOCATION)' \
+                          baseName='$(BASE_NAME)' \
                           deploymentSuffix='${{ parameters.targetEnvironment }}' \
                           aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
                           postgresAdminLogin='$(pg-admin-login)' \

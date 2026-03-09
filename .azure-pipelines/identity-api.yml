@@ -54,6 +54,8 @@ variables:
         value: Production
   - name: imageTag
     value: "$(Build.BuildId)"
+  - name: LOCATION
+    value: "westeurope"
   - name: containerImage
     value: "ghcr.io/fernandotonacoder/identity-api:$(imageTag)"
 
@@ -130,9 +132,13 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                az group create \
-                  --name '$(RESOURCE_GROUP)' \
-                  --location westeurope
+                if az group exists --name '$(RESOURCE_GROUP)'; then
+                  echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
+                else
+                  az group create \
+                    --name '$(RESOURCE_GROUP)' \
+                    --location '$(LOCATION)'
+                fi
 
           - task: AzureCLI@2
             displayName: Run What-If analysis
@@ -187,9 +193,13 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      az group create \
-                        --name '$(RESOURCE_GROUP)' \
-                        --location westeurope
+                      if az group exists --name '$(RESOURCE_GROUP)'; then
+                        echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
+                      else
+                        az group create \
+                          --name '$(RESOURCE_GROUP)' \
+                          --location '$(LOCATION)'
+                      fi
 
                 - task: AzureCLI@2
                   displayName: Deploy infrastructure
