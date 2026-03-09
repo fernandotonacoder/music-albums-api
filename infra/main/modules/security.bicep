@@ -38,30 +38,24 @@ param tags object = {}
   'dev'
   'prod'
 ])
-@description('Deployment environment. Controls Key Vault purge protection and soft-delete retention.')
+@description('Deployment environment. Controls Key Vault networking and private endpoint.')
 param deploymentEnvironment string = 'dev'
 
-@description('Resource ID of the subnet for the Key Vault private endpoint')
-param privateEndpointSubnetId string
+@description('Resource ID of the subnet for the Key Vault private endpoint (prod only)')
+param privateEndpointSubnetId string = ''
 
-@description('Resource ID of the Private DNS Zone for Key Vault')
-param keyVaultDnsZoneId string
+@description('Resource ID of the Private DNS Zone for Key Vault (prod only)')
+param keyVaultDnsZoneId string = ''
 
 // ============================================================================
 // Key Vault
 // ============================================================================
-// The Container App (in the same VNet) reaches Key Vault through the private
-// endpoint for secret references.
+// prod: VNet-integrated via private endpoint. Public access disabled.
+//       networkAcls deny by default, bypass AzureServices.
+// dev:  No VNet or private endpoint. Public access enabled.
+//       Key Vault accessible from anywhere (Portal, CLI, Container App).
 //
-// Environment-aware settings:
-//   prod:
-//     - publicNetworkAccess: 'Disabled' (locked down)
-//     - networkAcls.defaultAction: 'Deny' (deny by default)
-//   dev:
-//     - publicNetworkAccess: 'Enabled' (open for developer Portal/CLI access)
-//     - networkAcls.defaultAction: 'Allow' (allow by default)
-//
-// Purge protection is disabled for both environments.
+// Purge protection is disabled for both environments (property omitted).
 // This only works for brand-new Key Vault names that were never created
 // with purge protection enabled.
 
@@ -89,10 +83,10 @@ resource keyVault 'Microsoft.KeyVault/vaults@2025-05-01' = {
 }
 
 // ============================================================================
-// Key Vault Private Endpoint
+// Key Vault Private Endpoint (prod only)
 // ============================================================================
 
-resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = {
+resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01' = if (isProduction) {
   name: '${keyVaultName}-pe'
   location: location
   tags: tags
@@ -112,7 +106,7 @@ resource keyVaultPrivateEndpoint 'Microsoft.Network/privateEndpoints@2024-05-01'
   }
 }
 
-resource keyVaultPrivateDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = {
+resource keyVaultPrivateDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZoneGroups@2024-05-01' = if (isProduction) {
   parent: keyVaultPrivateEndpoint
   name: 'default'
   properties: {
