@@ -132,13 +132,17 @@ stages:
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                if az group exists --name '$(RESOURCE_GROUP)'; then
+                if [ "$(az group exists --name '$(RESOURCE_GROUP)')" = "true" ]; then
                   echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
                 else
                   az group create \
                     --name '$(RESOURCE_GROUP)' \
                     --location '$(LOCATION)'
                 fi
+
+                # Validate RG is accessible in current subscription context.
+                az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
+                echo "Resource group $(RESOURCE_GROUP) is ready."
 
           - task: AzureCLI@2
             displayName: Run What-If analysis
@@ -193,13 +197,17 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      if az group exists --name '$(RESOURCE_GROUP)'; then
+                      if [ "$(az group exists --name '$(RESOURCE_GROUP)')" = "true" ]; then
                         echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
                       else
                         az group create \
                           --name '$(RESOURCE_GROUP)' \
                           --location '$(LOCATION)'
                       fi
+
+                      # Validate RG is accessible in current subscription context.
+                      az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
+                      echo "Resource group $(RESOURCE_GROUP) is ready."
 
                 - task: AzureCLI@2
                   displayName: Deploy infrastructure
