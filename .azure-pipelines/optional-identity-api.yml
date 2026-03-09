@@ -54,8 +54,6 @@ variables:
         value: Production
   - name: imageTag
     value: "$(Build.BuildId)"
-  - name: LOCATION
-    value: "westeurope"
   - name: containerImage
     value: "ghcr.io/fernandotonacoder/identity-api:$(imageTag)"
   - name: containerAppName
@@ -171,6 +169,7 @@ stages:
                     deploymentSuffix=${{ parameters.environment }} \
                     containerImage=$(containerImage) \
                     jwtSecret='$(jwt-key)' \
+                    aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
                   --result-format ResourceIdOnly
 
                 echo ""
@@ -230,7 +229,8 @@ stages:
                           baseName='$(IDENTITY_API_BASE_NAME)' \
                           deploymentSuffix=${{ parameters.environment }} \
                           containerImage=$(containerImage) \
-                          jwtSecret='$(jwt-key)'
+                          jwtSecret='$(jwt-key)' \
+                          aspNetCoreEnvironment='$(aspNetCoreEnvironment)'
 
                 - task: AzureCLI@2
                   displayName: Print Identity API URL
