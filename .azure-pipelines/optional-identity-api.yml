@@ -105,7 +105,7 @@ stages:
           - task: AzureCLI@2
             displayName: Lint Bicep templates
             inputs:
-              azureSubscription: azure-service-connection-identity-api
+              azureSubscription: azure-service-connection
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -130,7 +130,7 @@ stages:
           - task: AzureCLI@2
             displayName: Ensure resource group exists
             inputs:
-              azureSubscription: azure-service-connection-identity-api
+              azureSubscription: azure-service-connection
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -146,10 +146,15 @@ stages:
                 az group show --name '$(IDENTITY_API_RESOURCE_GROUP)' --query name -o tsv > /dev/null
                 echo "Resource group $(IDENTITY_API_RESOURCE_GROUP) is ready."
 
+          - template: templates/ensure-shared-environment.yml
+            parameters:
+              azureSubscription: azure-service-connection
+              provision: false
+
           - task: AzureCLI@2
             displayName: Run What-If analysis
             inputs:
-              azureSubscription: azure-service-connection-identity-api
+              azureSubscription: azure-service-connection
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -170,6 +175,7 @@ stages:
                     containerImage=$(containerImage) \
                     jwtSecret='$(jwt-key)' \
                     aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
+                    existingEnvironmentId="$(sharedEnvironmentId)" \
                   --result-format ResourceIdOnly
 
                 echo ""
@@ -198,7 +204,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: Ensure resource group exists
                   inputs:
-                    azureSubscription: azure-service-connection-identity-api
+                    azureSubscription: azure-service-connection
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
@@ -214,10 +220,15 @@ stages:
                       az group show --name '$(IDENTITY_API_RESOURCE_GROUP)' --query name -o tsv > /dev/null
                       echo "Resource group $(IDENTITY_API_RESOURCE_GROUP) is ready."
 
+                - template: templates/ensure-shared-environment.yml
+                  parameters:
+                    azureSubscription: azure-service-connection
+                    provision: true
+
                 - task: AzureCLI@2
                   displayName: Deploy infrastructure
                   inputs:
-                    azureSubscription: azure-service-connection-identity-api
+                    azureSubscription: azure-service-connection
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
@@ -230,12 +241,13 @@ stages:
                           deploymentSuffix=${{ parameters.environment }} \
                           containerImage=$(containerImage) \
                           jwtSecret='$(jwt-key)' \
-                          aspNetCoreEnvironment='$(aspNetCoreEnvironment)'
+                          aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
+                          existingEnvironmentId="$(sharedEnvironmentId)"
 
                 - task: AzureCLI@2
                   displayName: Print Identity API URL
                   inputs:
-                    azureSubscription: azure-service-connection-identity-api
+                    azureSubscription: azure-service-connection
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
@@ -273,7 +285,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: Update Container App
                   inputs:
-                    azureSubscription: azure-service-connection-identity-api
+                    azureSubscription: azure-service-connection
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
@@ -294,9 +306,9 @@ stages:
         displayName: Delete Identity API Resources
         steps:
           - task: AzureCLI@2
-            displayName: Delete Container App & Environment
+            displayName: Delete Container App
             inputs:
-              azureSubscription: azure-service-connection-identity-api
+              azureSubscription: azure-service-connection
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -305,7 +317,15 @@ stages:
                   --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
                   --yes || true
 
-                az containerapp env delete \
-                  --name '$(containerEnvName)' \
-                  --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
-                  --yes || true
+                # Only delete the environment if it was NOT shared (i.e. created by this template).
+                # If SHARED_RESOURCE_GROUP / SHARED_ENVIRONMENT_NAME are set, the environment
+                # lives in the shared RG and must not be deleted here.
+                if [ -z "$(SHARED_RESOURCE_GROUP)" ] || [ -z "$(SHARED_ENVIRONMENT_NAME)" ]; then
+                  echo "Deleting self-managed Container App Environment..."
+                  az containerapp env delete \
+                    --name '$(containerEnvName)' \
+                    --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
+                    --yes || true
+                else
+                  echo "Skipping environment deletion — using shared environment in $(SHARED_RESOURCE_GROUP)."
+                fi

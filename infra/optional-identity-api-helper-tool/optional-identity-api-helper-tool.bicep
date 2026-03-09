@@ -26,11 +26,14 @@ param jwtSecret string
 @allowed([ 'Development', 'Staging', 'Production' ])
 param aspNetCoreEnvironment string = 'Development'
 
+@description('Resource ID of an existing shared Container App Environment. When provided, skips creating a new one.')
+param existingEnvironmentId string = ''
+
 // ============================================================================
 // Resources
 // ============================================================================
 
-resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
+resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = if (empty(existingEnvironmentId)) {
   name: '${baseName}-env-${deploymentSuffix}'
   location: location
   properties: {
@@ -44,6 +47,8 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
   }
 }
 
+var resolvedEnvironmentId = !empty(existingEnvironmentId) ? existingEnvironmentId : containerEnv.id
+
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: '${baseName}-${deploymentSuffix}'
   location: location
@@ -51,7 +56,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    managedEnvironmentId: containerEnv.id
+    managedEnvironmentId: resolvedEnvironmentId
     configuration: {
       ingress: {
         external: true
