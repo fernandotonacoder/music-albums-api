@@ -48,18 +48,20 @@ variables:
       - group: music-albums-dev
       - name: deploymentEnvironmentName
         value: Development
+      - name: azureServiceConnection
+        value: azure-service-connection
   - ${{ if eq(parameters.environment, 'prod') }}:
       - group: music-albums-prod
       - name: deploymentEnvironmentName
         value: Production
+      - name: azureServiceConnection
+        value: azure-service-connection-prod
   - name: imageTag
     value: "$(Build.BuildId)"
   - name: containerImage
     value: "ghcr.io/fernandotonacoder/identity-api:$(imageTag)"
   - name: containerAppName
-    value: "$(IDENTITY_API_BASE_NAME)-${{ parameters.environment }}"
-  - name: containerEnvName
-    value: "$(IDENTITY_API_BASE_NAME)-env-${{ parameters.environment }}"
+    value: "$(BASE_NAME)-identity-api-${{ parameters.environment }}"
 
 pool:
   vmImage: "ubuntu-latest"
@@ -105,7 +107,7 @@ stages:
           - task: AzureCLI@2
             displayName: Lint Bicep templates
             inputs:
-              azureSubscription: azure-service-connection
+              azureSubscription: $(azureServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -130,52 +132,47 @@ stages:
           - task: AzureCLI@2
             displayName: Ensure resource group exists
             inputs:
-              azureSubscription: azure-service-connection
+              azureSubscription: $(azureServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
-                if [ "$(az group exists --name '$(IDENTITY_API_RESOURCE_GROUP)')" = "true" ]; then
-                  echo "Resource group $(IDENTITY_API_RESOURCE_GROUP) already exists. Skipping creation."
+                if [ "$(az group exists --name '$(RESOURCE_GROUP)')" = "true" ]; then
+                  echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
                 else
                   az group create \
-                    --name '$(IDENTITY_API_RESOURCE_GROUP)' \
+                    --name '$(RESOURCE_GROUP)' \
                     --location '$(LOCATION)'
                 fi
 
                 # Validate RG is accessible in current subscription context.
-                az group show --name '$(IDENTITY_API_RESOURCE_GROUP)' --query name -o tsv > /dev/null
-                echo "Resource group $(IDENTITY_API_RESOURCE_GROUP) is ready."
-
-          - template: templates/ensure-shared-environment.yml
-            parameters:
-              azureSubscription: azure-service-connection
-              provision: false
+                az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
+                echo "Resource group $(RESOURCE_GROUP) is ready."
 
           - task: AzureCLI@2
             displayName: Run What-If analysis
             inputs:
-              azureSubscription: azure-service-connection
+              azureSubscription: $(azureServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
                 echo "========================================"
                 echo "Running What-If Analysis"
                 echo "Environment: ${{ parameters.environment }}"
-                echo "Resource Group: $(IDENTITY_API_RESOURCE_GROUP)"
+                echo "Resource Group: $(RESOURCE_GROUP)"
                 echo "========================================"
                 echo ""
 
                 az deployment group what-if \
-                  --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
+                  --resource-group '$(RESOURCE_GROUP)' \
                   --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
                   --parameters \
                     location='$(LOCATION)' \
-                    baseName='$(IDENTITY_API_BASE_NAME)' \
+                    baseName='$(BASE_NAME)-identity-api' \
                     deploymentSuffix=${{ parameters.environment }} \
                     containerImage=$(containerImage) \
                     jwtSecret='$(jwt-key)' \
                     aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
-                    existingEnvironmentId="$(sharedEnvironmentId)" \
+                    containerAppEnvironmentName='$(BASE_NAME)-env-${{ parameters.environment }}' \
                   --result-format ResourceIdOnly
 
                 echo ""
@@ -204,55 +201,50 @@ stages:
                 - task: AzureCLI@2
                   displayName: Ensure resource group exists
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      if [ "$(az group exists --name '$(IDENTITY_API_RESOURCE_GROUP)')" = "true" ]; then
-                        echo "Resource group $(IDENTITY_API_RESOURCE_GROUP) already exists. Skipping creation."
+                      if [ "$(az group exists --name '$(RESOURCE_GROUP)')" = "true" ]; then
+                        echo "Resource group $(RESOURCE_GROUP) already exists. Skipping creation."
                       else
                         az group create \
-                          --name '$(IDENTITY_API_RESOURCE_GROUP)' \
+                          --name '$(RESOURCE_GROUP)' \
                           --location '$(LOCATION)'
                       fi
 
                       # Validate RG is accessible in current subscription context.
-                      az group show --name '$(IDENTITY_API_RESOURCE_GROUP)' --query name -o tsv > /dev/null
-                      echo "Resource group $(IDENTITY_API_RESOURCE_GROUP) is ready."
-
-                - template: templates/ensure-shared-environment.yml
-                  parameters:
-                    azureSubscription: azure-service-connection
-                    provision: true
+                      az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
+                      echo "Resource group $(RESOURCE_GROUP) is ready."
 
                 - task: AzureCLI@2
                   displayName: Deploy infrastructure
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
                       az deployment group create \
-                        --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
+                        --resource-group '$(RESOURCE_GROUP)' \
                         --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
                         --parameters \
                           location='$(LOCATION)' \
-                          baseName='$(IDENTITY_API_BASE_NAME)' \
+                          baseName='$(BASE_NAME)-identity-api' \
                           deploymentSuffix=${{ parameters.environment }} \
                           containerImage=$(containerImage) \
                           jwtSecret='$(jwt-key)' \
                           aspNetCoreEnvironment='$(aspNetCoreEnvironment)' \
-                          existingEnvironmentId="$(sharedEnvironmentId)"
+                          containerAppEnvironmentName='$(BASE_NAME)-env-${{ parameters.environment }}'
 
                 - task: AzureCLI@2
                   displayName: Print Identity API URL
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
                       az deployment group show \
-                        --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
+                        --resource-group '$(RESOURCE_GROUP)' \
                         --name optional-identity-api-helper-tool \
                         --query 'properties.outputs.identityApiUrl.value' -o tsv
 
@@ -285,13 +277,13 @@ stages:
                 - task: AzureCLI@2
                   displayName: Update Container App
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
                       az containerapp update \
                         --name '$(containerAppName)' \
-                        --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
+                        --resource-group '$(RESOURCE_GROUP)' \
                         --image '$(containerImage)'
 
   # ============================================================================
@@ -308,24 +300,11 @@ stages:
           - task: AzureCLI@2
             displayName: Delete Container App
             inputs:
-              azureSubscription: azure-service-connection
+              azureSubscription: $(azureServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
                 az containerapp delete \
                   --name '$(containerAppName)' \
-                  --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
+                  --resource-group '$(RESOURCE_GROUP)' \
                   --yes || true
-
-                # Only delete the environment if it was NOT shared (i.e. created by this template).
-                # If SHARED_RESOURCE_GROUP / SHARED_ENVIRONMENT_NAME are set, the environment
-                # lives in the shared RG and must not be deleted here.
-                if [ -z "$(SHARED_RESOURCE_GROUP)" ] || [ -z "$(SHARED_ENVIRONMENT_NAME)" ]; then
-                  echo "Deleting self-managed Container App Environment..."
-                  az containerapp env delete \
-                    --name '$(containerEnvName)' \
-                    --resource-group '$(IDENTITY_API_RESOURCE_GROUP)' \
-                    --yes || true
-                else
-                  echo "Skipping environment deletion — using shared environment in $(SHARED_RESOURCE_GROUP)."
-                fi

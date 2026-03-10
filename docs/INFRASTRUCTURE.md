@@ -6,8 +6,6 @@ Modular Bicep architecture for the Music Albums API. The Identity API helper too
 
 ```
 infra/
-├── shared/
-│   └── shared-environment.bicep       # Shared Container App Environment
 ├── main/
 │   ├── main.bicep                     # Orchestrator
 │   ├── main.sample.bicepparam         # Sample parameters
@@ -25,6 +23,8 @@ infra/
 
 | Concern | Dev | Prod |
 |---|---|---|
+| **Subscription** | Azure for Students | VS Professional ($50/month) |
+| **Service Connection** | `azure-service-connection` | `azure-service-connection-prod` |
 | **Network** | No VNet, no private endpoints | Full VNet with subnets, NSGs, private DNS |
 | **PostgreSQL** | Public access | VNet-integrated (delegated subnet), no public access |
 | **Key Vault** | Public access, no private endpoint | Private endpoint only, public access disabled |
@@ -54,34 +54,20 @@ infra/
 - Private endpoint in prod only
 
 ### compute.bicep
-- Container Apps Environment (skipped when using shared environment)
+- Container Apps Environment
 - Container App with system-assigned managed identity
 - Auto-scaling (0–3 replicas)
 - Health probes (startup + liveness)
 - Key Vault secret references via managed identity
 
-## Shared Container App Environment
+## Resource Groups
 
-Azure for Students limits the subscription to **1 Container App Environment globally**. To work around this, a single shared environment is deployed in a dedicated resource group (`music-albums-rg-shared`) and referenced by all Container Apps (main API dev/prod, Identity API).
+Each environment uses a single resource group containing all resources (main API, Identity API, database, networking, etc.):
 
-### How it works
-
-1. Both pipelines include an **"Ensure shared Container App Environment exists"** step that runs before infrastructure deployment.
-2. If the shared environment already exists, it skips ahead. If not, it auto-provisions the resource group and deploys `shared-environment.bicep`.
-3. The environment resource ID is then resolved via `az containerapp env show` and passed as `containerAppEnvironmentId` (main) or `existingEnvironmentId` (Identity API) to skip creating a per-deployment environment.
-4. If the shared variables (`SHARED_RESOURCE_GROUP`, `SHARED_ENVIRONMENT_NAME`) are not set in the variable groups, each deployment falls back to creating its own environment.
-
-### Manual deployment (optional)
-
-If you prefer to provision the shared environment manually instead of letting the pipeline handle it:
-
-```bash
-az group create --name music-albums-rg-shared --location <location>
-az deployment group create \
-  --resource-group music-albums-rg-shared \
-  --template-file infra/shared/shared-environment.bicep \
-  --parameters environmentName='music-albums-shared-env'
-```
+| Environment | Resource Group | Subscription |
+|---|---|---|
+| Dev | `music-albums-rg-dev` | Azure for Students |
+| Prod | `music-albums-rg-prod` | VS Professional |
 
 ## Orchestration
 
@@ -130,7 +116,9 @@ Stages: Build → Preview Infrastructure (What-If) → Deploy Infrastructure →
 
 Manual queue only. Use to deploy a temporary JWT token generator for remote testing.
 
-Uses the same service connection as the main API: `azure-service-connection`.
+Both pipelines select the service connection automatically based on the target environment:
+- `dev` → `azure-service-connection` (Azure for Students)
+- `prod` → `azure-service-connection-prod` (VS Professional)
 
 Parameters:
 - `deployInfra` / `destroyInfra`: deploy or cleanup
@@ -153,23 +141,9 @@ Create two variable groups: `music-albums-dev` and `music-albums-prod`.
 | `jwt-key` (min 32 chars) | — | Yes |
 | `api-key` | — | Yes |
 
-### Identity API Variables (same variable groups)
+### Identity API
 
-The Identity API pipeline also reads from `music-albums-dev` / `music-albums-prod`. Add these variables to the same groups:
-
-| Variable | Example | Secret? |
-|---|---|---|
-| `IDENTITY_API_RESOURCE_GROUP` | `music-albums-identity-api-rg-dev` | No |
-| `IDENTITY_API_BASE_NAME` | `music-albums-identity-api` | No |
-
-### Shared Environment Variables (same variable groups)
-
-Both pipelines use these to reference the shared Container App Environment. Add to both `music-albums-dev` and `music-albums-prod`:
-
-| Variable | Example | Secret? |
-|---|---|---|
-| `SHARED_RESOURCE_GROUP` | `music-albums-rg-shared` | No |
-| `SHARED_ENVIRONMENT_NAME` | `music-albums-shared-env` | No |
+The Identity API pipeline also reads from `music-albums-dev` / `music-albums-prod` but only uses the shared variables (`RESOURCE_GROUP`, `BASE_NAME`, `LOCATION`, etc.). It derives its resource names from `BASE_NAME` (e.g. `music-albums-identity-api-dev`) and deploys into the same resource group and Container App Environment as the main API.
 
 ## Local Deployment
 

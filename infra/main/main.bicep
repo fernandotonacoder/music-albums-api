@@ -56,10 +56,6 @@ param jwtAudience string = 'MusicAlbumsApi'
 @description('API Key for admin operations')
 param apiKey string
 
-@description('Resource ID of an existing shared Container App Environment. When provided, skips creating a new one.')
-param containerAppEnvironmentId string = ''
-
-
 var resourceNames = {
   containerApp: '${baseName}-api-${deploymentSuffix}'
   environment: '${baseName}-env-${deploymentSuffix}'
@@ -167,7 +163,6 @@ module compute './modules/compute.bicep' = {
     jwtAudience: jwtAudience
     appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
     containerAppSubnetId: network.outputs.containerAppSubnetId
-    existingEnvironmentId: containerAppEnvironmentId
     tags: commonTags
   }
 }

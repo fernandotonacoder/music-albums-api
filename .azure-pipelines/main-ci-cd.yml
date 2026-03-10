@@ -3,7 +3,9 @@
 # ============================================================================
 #
 # PREREQUISITES (Azure DevOps project setup):
-#   1. Service Connection: azure-service-connection
+#   1. Service Connections:
+#      - azure-service-connection        (dev — Azure for Students)
+#      - azure-service-connection-prod   (prod — VS Professional)
 #   2. Variable groups:
 #      - music-albums-dev
 #      - music-albums-prod
@@ -73,10 +75,14 @@ variables:
       - group: music-albums-dev
       - name: deploymentEnvironmentName
         value: Development
+      - name: azureServiceConnection
+        value: azure-service-connection
   - ${{ if eq(parameters.targetEnvironment, 'prod') }}:
       - group: music-albums-prod
       - name: deploymentEnvironmentName
         value: Production
+      - name: azureServiceConnection
+        value: azure-service-connection-prod
   - name: containerAppName
     value: "$(BASE_NAME)-api-${{ parameters.targetEnvironment }}"
 
@@ -122,7 +128,7 @@ stages:
           - task: AzureCLI@2
             displayName: Lint Bicep templates
             inputs:
-              azureSubscription: azure-service-connection
+              azureSubscription: $(azureServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -132,10 +138,6 @@ stages:
                 echo "Linting infra/main/main.bicep..."
                 az bicep build --file infra/main/main.bicep
                 echo "✓ main.bicep is valid"
-
-                echo "Linting infra/shared/shared-environment.bicep..."
-                az bicep build --file infra/shared/shared-environment.bicep
-                echo "✓ shared-environment.bicep is valid"
 
                 echo "Linting Bicep modules..."
                 for module in infra/main/modules/*.bicep; do
@@ -187,7 +189,7 @@ stages:
           - task: AzureCLI@2
             displayName: Ensure resource group exists
             inputs:
-              azureSubscription: azure-service-connection
+              azureSubscription: $(azureServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -203,15 +205,10 @@ stages:
                 az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
                 echo "Resource group $(RESOURCE_GROUP) is ready."
 
-          - template: templates/ensure-shared-environment.yml
-            parameters:
-              azureSubscription: azure-service-connection
-              provision: false
-
           - task: AzureCLI@2
             displayName: Run What-If analysis
             inputs:
-              azureSubscription: azure-service-connection
+              azureSubscription: $(azureServiceConnection)
               scriptType: bash
               scriptLocation: inlineScript
               inlineScript: |
@@ -235,7 +232,6 @@ stages:
                     jwtKey='$(jwt-key)' \
                     apiKey='$(api-key)' \
                     imageTag='$(tag)' \
-                    containerAppEnvironmentId="$(sharedEnvironmentId)" \
                   --result-format ResourceIdOnly
 
                 echo ""
@@ -264,7 +260,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: Ensure resource group exists
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
@@ -280,15 +276,10 @@ stages:
                       az group show --name '$(RESOURCE_GROUP)' --query name -o tsv > /dev/null
                       echo "Resource group $(RESOURCE_GROUP) is ready."
 
-                - template: templates/ensure-shared-environment.yml
-                  parameters:
-                    azureSubscription: azure-service-connection
-                    provision: true
-
                 - task: AzureCLI@2
                   displayName: Deploy infrastructure
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
@@ -306,8 +297,7 @@ stages:
                           postgresAdminPassword='$(pg-admin-password)' \
                           jwtKey='$(jwt-key)' \
                           apiKey='$(api-key)' \
-                          imageTag='$(tag)' \
-                          containerAppEnvironmentId="$(sharedEnvironmentId)"
+                          imageTag='$(tag)'
                       DEPLOY_EXIT_CODE=$?
                       set -e
 
@@ -359,7 +349,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: Update Container App
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
@@ -371,7 +361,7 @@ stages:
                 - task: AzureCLI@2
                   displayName: Verify deployment
                   inputs:
-                    azureSubscription: azure-service-connection
+                    azureSubscription: $(azureServiceConnection)
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |

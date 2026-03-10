@@ -9,7 +9,7 @@
 param location string = resourceGroup().location
 
 @description('Base name for resource naming')
-param baseName string = 'identity-api'
+param baseName string = 'music-albums-identity-api'
 
 @description('Deployment suffix used in resource names')
 @allowed([ 'dev', 'prod' ])
@@ -26,28 +26,16 @@ param jwtSecret string
 @allowed([ 'Development', 'Staging', 'Production' ])
 param aspNetCoreEnvironment string = 'Development'
 
-@description('Resource ID of an existing shared Container App Environment. When provided, skips creating a new one.')
-param existingEnvironmentId string = ''
+@description('Name of the existing Container App Environment in the same resource group (created by the main API deployment)')
+param containerAppEnvironmentName string
 
 // ============================================================================
 // Resources
 // ============================================================================
 
-resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = if (empty(existingEnvironmentId)) {
-  name: '${baseName}-env-${deploymentSuffix}'
-  location: location
-  properties: {
-    zoneRedundant: false
-    workloadProfiles: [
-      {
-        name: 'Consumption'
-        workloadProfileType: 'Consumption'
-      }
-    ]
-  }
+resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' existing = {
+  name: containerAppEnvironmentName
 }
-
-var resolvedEnvironmentId = !empty(existingEnvironmentId) ? existingEnvironmentId : containerEnv.id
 
 resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
   name: '${baseName}-${deploymentSuffix}'
@@ -56,7 +44,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
     type: 'SystemAssigned'
   }
   properties: {
-    managedEnvironmentId: resolvedEnvironmentId
+    managedEnvironmentId: containerEnv.id
     configuration: {
       ingress: {
         external: true
