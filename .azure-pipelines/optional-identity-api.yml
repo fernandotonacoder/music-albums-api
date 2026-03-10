@@ -61,7 +61,7 @@ variables:
   - name: containerImage
     value: "ghcr.io/fernandotonacoder/identity-api:$(imageTag)"
   - name: containerAppName
-    value: "$(BASE_NAME)-identity-api-${{ parameters.environment }}"
+    value: "id-api-$(BASE_NAME)-${{ parameters.environment }}"
 
 pool:
   vmImage: "ubuntu-latest"
@@ -167,7 +167,7 @@ stages:
                   --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
                   --parameters \
                     location='$(LOCATION)' \
-                    baseName='$(BASE_NAME)-identity-api' \
+                    baseName='id-api-$(BASE_NAME)' \
                     deploymentSuffix=${{ parameters.environment }} \
                     containerImage=$(containerImage) \
                     jwtSecret='$(jwt-key)' \
@@ -229,7 +229,7 @@ stages:
                         --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
                         --parameters \
                           location='$(LOCATION)' \
-                          baseName='$(BASE_NAME)-identity-api' \
+                          baseName='id-api-$(BASE_NAME)' \
                           deploymentSuffix=${{ parameters.environment }} \
                           containerImage=$(containerImage) \
                           jwtSecret='$(jwt-key)' \
