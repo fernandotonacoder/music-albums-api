@@ -12,6 +12,7 @@
 #   3. Each group should define:
 #      - RESOURCE_GROUP, LOCATION, BASE_NAME, aspNetCoreEnvironment
 #      - pg-admin-login, pg-admin-password, jwt-key, api-key (mark as secrets)
+#      - GITHUB_TOKEN (GitHub Fine-grained PAT with Deployments: Read and write)
 #
 # PIPELINE RUNTIME:
 #   - Choose parameter: targetEnvironment (dev | prod)
@@ -346,6 +347,17 @@ stages:
               steps:
                 - checkout: self
 
+                - bash: |
+                    DEPLOY_ID=$(curl -sf -X POST \
+                      -H "Authorization: token $(GITHUB_TOKEN)" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      https://api.github.com/repos/fernandotonacoder/music-albums-api/deployments \
+                      -d '{"ref":"'$(Build.SourceVersion)'","environment":"${{ parameters.targetEnvironment }}","auto_merge":false,"required_contexts":[],"description":"Music Albums API ${{ parameters.targetEnvironment }}"}' \
+                      | jq -r '.id')
+                    echo "##vso[task.setvariable variable=ghDeploymentId]$DEPLOY_ID"
+                    echo "Created GitHub Deployment: $DEPLOY_ID"
+                  displayName: Create GitHub Deployment
+
                 - task: AzureCLI@2
                   displayName: Update Container App
                   inputs:
@@ -374,6 +386,7 @@ stages:
                         --query 'properties.configuration.ingress.fqdn' -o tsv)
 
                       echo "Checking health at https://$APP_URL/_health"
+                      echo "##vso[task.setvariable variable=appFqdn]$APP_URL"
 
                       for i in {1..10}; do
                         if curl -sf "https://$APP_URL/_health"; then
@@ -386,3 +399,27 @@ stages:
 
                       echo "Health check failed after all retries."
                       exit 1
+
+                - bash: |
+                    if [ -z "$(ghDeploymentId)" ]; then
+                      echo "No GitHub Deployment ID found. Skipping status update."
+                      exit 0
+                    fi
+
+                    if [ "$(Agent.JobStatus)" = "Succeeded" ]; then
+                      STATUS="success"
+                    else
+                      STATUS="failure"
+                    fi
+
+                    ENV_URL="https://$(appFqdn)"
+                    LOG_URL="$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)"
+
+                    curl -sf -X POST \
+                      -H "Authorization: token $(GITHUB_TOKEN)" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      https://api.github.com/repos/fernandotonacoder/music-albums-api/deployments/$(ghDeploymentId)/statuses \
+                      -d '{"state":"'"$STATUS"'","environment_url":"'"$ENV_URL"'","log_url":"'"$LOG_URL"'","auto_inactive":true}'
+                    echo "GitHub Deployment status updated to $STATUS"
+                  displayName: Update GitHub Deployment status
+                  condition: always()

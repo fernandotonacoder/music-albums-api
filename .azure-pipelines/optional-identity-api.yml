@@ -274,6 +274,17 @@ stages:
               steps:
                 - checkout: self
 
+                - bash: |
+                    DEPLOY_ID=$(curl -sf -X POST \
+                      -H "Authorization: token $(GITHUB_TOKEN)" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      https://api.github.com/repos/fernandotonacoder/music-albums-api/deployments \
+                      -d '{"ref":"'$(Build.SourceVersion)'","environment":"id-api-${{ parameters.environment }}","auto_merge":false,"required_contexts":[],"description":"Identity API ${{ parameters.environment }}"}' \
+                      | jq -r '.id')
+                    echo "##vso[task.setvariable variable=ghDeploymentId]$DEPLOY_ID"
+                    echo "Created GitHub Deployment: $DEPLOY_ID"
+                  displayName: Create GitHub Deployment
+
                 - task: AzureCLI@2
                   displayName: Update Container App
                   inputs:
@@ -285,6 +296,37 @@ stages:
                         --name '$(containerAppName)' \
                         --resource-group '$(RESOURCE_GROUP)' \
                         --image '$(containerImage)'
+
+                      APP_FQDN=$(az containerapp show \
+                        --name '$(containerAppName)' \
+                        --resource-group '$(RESOURCE_GROUP)' \
+                        --query 'properties.configuration.ingress.fqdn' -o tsv)
+                      echo "##vso[task.setvariable variable=appFqdn]$APP_FQDN"
+                      echo "App URL: https://$APP_FQDN"
+
+                - bash: |
+                    if [ -z "$(ghDeploymentId)" ]; then
+                      echo "No GitHub Deployment ID found. Skipping status update."
+                      exit 0
+                    fi
+
+                    if [ "$(Agent.JobStatus)" = "Succeeded" ]; then
+                      STATUS="success"
+                    else
+                      STATUS="failure"
+                    fi
+
+                    ENV_URL="https://$(appFqdn)"
+                    LOG_URL="$(System.CollectionUri)$(System.TeamProject)/_build/results?buildId=$(Build.BuildId)"
+
+                    curl -sf -X POST \
+                      -H "Authorization: token $(GITHUB_TOKEN)" \
+                      -H "Accept: application/vnd.github.v3+json" \
+                      https://api.github.com/repos/fernandotonacoder/music-albums-api/deployments/$(ghDeploymentId)/statuses \
+                      -d '{"state":"'"$STATUS"'","environment_url":"'"$ENV_URL"'","log_url":"'"$LOG_URL"'","auto_inactive":true}'
+                    echo "GitHub Deployment status updated to $STATUS"
+                  displayName: Update GitHub Deployment status
+                  condition: always()
 
   # ============================================================================
   # Destroy Infrastructure Stage (manual only)
