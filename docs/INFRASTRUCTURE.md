@@ -152,6 +152,8 @@ The Identity API pipeline also reads from `music-albums-dev` / `music-albums-pro
 
 A scheduled GitHub Actions workflow (`.github/workflows/cleanup-ghcr.yml`) runs weekly to clean up old container images from GHCR. It keeps the 10 most recent versions of each package (`music-albums-api` and `identity-api`) and deletes the rest. Can also be triggered manually via **Actions → Cleanup GHCR → Run workflow**.
 
+Requires both packages to have **Admin** role assigned to the repo under **Package Settings → Manage Actions access**.
+
 ## Local Deployment
 
 ```bash
