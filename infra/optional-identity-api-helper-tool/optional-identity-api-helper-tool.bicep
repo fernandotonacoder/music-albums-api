@@ -9,7 +9,7 @@
 param location string = resourceGroup().location
 
 @description('Base name for resource naming')
-param baseName string = 'music-albums-identity-api'
+param baseName string = 'id-api-music-albums'
 
 @description('Deployment suffix used in resource names')
 @allowed([ 'dev', 'prod' ])
