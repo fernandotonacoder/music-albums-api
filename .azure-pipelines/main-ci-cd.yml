@@ -12,6 +12,7 @@
 #   3. Each group should define:
 #      - RESOURCE_GROUP, LOCATION, BASE_NAME, aspNetCoreEnvironment
 #      - pg-admin-login, pg-admin-password, jwt-key, api-key (mark as secrets)
+#      - GITHUB_TOKEN (GitHub Fine-grained PAT with Deployments: Read and write)
 #
 # PIPELINE RUNTIME:
 #   - Choose parameter: targetEnvironment (dev | prod)

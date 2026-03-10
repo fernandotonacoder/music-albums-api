@@ -140,10 +140,13 @@ Create two variable groups: `music-albums-dev` and `music-albums-prod`.
 | `pg-admin-password` | — | Yes |
 | `jwt-key` (min 32 chars) | — | Yes |
 | `api-key` | — | Yes |
+| `GITHUB_TOKEN` | — | Yes |
+
+> `GITHUB_TOKEN` is a GitHub Fine-grained PAT scoped to the repo with **Deployments: Read and write** permission. Used to create GitHub Deployments with environment URLs.
 
 ### Identity API
 
-The Identity API pipeline also reads from `music-albums-dev` / `music-albums-prod` but only uses the shared variables (`RESOURCE_GROUP`, `BASE_NAME`, `LOCATION`, etc.). It derives its resource names from `BASE_NAME` (e.g. `music-albums-identity-api-dev`) and deploys into the same resource group and Container App Environment as the main API.
+The Identity API pipeline also reads from `music-albums-dev` / `music-albums-prod` but only uses the shared variables (`RESOURCE_GROUP`, `BASE_NAME`, `LOCATION`, `GITHUB_TOKEN`, etc.). It derives its resource names from `BASE_NAME` (e.g. `id-api-music-albums-dev`) and deploys into the same resource group and Container App Environment as the main API.
 
 ## Local Deployment
 
