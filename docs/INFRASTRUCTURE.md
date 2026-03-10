@@ -148,6 +148,10 @@ Create two variable groups: `music-albums-dev` and `music-albums-prod`.
 
 The Identity API pipeline also reads from `music-albums-dev` / `music-albums-prod` but only uses the shared variables (`RESOURCE_GROUP`, `BASE_NAME`, `LOCATION`, `GITHUB_TOKEN`, etc.). It derives its resource names from `BASE_NAME` (e.g. `id-api-music-albums-dev`) and deploys into the same resource group and Container App Environment as the main API.
 
+## GitHub Actions
+
+A scheduled GitHub Actions workflow (`.github/workflows/cleanup-ghcr.yml`) runs weekly to clean up old container images from GHCR. It keeps the 10 most recent versions of each package (`music-albums-api` and `identity-api`) and deletes the rest. Can also be triggered manually via **Actions → Cleanup GHCR → Run workflow**.
+
 ## Local Deployment
 
 ```bash

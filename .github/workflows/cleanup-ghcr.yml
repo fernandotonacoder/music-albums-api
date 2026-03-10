@@ -5,10 +5,14 @@ on:
     - cron: "0 0 * * 1" # Every Monday at midnight UTC
   workflow_dispatch:
 
+permissions:
+  packages: write
+
 jobs:
   delete-old-versions:
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         package:
           - music-albums-api
