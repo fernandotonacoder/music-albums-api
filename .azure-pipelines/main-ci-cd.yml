@@ -174,12 +174,16 @@ stages:
       - job: Push
         displayName: Push to GitHub Container Registry
         steps:
+          - checkout: self
+
           - task: Docker@2
-            displayName: Push to GitHub Container Registry
+            displayName: Build and push to GitHub Container Registry
             inputs:
               containerRegistry: $(containerRegistry)
               repository: "$(imageRepository)"
-              command: push
+              command: buildAndPush
+              Dockerfile: "$(dockerfilePath)"
+              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(tag)
                 $(tag)-${{ parameters.targetEnvironment }}
@@ -187,7 +191,9 @@ stages:
 
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
-    dependsOn: Build
+    dependsOn:
+      - Build
+      - Test
     condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
       - job: WhatIf
