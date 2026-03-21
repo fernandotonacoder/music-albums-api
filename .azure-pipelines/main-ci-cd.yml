@@ -88,9 +88,6 @@ variables:
     value: "$(BASE_NAME)-api-${{ parameters.targetEnvironment }}"
 
 stages:
-  # ============================================================================
-  # Build Stage
-  # ============================================================================
   - stage: Build
     displayName: Build
     jobs:
@@ -142,9 +139,6 @@ stages:
               targetPath: "$(Build.SourcesDirectory)/infra"
               artifact: "infra"
 
-  # ============================================================================
-  # Test Stage
-  # ============================================================================
   - stage: Test
     displayName: "Run Tests"
     dependsOn: Build
@@ -172,9 +166,6 @@ stages:
               arguments: "--configuration Release --no-restore"
               publishTestResults: true
 
-  # ============================================================================
-  # Push Stage
-  # ============================================================================
   - stage: Push
     displayName: Push Docker Image
     dependsOn: Test
@@ -194,9 +185,6 @@ stages:
                 $(tag)-${{ parameters.targetEnvironment }}
                 ${{ parameters.targetEnvironment }}
 
-  # ============================================================================
-  # Preview Infrastructure Stage (What-If Analysis)
-  # ============================================================================
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
     dependsOn: Build
@@ -265,9 +253,6 @@ stages:
                 echo "Review the changes above before deployment"
                 echo "========================================"
 
-  # ============================================================================
-  # Deploy Infrastructure Stage (optional - run manually or on infra changes)
-  # ============================================================================
   - stage: DeployInfra
     displayName: Deploy Infrastructure
     dependsOn: PreviewInfra
@@ -349,9 +334,6 @@ stages:
                         exit $DEPLOY_EXIT_CODE
                       fi
 
-  # ============================================================================
-  # Deploy Application Stage
-  # ============================================================================
   - stage: DeployApp
     displayName: Deploy Application
     dependsOn:

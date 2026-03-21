@@ -67,9 +67,6 @@ pool:
   vmImage: "ubuntu-latest"
 
 stages:
-  # ============================================================================
-  # Build Stage
-  # ============================================================================
   - stage: Build
     displayName: Build
     jobs:
@@ -113,9 +110,6 @@ stages:
               targetPath: '$(Build.SourcesDirectory)/infra/optional-identity-api-helper-tool'
               artifact: 'identity-api-infra'
 
-  # ============================================================================
-  # Push Stage
-  # ============================================================================
   - stage: Push
     displayName: Push Docker Image
     dependsOn: Build
@@ -135,9 +129,6 @@ stages:
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
 
-  # ============================================================================
-  # Preview Infrastructure Stage (What-If Analysis)
-  # ============================================================================
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
     dependsOn: Build
@@ -204,9 +195,6 @@ stages:
                 echo "Review the changes above before deployment"
                 echo "========================================"
 
-  # ============================================================================
-  # Deploy Infrastructure Stage (manual only)
-  # ============================================================================
   - stage: DeployInfra
     displayName: Deploy Infrastructure
     dependsOn: PreviewInfra
@@ -275,9 +263,6 @@ stages:
                         --name optional-identity-api-helper-tool \
                         --query 'properties.outputs.identityApiUrl.value' -o tsv
 
-  # ============================================================================
-  # Deploy Application Stage
-  # ============================================================================
   - stage: DeployApp
     displayName: Deploy Application
     dependsOn:
@@ -355,9 +340,6 @@ stages:
                   displayName: Update GitHub Deployment status
                   condition: always()
 
-  # ============================================================================
-  # Destroy Infrastructure Stage (manual only)
-  # ============================================================================
   - stage: DestroyInfra
     displayName: Destroy Infrastructure
     dependsOn: []
