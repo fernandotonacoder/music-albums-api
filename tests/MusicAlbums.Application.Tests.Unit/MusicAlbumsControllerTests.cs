@@ -1,20 +1,19 @@
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MusicAlbums.Application.Models;
-using MusicAlbums.Application.Tests.Unit.Fixtures;
+using MusicAlbums.Application.Tests.Unit.Factories;
 using MusicAlbums.Contracts.Requests;
 using MusicAlbums.Contracts.Responses;
 using Xunit;
 
 namespace MusicAlbums.Application.Tests.Unit;
 
-public class MusicAlbumsControllerTests(
-    MusicAlbumsControllerFixture fixture) : IClassFixture<MusicAlbumsControllerFixture>
+public class MusicAlbumsControllerTests
 {
     [Fact]
     public async Task GetAll_ReturnsOkObjectResult()
     {
-        var (controller, _, _) = MusicAlbumsControllerFixture.CreateSut();
+        var (controller, _, _) = MusicAlbumsControllerTestFactory.CreateSut();
 
         var result = await controller.GetAll(new GetAllMusicAlbumsRequest(), CancellationToken.None);
 
@@ -25,7 +24,7 @@ public class MusicAlbumsControllerTests(
     public async Task GetAll_ReturnsPagedResponseMetadata()
     {
         var request = new GetAllMusicAlbumsRequest { Page = 3, PageSize = 20 };
-        var (controller, serviceMock, _) = MusicAlbumsControllerFixture.CreateSut();
+        var (controller, serviceMock, _) = MusicAlbumsControllerTestFactory.CreateSut();
         serviceMock
             .Setup(x => x.GetCountAsync(It.IsAny<string?>(), It.IsAny<int?>(), CancellationToken.None))
             .ReturnsAsync(57);
@@ -53,7 +52,7 @@ public class MusicAlbumsControllerTests(
         };
 
         GetAllMusicAlbumsOptions? capturedOptions = null;
-        var (controller, serviceMock, _) = MusicAlbumsControllerFixture.CreateSut(userId);
+        var (controller, serviceMock, _) = MusicAlbumsControllerTestFactory.CreateSut(userId);
         serviceMock
             .Setup(x => x.GetAllAsync(It.IsAny<GetAllMusicAlbumsOptions>(), CancellationToken.None))
             .Callback<GetAllMusicAlbumsOptions, CancellationToken>((options, _) => capturedOptions = options)
@@ -75,7 +74,7 @@ public class MusicAlbumsControllerTests(
     public async Task GetAll_CallsGetCountWithMappedFilters()
     {
         var request = new GetAllMusicAlbumsRequest { Title = "Dark Side", Year = 1973 };
-        var (controller, serviceMock, _) = MusicAlbumsControllerFixture.CreateSut();
+        var (controller, serviceMock, _) = MusicAlbumsControllerTestFactory.CreateSut();
 
         await controller.GetAll(request, CancellationToken.None);
 
@@ -87,7 +86,7 @@ public class MusicAlbumsControllerTests(
     [Fact]
     public async Task GetAll_DoesNotEvictOutputCache()
     {
-        var (controller, _, outputCacheStoreMock) = MusicAlbumsControllerFixture.CreateSut();
+        var (controller, _, outputCacheStoreMock) = MusicAlbumsControllerTestFactory.CreateSut();
 
         await controller.GetAll(new GetAllMusicAlbumsRequest(), CancellationToken.None);
 

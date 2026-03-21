@@ -7,9 +7,9 @@ using MusicAlbums.Api.Controllers;
 using MusicAlbums.Application.Models;
 using MusicAlbums.Application.Services;
 
-namespace MusicAlbums.Application.Tests.Unit.Fixtures;
+namespace MusicAlbums.Application.Tests.Unit.Factories;
 
-public class MusicAlbumsControllerFixture
+public static class MusicAlbumsControllerTestFactory
 {
     public static (MusicAlbumsController Controller, Mock<IMusicAlbumService> ServiceMock,
         Mock<IOutputCacheStore> OutputCacheStoreMock) CreateSut(Guid? userId = null)
