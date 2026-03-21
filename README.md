@@ -45,7 +45,7 @@ dotnet user-secrets set "ApiKey" "your-api-key"
 **2. Set Identity API environment variable (if testing Identity API locally):**
 
 ```bash
-export JWT_SECRET="your-secret-key-min-32-chars"
+export JWT_KEY="your-secret-key-min-32-chars"
 ```
 
 **2. Configure database credentials (Docker - Optional):**

@@ -88,11 +88,8 @@ variables:
     value: "$(BASE_NAME)-api-${{ parameters.targetEnvironment }}"
 
 stages:
-  # ============================================================================
-  # Build Stage
-  # ============================================================================
   - stage: Build
-    displayName: Build and Push
+    displayName: Build
     jobs:
       - job: Build
         displayName: Build Docker Image
@@ -107,17 +104,6 @@ stages:
               command: build
               Dockerfile: "$(dockerfilePath)"
               arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
-              tags: |
-                $(tag)
-                $(tag)-${{ parameters.targetEnvironment }}
-                ${{ parameters.targetEnvironment }}
-
-          - task: Docker@2
-            displayName: Push to GitHub Container Registry
-            inputs:
-              containerRegistry: $(containerRegistry)
-              repository: "$(imageRepository)"
-              command: push
               tags: |
                 $(tag)
                 $(tag)-${{ parameters.targetEnvironment }}
@@ -147,38 +133,58 @@ stages:
                 done
                 echo "✓ All modules are valid"
 
-  # # ============================================================================
-  # # Test Stage
-  # # ============================================================================
-  # - stage: Test
-  #   displayName: 'Run Tests'
-  #   dependsOn: Build
-  #   jobs:
-  #     - job: UnitTests
-  #       displayName: 'Unit Tests'
-  #       steps:
-  #         - task: UseDotNet@2
-  #           displayName: 'Use .NET SDK'
-  #           inputs:
-  #             packageType: 'sdk'
-  #             version: '8.x'
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Bicep artifact
+            inputs:
+              targetPath: "$(Build.SourcesDirectory)/infra"
+              artifact: "infra"
 
-  #         - task: DotNetCoreCLI@2
-  #           displayName: 'Restore packages'
-  #           inputs:
-  #             command: 'restore'
-  #             projects: '**/*.csproj'
+  - stage: Test
+    displayName: "Run Tests"
+    dependsOn: Build
+    jobs:
+      - job: UnitTests
+        displayName: "Unit Tests"
+        steps:
+          - task: UseDotNet@2
+            displayName: "Use .NET SDK"
+            inputs:
+              packageType: "sdk"
+              version: "8.x"
 
-  #         - task: DotNetCoreCLI@2
-  #           displayName: 'Run unit tests'
-  #           inputs:
-  #             command: 'test'
-  #             projects: '**/tests/**/*.csproj'
-  #             arguments: '--configuration Release --no-restore'
+          - task: DotNetCoreCLI@2
+            displayName: "Restore packages"
+            inputs:
+              command: "restore"
+              projects: "**/*.csproj"
 
-  # ============================================================================
-  # Preview Infrastructure Stage (What-If Analysis)
-  # ============================================================================
+          - task: DotNetCoreCLI@2
+            displayName: "Run unit tests"
+            inputs:
+              command: "test"
+              projects: "tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj"
+              arguments: "--configuration Release --no-restore"
+              publishTestResults: true
+
+  - stage: Push
+    displayName: Push Docker Image
+    dependsOn: Test
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - job: Push
+        displayName: Push to GitHub Container Registry
+        steps:
+          - task: Docker@2
+            displayName: Push to GitHub Container Registry
+            inputs:
+              containerRegistry: $(containerRegistry)
+              repository: "$(imageRepository)"
+              command: push
+              tags: |
+                $(tag)
+                $(tag)-${{ parameters.targetEnvironment }}
+                ${{ parameters.targetEnvironment }}
+
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
     dependsOn: Build
@@ -187,6 +193,12 @@ stages:
       - job: WhatIf
         displayName: Run What-If Analysis
         steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Bicep artifact
+            inputs:
+              artifact: "infra"
+              path: "$(Pipeline.Workspace)/infra"
+
           - task: AzureCLI@2
             displayName: Ensure resource group exists
             inputs:
@@ -222,7 +234,7 @@ stages:
 
                 az deployment group what-if \
                   --resource-group '$(RESOURCE_GROUP)' \
-                  --template-file infra/main/main.bicep \
+                  --template-file $(Pipeline.Workspace)/infra/main/main.bicep \
                   --parameters \
                     location='$(LOCATION)' \
                     baseName='$(BASE_NAME)' \
@@ -241,9 +253,6 @@ stages:
                 echo "Review the changes above before deployment"
                 echo "========================================"
 
-  # ============================================================================
-  # Deploy Infrastructure Stage (optional - run manually or on infra changes)
-  # ============================================================================
   - stage: DeployInfra
     displayName: Deploy Infrastructure
     dependsOn: PreviewInfra
@@ -256,7 +265,11 @@ stages:
           runOnce:
             deploy:
               steps:
-                - checkout: self
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download Bicep artifact
+                  inputs:
+                    artifact: "infra"
+                    path: "$(Pipeline.Workspace)/infra"
 
                 - task: AzureCLI@2
                   displayName: Ensure resource group exists
@@ -288,7 +301,7 @@ stages:
                       az deployment group create \
                         --resource-group '$(RESOURCE_GROUP)' \
                         --name main \
-                        --template-file infra/main/main.bicep \
+                        --template-file $(Pipeline.Workspace)/infra/main/main.bicep \
                         --parameters \
                           location='$(LOCATION)' \
                           baseName='$(BASE_NAME)' \
@@ -321,18 +334,15 @@ stages:
                         exit $DEPLOY_EXIT_CODE
                       fi
 
-  # ============================================================================
-  # Deploy Application Stage
-  # ============================================================================
   - stage: DeployApp
     displayName: Deploy Application
     dependsOn:
-      - Build
+      - Push
       - PreviewInfra
       - DeployInfra
     condition: |
       and(
-        eq(dependencies.Build.result, 'Succeeded'),
+        eq(dependencies.Push.result, 'Succeeded'),
         in(dependencies.PreviewInfra.result, 'Succeeded', 'Skipped'),
         in(dependencies.DeployInfra.result, 'Succeeded', 'Skipped'),
         ne(variables['Build.Reason'], 'PullRequest')

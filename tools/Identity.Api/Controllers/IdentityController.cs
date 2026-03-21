@@ -31,12 +31,12 @@ public class IdentityController : ControllerBase
             return BadRequest("Valid userId is required");
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenSecret = _configuration["Jwt:Secret"]
+        var tokenSecret = Environment.GetEnvironmentVariable("JWT_KEY")
             ?? throw new InvalidOperationException(
-                "Jwt:Secret is not configured.");
+                "JWT_KEY is not configured.");
         if (tokenSecret.Length < 32)
             throw new InvalidOperationException(
-                "Jwt:Secret must be at least 32 characters long.");
+                "JWT_KEY must be at least 32 characters long.");
         var key = Encoding.UTF8.GetBytes(tokenSecret);
 
         var claims = new List<Claim>

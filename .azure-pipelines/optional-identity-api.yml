@@ -67,11 +67,8 @@ pool:
   vmImage: "ubuntu-latest"
 
 stages:
-  # ============================================================================
-  # Build Stage
-  # ============================================================================
   - stage: Build
-    displayName: Build and Push
+    displayName: Build
     jobs:
       - job: Build
         displayName: Build Docker Image
@@ -85,17 +82,6 @@ stages:
               repository: fernandotonacoder/identity-api
               command: build
               dockerfile: tools/Identity.Api/Dockerfile
-              tags: |
-                $(imageTag)
-                $(imageTag)-${{ parameters.environment }}
-                ${{ parameters.environment }}
-
-          - task: Docker@2
-            displayName: Push to GitHub Container Registry
-            inputs:
-              containerRegistry: github-ghcr
-              repository: fernandotonacoder/identity-api
-              command: push
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
@@ -117,10 +103,32 @@ stages:
                 echo "Linting infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep..."
                 az bicep build --file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep
                 echo "✓ Bicep template is valid"
+          
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Bicep artifact
+            inputs:
+              targetPath: '$(Build.SourcesDirectory)/infra/optional-identity-api-helper-tool'
+              artifact: 'identity-api-infra'
 
-  # ============================================================================
-  # Preview Infrastructure Stage (What-If Analysis)
-  # ============================================================================
+  - stage: Push
+    displayName: Push Docker Image
+    dependsOn: Build
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    jobs:
+      - job: Push
+        displayName: Push to GitHub Container Registry
+        steps:
+          - task: Docker@2
+            displayName: Push to GitHub Container Registry
+            inputs:
+              containerRegistry: github-ghcr
+              repository: fernandotonacoder/identity-api
+              command: push
+              tags: |
+                $(imageTag)
+                $(imageTag)-${{ parameters.environment }}
+                ${{ parameters.environment }}
+
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
     dependsOn: Build
@@ -129,6 +137,12 @@ stages:
       - job: WhatIf
         displayName: Run What-If Analysis
         steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Bicep artifact
+            inputs:
+              artifact: 'identity-api-infra'
+              path: '$(Pipeline.Workspace)/identity-api-infra'
+
           - task: AzureCLI@2
             displayName: Ensure resource group exists
             inputs:
@@ -164,7 +178,7 @@ stages:
 
                 az deployment group what-if \
                   --resource-group '$(RESOURCE_GROUP)' \
-                  --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
+                  --template-file $(Pipeline.Workspace)/identity-api-infra/optional-identity-api-helper-tool.bicep \
                   --parameters \
                     location='$(LOCATION)' \
                     baseName='id-api-$(BASE_NAME)' \
@@ -181,9 +195,6 @@ stages:
                 echo "Review the changes above before deployment"
                 echo "========================================"
 
-  # ============================================================================
-  # Deploy Infrastructure Stage (manual only)
-  # ============================================================================
   - stage: DeployInfra
     displayName: Deploy Infrastructure
     dependsOn: PreviewInfra
@@ -196,7 +207,11 @@ stages:
           runOnce:
             deploy:
               steps:
-                - checkout: self
+                - task: DownloadPipelineArtifact@2
+                  displayName: Download Bicep artifact
+                  inputs:
+                    artifact: 'identity-api-infra'
+                    path: '$(Pipeline.Workspace)/identity-api-infra'
 
                 - task: AzureCLI@2
                   displayName: Ensure resource group exists
@@ -226,7 +241,7 @@ stages:
                     inlineScript: |
                       az deployment group create \
                         --resource-group '$(RESOURCE_GROUP)' \
-                        --template-file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep \
+                        --template-file $(Pipeline.Workspace)/identity-api-infra/optional-identity-api-helper-tool.bicep \
                         --parameters \
                           location='$(LOCATION)' \
                           baseName='id-api-$(BASE_NAME)' \
@@ -248,18 +263,15 @@ stages:
                         --name optional-identity-api-helper-tool \
                         --query 'properties.outputs.identityApiUrl.value' -o tsv
 
-  # ============================================================================
-  # Deploy Application Stage
-  # ============================================================================
   - stage: DeployApp
     displayName: Deploy Application
     dependsOn:
-      - Build
+      - Push
       - PreviewInfra
       - DeployInfra
     condition: |
       and(
-        eq(dependencies.Build.result, 'Succeeded'),
+        eq(dependencies.Push.result, 'Succeeded'),
         in(dependencies.PreviewInfra.result, 'Succeeded', 'Skipped'),
         in(dependencies.DeployInfra.result, 'Succeeded', 'Skipped'),
         ne(variables['Build.Reason'], 'PullRequest')
@@ -328,9 +340,6 @@ stages:
                   displayName: Update GitHub Deployment status
                   condition: always()
 
-  # ============================================================================
-  # Destroy Infrastructure Stage (manual only)
-  # ============================================================================
   - stage: DestroyInfra
     displayName: Destroy Infrastructure
     dependsOn: []
