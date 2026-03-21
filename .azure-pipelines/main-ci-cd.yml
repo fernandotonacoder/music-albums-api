@@ -109,6 +109,21 @@ stages:
                 $(tag)-${{ parameters.targetEnvironment }}
                 ${{ parameters.targetEnvironment }}
 
+          - bash: |
+              mkdir -p "$(Build.ArtifactStagingDirectory)/docker"
+              docker save \
+                ghcr.io/$(imageRepository):$(tag) \
+                ghcr.io/$(imageRepository):$(tag)-${{ parameters.targetEnvironment }} \
+                ghcr.io/$(imageRepository):${{ parameters.targetEnvironment }} \
+                -o "$(Build.ArtifactStagingDirectory)/docker/music-albums-api.tar"
+            displayName: Export Docker image artifact
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Docker image artifact
+            inputs:
+              targetPath: "$(Build.ArtifactStagingDirectory)/docker"
+              artifact: "music-albums-api-image"
+
       - job: LintBicep
         displayName: Lint Bicep Templates
         steps:
@@ -174,6 +189,16 @@ stages:
       - job: Push
         displayName: Push to GitHub Container Registry
         steps:
+          - task: DownloadPipelineArtifact@2
+            displayName: Download Docker image artifact
+            inputs:
+              artifact: "music-albums-api-image"
+              path: "$(Pipeline.Workspace)/docker"
+
+          - bash: |
+              docker load -i "$(Pipeline.Workspace)/docker/music-albums-api.tar"
+            displayName: Load Docker image artifact
+
           - task: Docker@2
             displayName: Push to GitHub Container Registry
             inputs:
@@ -187,7 +212,9 @@ stages:
 
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
-    dependsOn: Build
+    dependsOn:
+      - Build
+      - Test
     condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
       - job: WhatIf
