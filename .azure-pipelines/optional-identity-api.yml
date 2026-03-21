@@ -99,8 +99,8 @@ stages:
           - task: PublishPipelineArtifact@1
             displayName: Publish Docker image artifact
             inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/docker'
-              artifact: 'identity-api-image'
+              targetPath: "$(Build.ArtifactStagingDirectory)/docker"
+              artifact: "identity-api-image"
 
       - job: LintBicep
         displayName: Lint Bicep Templates
@@ -118,12 +118,12 @@ stages:
                 echo "Linting infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep..."
                 az bicep build --file infra/optional-identity-api-helper-tool/optional-identity-api-helper-tool.bicep
                 echo "✓ Bicep template is valid"
-          
+
           - task: PublishPipelineArtifact@1
             displayName: Publish Bicep artifact
             inputs:
-              targetPath: '$(Build.SourcesDirectory)/infra/optional-identity-api-helper-tool'
-              artifact: 'identity-api-infra'
+              targetPath: "$(Build.SourcesDirectory)/infra/optional-identity-api-helper-tool"
+              artifact: "identity-api-infra"
 
   - stage: Push
     displayName: Push Docker Image
@@ -136,8 +136,8 @@ stages:
           - task: DownloadPipelineArtifact@2
             displayName: Download Docker image artifact
             inputs:
-              artifact: 'identity-api-image'
-              path: '$(Pipeline.Workspace)/docker'
+              artifact: "identity-api-image"
+              path: "$(Pipeline.Workspace)/docker"
 
           - bash: |
               docker load -i '$(Pipeline.Workspace)/docker/identity-api.tar'
@@ -165,8 +165,8 @@ stages:
           - task: DownloadPipelineArtifact@2
             displayName: Download Bicep artifact
             inputs:
-              artifact: 'identity-api-infra'
-              path: '$(Pipeline.Workspace)/identity-api-infra'
+              artifact: "identity-api-infra"
+              path: "$(Pipeline.Workspace)/identity-api-infra"
 
           - task: AzureCLI@2
             displayName: Ensure resource group exists
@@ -235,8 +235,8 @@ stages:
                 - task: DownloadPipelineArtifact@2
                   displayName: Download Bicep artifact
                   inputs:
-                    artifact: 'identity-api-infra'
-                    path: '$(Pipeline.Workspace)/identity-api-infra'
+                    artifact: "identity-api-infra"
+                    path: "$(Pipeline.Workspace)/identity-api-infra"
 
                 - task: AzureCLI@2
                   displayName: Ensure resource group exists
