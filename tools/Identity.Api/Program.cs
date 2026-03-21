@@ -1,12 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// Jwt:Secret is populated from appsettings, User Secrets (local dev),
-// or the Jwt__Secret environment variable on Azure.
-var jwtSecret = builder.Configuration["Jwt:Secret"];
+// JWT signing key must come from environment (JWT_KEY), not from checked-in config.
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_KEY");
 if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
 {
 	throw new InvalidOperationException(
-		"Jwt:Secret must be configured and at least 32 characters long.");
+		"JWT_KEY must be configured and at least 32 characters long.");
 }
 
 builder.Services.AddControllers();

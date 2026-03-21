@@ -73,7 +73,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
               value: aspNetCoreEnvironment
             }
             {
-              name: 'Jwt__Secret'
+              name: 'JWT_KEY'
               secretRef: 'jwt-secret'
             }
           ]

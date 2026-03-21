@@ -10,7 +10,7 @@ Generates JWT tokens with custom claims for testing authorization in the main Mu
 
 ```bash
 cd tools/Identity.Api
-export JWT_SECRET="your-secret-key-min-32-chars"
+export JWT_KEY="your-secret-key-min-32-chars"
 dotnet run
 ```
 
@@ -23,11 +23,11 @@ Server runs at: `http://localhost:5003`
 ### Environment Variable
 
 The Identity API requires:
-- `JWT_SECRET` (environment variable, min 32 characters)
+- `JWT_KEY` (environment variable, min 32 characters)
 
 **Set it:**
 ```bash
-export JWT_SECRET="your-secret-key-min-32-chars"
+export JWT_KEY="your-secret-key-min-32-chars"
 ```
 
 This secret must match the `Jwt:Key` used in the main Music Albums API for token validation.
@@ -114,7 +114,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
 ## Quick Test
 
 ```bash
-export JWT_SECRET="your-secret-key-min-32-chars"
+export JWT_KEY="your-secret-key-min-32-chars"
 dotnet run &
 sleep 2
 
@@ -131,10 +131,10 @@ curl -X POST http://localhost:5003/token \
 
 ## Docker
 
-The Dockerfile expects `JWT_SECRET` as a runtime environment variable:
+The Dockerfile expects `JWT_KEY` as a runtime environment variable:
 
 ```bash
-docker run -e JWT_SECRET="your-secret-key-min-32-chars" \
+docker run -e JWT_KEY="your-secret-key-min-32-chars" \
   ghcr.io/fernandotonacoder/identity-api:latest
 ```
 
