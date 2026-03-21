@@ -87,21 +87,6 @@ stages:
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
 
-          - bash: |
-              mkdir -p "$(Build.ArtifactStagingDirectory)/docker"
-              docker save \
-                ghcr.io/fernandotonacoder/identity-api:$(imageTag) \
-                ghcr.io/fernandotonacoder/identity-api:$(imageTag)-${{ parameters.environment }} \
-                ghcr.io/fernandotonacoder/identity-api:${{ parameters.environment }} \
-                -o "$(Build.ArtifactStagingDirectory)/docker/identity-api.tar"
-            displayName: Export Docker image artifact
-
-          - task: PublishPipelineArtifact@1
-            displayName: Publish Docker image artifact
-            inputs:
-              targetPath: "$(Build.ArtifactStagingDirectory)/docker"
-              artifact: "identity-api-image"
-
       - job: LintBicep
         displayName: Lint Bicep Templates
         steps:
@@ -133,22 +118,15 @@ stages:
       - job: Push
         displayName: Push to GitHub Container Registry
         steps:
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Docker image artifact
-            inputs:
-              artifact: "identity-api-image"
-              path: "$(Pipeline.Workspace)/docker"
-
-          - bash: |
-              docker load -i '$(Pipeline.Workspace)/docker/identity-api.tar'
-            displayName: Load Docker image artifact
+          - checkout: self
 
           - task: Docker@2
-            displayName: Push to GitHub Container Registry
+            displayName: Build and push to GitHub Container Registry
             inputs:
               containerRegistry: github-ghcr
               repository: fernandotonacoder/identity-api
-              command: push
+              command: buildAndPush
+              dockerfile: tools/Identity.Api/Dockerfile
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
