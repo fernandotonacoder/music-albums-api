@@ -168,12 +168,6 @@ stages:
               artifact: 'identity-api-infra'
               path: '$(Pipeline.Workspace)/identity-api-infra'
 
-          - task: DownloadPipelineArtifact@2
-            displayName: Download Bicep artifact
-            inputs:
-              artifact: 'identity-api-infra'
-              path: '$(Pipeline.Workspace)/identity-api-infra'
-
           - task: AzureCLI@2
             displayName: Ensure resource group exists
             inputs:
