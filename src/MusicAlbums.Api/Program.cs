@@ -14,17 +14,21 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// User Secrets (local dev) and Environment Variables (production) are loaded automatically
 var config = builder.Configuration;
 
 var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
-    ?? throw new InvalidOperationException("JWT_KEY environment variable is not configured.");
-if (jwtKey.Length < 32)
-    throw new InvalidOperationException("JWT_KEY must be at least 32 characters long.");
+    ?? config["Jwt:Key"]
+    ?? config["JWT_KEY"];
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+    throw new InvalidOperationException("JWT_KEY must be configured (env var or configuration) and be at least 32 characters long.");
 var jwtKeyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
+
 var apiKey = Environment.GetEnvironmentVariable("API_KEY")
-    ?? throw new InvalidOperationException("API_KEY environment variable is not configured.");
+    ?? config["ApiKey"]
+    ?? config["API_KEY"];
+if (string.IsNullOrWhiteSpace(apiKey))
+    throw new InvalidOperationException("API_KEY must be configured (env var or configuration).");
 
 builder.Services.AddAuthentication(x =>
 {
