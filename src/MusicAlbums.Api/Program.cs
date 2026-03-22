@@ -13,8 +13,17 @@ using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// User Secrets (local dev) and Environment Variables (production) are loaded automatically
 var config = builder.Configuration;
+
+
+var jwtKey = config["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
+    throw new InvalidOperationException("JWT_KEY must be configured (user-secrets or configuration) and be at least 32 characters long.");
+var jwtKeyBytes = Encoding.UTF8.GetBytes(jwtKey);
+
+var apiKey = config["ApiKey"];
+if (string.IsNullOrWhiteSpace(apiKey))
+    throw new InvalidOperationException("API_KEY must be configured (user-secrets or configuration).");
 
 builder.Services.AddAuthentication(x =>
 {
@@ -25,8 +34,7 @@ builder.Services.AddAuthentication(x =>
 {
     x.TokenValidationParameters = new TokenValidationParameters
     {
-        IssuerSigningKey = new SymmetricSecurityKey(
-            Encoding.UTF8.GetBytes(config["Jwt:Key"]!)),
+        IssuerSigningKey = new SymmetricSecurityKey(jwtKeyBytes),
         ValidateIssuerSigningKey = true,
         ValidateLifetime = true,
         ValidIssuer = config["Jwt:Issuer"],
@@ -39,7 +47,7 @@ builder.Services.AddAuthentication(x =>
 builder.Services.AddAuthorization(x =>
 {
     x.AddPolicy(AuthConstants.AdminUserPolicyName,
-        p => p.AddRequirements(new AdminAuthRequirement(config["ApiKey"]!)));
+        p => p.AddRequirements(new AdminAuthRequirement(config)));
 
     x.AddPolicy(AuthConstants.TrustedMemberPolicyName,
         p => p.RequireAssertion(c =>
@@ -48,6 +56,7 @@ builder.Services.AddAuthorization(x =>
 });
 
 builder.Services.AddScoped<ApiKeyAuthFilter>();
+builder.Services.AddSingleton<IConfiguration>(config);
 
 builder.Services.AddApiVersioning(x =>
 {
@@ -95,10 +104,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger();
     app.UseSwaggerUI(x =>
     {
-        foreach (var description in app.DescribeApiVersions())
+        foreach (var groupName in app.DescribeApiVersions().Select(description => description.GroupName))
         {
-            x.SwaggerEndpoint($"/swagger/{description.GroupName}/swagger.json",
-                description.GroupName);
+            x.SwaggerEndpoint($"/swagger/{groupName}/swagger.json", groupName);
         }
     });
 }
@@ -131,4 +139,4 @@ app.MapControllers();
 var dbInitializer = app.Services.GetRequiredService<DbInitializer>();
 await dbInitializer.InitializeAsync(CancellationToken.None);
 
-app.Run();
+await app.RunAsync();

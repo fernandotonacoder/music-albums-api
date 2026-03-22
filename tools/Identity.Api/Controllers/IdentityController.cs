@@ -9,6 +9,9 @@ using System.Text.Json;
 
 namespace Identity.Api.Controllers;
 
+/// <summary>
+///     Exposes endpoints for generating JWT tokens used by local development and API testing workflows.
+/// </summary>
 [ApiController]
 [Route("")]
 public class IdentityController : ControllerBase
@@ -16,11 +19,22 @@ public class IdentityController : ControllerBase
     private readonly IConfiguration _configuration;
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(8);
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="IdentityController"/>.
+    /// </summary>
+    /// <param name="configuration">Application configuration used for JWT issuer and audience values.</param>
     public IdentityController(IConfiguration configuration)
     {
         _configuration = configuration;
     }
 
+    /// <summary>
+    ///     Generates a signed JWT for API testing and local development scenarios.
+    /// </summary>
+    /// <param name="request">Token request containing user information and custom claims.</param>
+    /// <returns>
+    ///     A 200 OK response with the generated token; or 400 Bad Request when the supplied user ID is empty.
+    /// </returns>
     [HttpPost("token")]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -31,9 +45,9 @@ public class IdentityController : ControllerBase
             return BadRequest("Valid userId is required");
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenSecret = Environment.GetEnvironmentVariable("JWT_KEY")
+        var tokenSecret = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException(
-                "JWT_KEY is not configured.");
+                "Jwt:Key must be configured (user-secrets or configuration).");
         if (tokenSecret.Length < 32)
             throw new InvalidOperationException(
                 "JWT_KEY must be at least 32 characters long.");
@@ -70,7 +84,7 @@ public class IdentityController : ControllerBase
             Issuer = _configuration["Jwt:Issuer"] ?? "MusicAlbumsIdentity",
             Audience = _configuration["Jwt:Audience"] ?? "MusicAlbumsApi",
             SigningCredentials =
-                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature) //NOSONAR
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);
