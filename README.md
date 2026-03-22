@@ -46,13 +46,7 @@ dotnet user-secrets set "ApiKey" "your-api-key"
 
 ```bash
 cd tools/Identity.Api
-dotnet user-secrets set "JWT_KEY" "your-secret-key-min-32-chars"
-```
-
-**Optional: use an environment variable instead:**
-
-```bash
-export JWT_KEY="your-secret-key-min-32-chars"
+dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
 ```
 
 This key must match the `Jwt:Key` used by `src/MusicAlbums.Api` for token validation to work.

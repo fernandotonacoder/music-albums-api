@@ -90,12 +90,7 @@ curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
 **Setup (first time):**
 ```bash
 cd tools/Identity.Api
-dotnet user-secrets set "JWT_KEY" "your-secret-key-min-32-chars"
-```
-
-**Optional: environment variable instead of user-secrets**
-```bash
-export JWT_KEY="your-secret-key-min-32-chars"
+dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
 ```
 
 This key must match the `Jwt:Key` in the main API for token validation to work.

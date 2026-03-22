@@ -7,9 +7,10 @@ public class AdminAuthRequirement : IAuthorizationHandler, IAuthorizationRequire
 {
     private readonly string _apiKey;
 
-    public AdminAuthRequirement(string apiKey)
+    public AdminAuthRequirement(IConfiguration configuration)
     {
-        _apiKey = apiKey;
+        _apiKey = configuration["ApiKey"]
+            ?? throw new InvalidOperationException("API_KEY must be configured (user-secrets or configuration).");
     }
 
     public Task HandleAsync(AuthorizationHandlerContext context)

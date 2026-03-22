@@ -3,14 +3,15 @@ using Microsoft.AspNetCore.Mvc.Filters;
 
 namespace MusicAlbums.Api.Auth;
 
+
 public class ApiKeyAuthFilter : IAuthorizationFilter
 {
     private readonly string _apiKey;
 
-    public ApiKeyAuthFilter()
+    public ApiKeyAuthFilter(IConfiguration configuration)
     {
-        _apiKey = Environment.GetEnvironmentVariable("API_KEY")
-            ?? throw new InvalidOperationException("API_KEY environment variable is not configured.");
+        _apiKey = configuration["ApiKey"]
+            ?? throw new InvalidOperationException("API_KEY must be configured (user-secrets or configuration).");
     }
 
     public void OnAuthorization(AuthorizationFilterContext context)

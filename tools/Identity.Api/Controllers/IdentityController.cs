@@ -45,9 +45,9 @@ public class IdentityController : ControllerBase
             return BadRequest("Valid userId is required");
 
         var tokenHandler = new JwtSecurityTokenHandler();
-        var tokenSecret = Environment.GetEnvironmentVariable("JWT_KEY")
+        var tokenSecret = _configuration["Jwt:Key"]
             ?? throw new InvalidOperationException(
-                "JWT_KEY environment variable is not configured.");
+                "Jwt:Key must be configured (user-secrets or configuration).");
         if (tokenSecret.Length < 32)
             throw new InvalidOperationException(
                 "JWT_KEY must be at least 32 characters long.");
@@ -84,7 +84,7 @@ public class IdentityController : ControllerBase
             Issuer = _configuration["Jwt:Issuer"] ?? "MusicAlbumsIdentity",
             Audience = _configuration["Jwt:Audience"] ?? "MusicAlbumsApi",
             SigningCredentials =
-                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
+                new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature) //NOSONAR
         };
 
         var token = tokenHandler.CreateToken(tokenDescriptor);

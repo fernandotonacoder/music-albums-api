@@ -9,26 +9,21 @@ using MusicAlbums.Api.Swagger;
 using MusicAlbums.Application;
 using MusicAlbums.Application.Database;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Security.Cryptography;
 using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration;
 
-var jwtKey = Environment.GetEnvironmentVariable("JWT_KEY")
-    ?? config["Jwt:Key"]
-    ?? config["JWT_KEY"];
+
+var jwtKey = config["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
-    throw new InvalidOperationException("JWT_KEY must be configured (env var or configuration) and be at least 32 characters long.");
+    throw new InvalidOperationException("JWT_KEY must be configured (user-secrets or configuration) and be at least 32 characters long.");
 var jwtKeyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
-
-var apiKey = Environment.GetEnvironmentVariable("API_KEY")
-    ?? config["ApiKey"]
-    ?? config["API_KEY"];
+var apiKey = config["ApiKey"];
 if (string.IsNullOrWhiteSpace(apiKey))
-    throw new InvalidOperationException("API_KEY must be configured (env var or configuration).");
+    throw new InvalidOperationException("API_KEY must be configured (user-secrets or configuration).");
 
 builder.Services.AddAuthentication(x =>
 {
@@ -49,12 +44,10 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-CryptographicOperations.ZeroMemory(jwtKeyBytes);
-
 builder.Services.AddAuthorization(x =>
 {
     x.AddPolicy(AuthConstants.AdminUserPolicyName,
-        p => p.AddRequirements(new AdminAuthRequirement(apiKey)));
+        p => p.AddRequirements(new AdminAuthRequirement(config)));
 
     x.AddPolicy(AuthConstants.TrustedMemberPolicyName,
         p => p.RequireAssertion(c =>
@@ -63,6 +56,7 @@ builder.Services.AddAuthorization(x =>
 });
 
 builder.Services.AddScoped<ApiKeyAuthFilter>();
+builder.Services.AddSingleton<IConfiguration>(config);
 
 builder.Services.AddApiVersioning(x =>
 {

@@ -1,10 +1,11 @@
 var builder = WebApplication.CreateBuilder(args);
 
-var jwtSecret = Environment.GetEnvironmentVariable("JWT_KEY");
+
+var jwtSecret = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
 {
-	throw new InvalidOperationException(
-		"JWT_KEY environment variable is not configured or must be at least 32 characters long.");
+    throw new InvalidOperationException(
+        "JWT_KEY must be configured (user-secrets or configuration) and at least 32 characters long.");
 }
 
 builder.Services.AddControllers();
