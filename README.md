@@ -42,13 +42,22 @@ dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
 dotnet user-secrets set "ApiKey" "your-api-key"
 ```
 
-**2. Set Identity API environment variable (if testing Identity API locally):**
+**2. Set Identity API secret (User Secrets):**
+
+```bash
+cd tools/Identity.Api
+dotnet user-secrets set "JWT_KEY" "your-secret-key-min-32-chars"
+```
+
+**Optional: use an environment variable instead:**
 
 ```bash
 export JWT_KEY="your-secret-key-min-32-chars"
 ```
 
-**2. Configure database credentials (Docker - Optional):**
+This key must match the `Jwt:Key` used by `src/MusicAlbums.Api` for token validation to work.
+
+**3. Configure database credentials (Docker - Optional):**
 
 Docker Compose uses these defaults: `dev` / `changeme` / `albums` on port `5433`
 

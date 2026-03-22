@@ -9,6 +9,9 @@ using System.Text.Json;
 
 namespace Identity.Api.Controllers;
 
+/// <summary>
+///     Exposes endpoints for generating JWT tokens used by local development and API testing workflows.
+/// </summary>
 [ApiController]
 [Route("")]
 public class IdentityController : ControllerBase
@@ -16,11 +19,22 @@ public class IdentityController : ControllerBase
     private readonly IConfiguration _configuration;
     private static readonly TimeSpan TokenLifetime = TimeSpan.FromHours(8);
 
+    /// <summary>
+    ///     Initializes a new instance of the <see cref="IdentityController"/>.
+    /// </summary>
+    /// <param name="configuration">Application configuration used for JWT issuer and audience values.</param>
     public IdentityController(IConfiguration configuration)
     {
         _configuration = configuration;
     }
 
+    /// <summary>
+    ///     Generates a signed JWT for API testing and local development scenarios.
+    /// </summary>
+    /// <param name="request">Token request containing user information and custom claims.</param>
+    /// <returns>
+    ///     A 200 OK response with the generated token; or 400 Bad Request when the supplied user ID is empty.
+    /// </returns>
     [HttpPost("token")]
     [ProducesResponseType(typeof(TokenResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -33,7 +47,7 @@ public class IdentityController : ControllerBase
         var tokenHandler = new JwtSecurityTokenHandler();
         var tokenSecret = Environment.GetEnvironmentVariable("JWT_KEY")
             ?? throw new InvalidOperationException(
-                "JWT_KEY is not configured.");
+                "JWT_KEY environment variable is not configured.");
         if (tokenSecret.Length < 32)
             throw new InvalidOperationException(
                 "JWT_KEY must be at least 32 characters long.");

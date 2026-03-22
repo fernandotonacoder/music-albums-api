@@ -28,6 +28,13 @@ public class ConfigureSwaggerOptions : IConfigureOptions<SwaggerGenOptions>
                     Version = description.ApiVersion.ToString(),
                 });
         }
+
+        var xmlFile = $"{_environment.ApplicationName}.xml";
+        var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+        if (File.Exists(xmlPath))
+        {
+            options.IncludeXmlComments(xmlPath);
+        }
         
         options.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
         {

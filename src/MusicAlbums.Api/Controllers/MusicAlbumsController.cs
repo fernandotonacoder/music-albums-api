@@ -10,8 +10,14 @@ using MusicAlbums.Contracts.Responses;
 
 namespace MusicAlbums.Api.Controllers;
 
+/// <summary>
+///     Exposes endpoints for creating, querying, updating, deleting, and rating music albums.
+/// </summary>
+/// <param name="musicAlbumService">Service used for album read/write operations.</param>
+/// <param name="outputCacheStore">Output cache store used to evict album cache entries after mutations.</param>
 [ApiController]
 [ApiVersion(1.0)]
+[Route("")]
 public class MusicAlbumsController(
     IMusicAlbumService musicAlbumService,
     IOutputCacheStore outputCacheStore) : ControllerBase

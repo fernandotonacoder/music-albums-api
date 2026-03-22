@@ -1,11 +1,12 @@
 var builder = WebApplication.CreateBuilder(args);
 
-// JWT signing key must come from environment (JWT_KEY), not from checked-in config.
-var jwtSecret = Environment.GetEnvironmentVariable("JWT_KEY");
+// Prefer environment variables, but allow configuration providers (for example user-secrets in development).
+var jwtSecret = Environment.GetEnvironmentVariable("JWT_KEY")
+    ?? builder.Configuration["JWT_KEY"];
 if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
 {
 	throw new InvalidOperationException(
-		"JWT_KEY must be configured and at least 32 characters long.");
+		"JWT_KEY must be configured (environment variable or configuration) and be at least 32 characters long.");
 }
 
 builder.Services.AddControllers();
@@ -13,7 +14,15 @@ builder.Services.AddControllers();
 if (builder.Environment.IsDevelopment())
 {
 	builder.Services.AddEndpointsApiExplorer();
-	builder.Services.AddSwaggerGen();
+	builder.Services.AddSwaggerGen(options =>
+	{
+		var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
+		var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+		if (File.Exists(xmlPath))
+		{
+			options.IncludeXmlComments(xmlPath);
+		}
+	});
 }
 
 var app = builder.Build();

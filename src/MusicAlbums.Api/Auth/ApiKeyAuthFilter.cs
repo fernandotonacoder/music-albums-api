@@ -5,11 +5,12 @@ namespace MusicAlbums.Api.Auth;
 
 public class ApiKeyAuthFilter : IAuthorizationFilter
 {
-    private readonly IConfiguration _configuration;
+    private readonly string _apiKey;
 
-    public ApiKeyAuthFilter(IConfiguration configuration)
+    public ApiKeyAuthFilter()
     {
-        _configuration = configuration;
+        _apiKey = Environment.GetEnvironmentVariable("API_KEY")
+            ?? throw new InvalidOperationException("API_KEY environment variable is not configured.");
     }
 
     public void OnAuthorization(AuthorizationFilterContext context)
@@ -21,8 +22,7 @@ public class ApiKeyAuthFilter : IAuthorizationFilter
             return;
         }
 
-        var apiKey = _configuration["ApiKey"]!;
-        if (apiKey != extractedApiKey)
+        if (_apiKey != extractedApiKey)
         {
             context.Result = new UnauthorizedObjectResult("Invalid API Key");
         }
