@@ -44,8 +44,8 @@ param logAnalyticsPrimarySharedKey string
 ])
 param aspNetCoreEnvironment string
 
-@description('Database connection string secret URI from Key Vault')
-param dbConnectionSecretUri string
+@description('Passwordless database connection string (no credentials)')
+param dbConnectionString string
 
 @description('JWT key secret URI from Key Vault')
 param jwtKeySecretUri string
@@ -120,11 +120,6 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
       }
       secrets: [
         {
-          name: 'db-connection-string'
-          keyVaultUrl: dbConnectionSecretUri
-          identity: 'system'
-        }
-        {
           name: 'jwt-key'
           keyVaultUrl: jwtKeySecretUri
           identity: 'system'
@@ -176,7 +171,7 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             }
             {
               name: 'Database__ConnectionString'
-              secretRef: 'db-connection-string'
+              value: dbConnectionString
             }
             {
               name: 'Jwt__Key'

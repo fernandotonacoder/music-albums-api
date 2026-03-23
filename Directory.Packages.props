@@ -11,6 +11,9 @@
         <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="8.0.19" />
         <PackageVersion Include="Swashbuckle.AspNetCore" Version="9.0.4" />
 
+        <!-- Azure Identity -->
+        <PackageVersion Include="Azure.Identity" Version="1.13.2" />
+
         <!-- Data Access -->
         <PackageVersion Include="Dapper" Version="2.1.66" />
         <PackageVersion Include="Dapper.SqlBuilder" Version="2.1.66" />

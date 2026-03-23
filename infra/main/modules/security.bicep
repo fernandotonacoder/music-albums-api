@@ -11,18 +11,6 @@ param keyVaultName string
 @description('Tenant ID for Key Vault')
 param tenantId string
 
-@description('Database connection string to store')
-@secure()
-param dbConnectionString string
-
-@description('PostgreSQL admin login to store')
-@secure()
-param postgresAdminLogin string
-
-@description('PostgreSQL admin password to store')
-@secure()
-param postgresAdminPassword string
-
 @description('JWT signing key to store')
 @secure()
 param jwtKey string
@@ -30,6 +18,18 @@ param jwtKey string
 @description('API key to store')
 @secure()
 param apiKey string
+
+@description('Database connection string (dev only — stored for pgAdmin/troubleshooting)')
+@secure()
+param dbConnectionString string = ''
+
+@description('PostgreSQL admin login (dev only — stored for pgAdmin/troubleshooting)')
+@secure()
+param postgresAdminLogin string = ''
+
+@description('PostgreSQL admin password (dev only — stored for pgAdmin/troubleshooting)')
+@secure()
+param postgresAdminPassword string = ''
 
 @description('Tags to apply to security resources')
 param tags object = {}
@@ -58,6 +58,10 @@ param keyVaultDnsZoneId string = ''
 // Purge protection is disabled for both environments (property omitted).
 // This only works for brand-new Key Vault names that were never created
 // with purge protection enabled.
+//
+// Database secrets (connection string, admin login/password) are only stored
+// in dev for pgAdmin/troubleshooting. The app itself uses passwordless
+// Entra ID authentication and never reads these secrets.
 
 var isProduction = deploymentEnvironment == 'prod'
 
@@ -125,7 +129,7 @@ resource keyVaultPrivateDnsGroup 'Microsoft.Network/privateEndpoints/privateDnsZ
 // Secrets
 // ============================================================================
 
-resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
+resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = if (!isProduction) {
   parent: keyVault
   name: 'db-connection-string'
   properties: {
@@ -133,7 +137,7 @@ resource secretDbConnection 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
   }
 }
 
-resource secretPostgresAdminLogin 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
+resource secretPostgresAdminLogin 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = if (!isProduction) {
   parent: keyVault
   name: 'pg-admin-login'
   properties: {
@@ -141,7 +145,7 @@ resource secretPostgresAdminLogin 'Microsoft.KeyVault/vaults/secrets@2025-05-01'
   }
 }
 
-resource secretPostgresAdminPassword 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = {
+resource secretPostgresAdminPassword 'Microsoft.KeyVault/vaults/secrets@2025-05-01' = if (!isProduction) {
   parent: keyVault
   name: 'pg-admin-password'
   properties: {
@@ -177,9 +181,6 @@ output keyVaultUri string = keyVault.properties.vaultUri
 
 @description('Key Vault name')
 output keyVaultName string = keyVault.name
-
-@description('Database connection string secret URI')
-output dbConnectionSecretUri string = secretDbConnection.properties.secretUri
 
 @description('JWT key secret URI')
 output jwtKeySecretUri string = secretJwtKey.properties.secretUri

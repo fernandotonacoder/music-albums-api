@@ -8,11 +8,11 @@ param location string
 @description('Name for the PostgreSQL server')
 param postgresServerName string
 
-@description('PostgreSQL administrator login')
+@description('PostgreSQL administrator login (used at server creation time)')
 param postgresAdminLogin string
 
 @secure()
-@description('PostgreSQL administrator password')
+@description('PostgreSQL administrator password (used at server creation time)')
 param postgresAdminPassword string
 
 @description('PostgreSQL version')
@@ -62,8 +62,9 @@ var isProduction = deploymentEnvironment == 'prod'
 // ============================================================================
 // prod: VNet integration via delegated subnet + private DNS zone. No public access.
 //       Only resources inside the VNet (Container App) can reach the server.
+//       Password auth is disabled — only Microsoft Entra ID authentication is allowed.
 // dev:  Public network access enabled. Connect directly from any machine.
-//       No VPN or bastion required.
+//       Both password and Entra ID authentication are enabled for flexibility.
 
 resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview' = {
   name: postgresServerName
@@ -80,6 +81,10 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     version: postgresVersion
     administratorLogin: postgresAdminLogin
     administratorLoginPassword: postgresAdminPassword
+    authConfig: {
+      activeDirectoryAuth: 'Enabled'
+      passwordAuth: isProduction ? 'Disabled' : 'Enabled'
+    }
     storage: {
       storageSizeGB: storageSizeGB
     }
@@ -122,6 +127,5 @@ output postgresServerFqdn string = postgres.properties.fullyQualifiedDomainName
 @description('PostgreSQL server name')
 output postgresServerName string = postgres.name
 
-@description('Database connection string (includes password)')
-@secure()
-output connectionString string = 'Server=${postgres.properties.fullyQualifiedDomainName};Database=postgres;Port=5432;User Id=${postgresAdminLogin};Password=${postgresAdminPassword};Ssl Mode=Require;'
+@description('Passwordless connection string (no credentials — token acquired at runtime via Entra ID)')
+output connectionString string = 'Server=${postgres.properties.fullyQualifiedDomainName};Database=postgres;Port=5432;Ssl Mode=Require;'

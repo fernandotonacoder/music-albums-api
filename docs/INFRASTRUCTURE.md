@@ -14,7 +14,8 @@ infra/
 │       ├── monitoring.bicep           # Log Analytics + Application Insights
 │       ├── database.bicep             # PostgreSQL Flexible Server
 │       ├── security.bicep             # Key Vault + Secrets
-│       └── compute.bicep              # Container Apps Environment + App
+│       ├── compute.bicep              # Container Apps Environment + App
+│       └── entra-admin.bicep          # Entra ID admin for PostgreSQL
 └── optional-identity-api-helper-tool/
     └── optional-identity-api-helper-tool.bicep
 ```
@@ -27,6 +28,8 @@ infra/
 | **Service Connection** | `azure-service-connection` | `azure-service-connection-prod` |
 | **Network** | No VNet, no private endpoints | Full VNet with subnets, NSGs, private DNS |
 | **PostgreSQL** | Public access | VNet-integrated (delegated subnet), no public access |
+| **PostgreSQL auth** | Entra ID + password (both enabled) | Entra ID only (password disabled) |
+| **DB credentials in Key Vault** | Yes (for pgAdmin/troubleshooting) | No |
 | **Key Vault** | Public access, no private endpoint | Private endpoint only, public access disabled |
 | **Container App** | Azure-managed networking | VNet-integrated |
 | **Log retention** | 30 days | 90 days |
@@ -46,11 +49,17 @@ infra/
 
 ### database.bicep
 - PostgreSQL Flexible Server (v18)
+- Microsoft Entra ID authentication enabled (passwordless)
 - VNet-integrated in prod, public access in dev
+- Password auth enabled in dev (for pgAdmin), disabled in prod
+
+### entra-admin.bicep
+- Registers the Container App's managed identity as a PostgreSQL Entra ID administrator
+- Enables the app to authenticate with tokens from `DefaultAzureCredential` instead of a password
 
 ### security.bicep
 - Azure Key Vault (RBAC-based access)
-- Secrets: DB connection string, PostgreSQL credentials, JWT key, API key
+- Secrets: JWT key, API key (both environments), DB connection string + PostgreSQL credentials (dev only, for pgAdmin)
 - Private endpoint in prod only
 
 ### compute.bicep
@@ -58,7 +67,8 @@ infra/
 - Container App with system-assigned managed identity
 - Auto-scaling (0–3 replicas)
 - Health probes (startup + liveness)
-- Key Vault secret references via managed identity
+- Key Vault secret references via managed identity (JWT key, API key)
+- Passwordless database connection string (plain env var, no credentials)
 
 ## Resource Groups
 
@@ -76,12 +86,37 @@ Network (prod only)
        ↓
 Monitoring + Database (parallel, depend on Network outputs)
        ↓
-Security (uses Database connection string)
+Security (uses Database connection string — dev only secrets)
        ↓
 Compute (uses Monitoring + Security outputs)
        ↓
 RBAC (grants Container App → Key Vault Secrets User)
+       ↓
+Entra Admin (registers Container App identity as PostgreSQL Entra ID admin)
 ```
+
+## Passwordless Database Authentication (Entra ID)
+
+The app connects to PostgreSQL using Microsoft Entra ID tokens instead of a password. The Container App's system-assigned managed identity is registered as an Entra ID administrator on the PostgreSQL server, and the app uses `DefaultAzureCredential` to fetch short-lived tokens (refreshed every 55 minutes).
+
+### Manual prerequisite (both dev and prod)
+
+The PostgreSQL server's system-assigned managed identity must have the **Directory Readers** role in Microsoft Entra ID. This allows the server to validate Entra ID tokens. **Bicep cannot automate this** — it requires Azure AD tenant-level permissions.
+
+For each environment:
+
+1. Go to **Microsoft Entra ID** > **Roles and administrators** in the Azure portal
+2. Find the **Directory Readers** role
+3. Click **Add assignments**
+4. Add the PostgreSQL server's managed identity:
+   - Dev: `music-albums-db-dev`
+   - Prod: `music-albums-db-prod`
+
+Without this, the PostgreSQL server cannot validate Entra ID tokens and the app will fail to connect.
+
+### How local dev works
+
+Local development uses docker-compose with a plain PostgreSQL container and password auth. The connection string in user-secrets includes a `Password` field, so the Entra ID token provider is automatically skipped (see `ApplicationServiceCollectionExtensions.AddDatabase()`).
 
 ## Resource Naming
 
@@ -136,8 +171,8 @@ Create two variable groups: `music-albums-dev` and `music-albums-prod`.
 | `BASE_NAME` | `music-albums` | No |
 | `LOCATION` | `swedencentral` | No |
 | `aspNetCoreEnvironment` | `Development` | No |
-| `pg-admin-login` | — | Yes |
-| `pg-admin-password` | — | Yes |
+| `pg-admin-login` | — | Yes (server creation only, not used at runtime) |
+| `pg-admin-password` | — | Yes (server creation only, not used at runtime) |
 | `jwt-key` (min 32 chars) | — | Yes |
 | `api-key` | — | Yes |
 | `GITHUB_TOKEN` | — | Yes |
