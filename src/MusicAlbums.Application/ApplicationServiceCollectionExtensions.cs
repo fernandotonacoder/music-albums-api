@@ -1,3 +1,4 @@
+using Azure.Core;
 using Azure.Identity;
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
@@ -31,7 +32,7 @@ public static class ApplicationServiceCollectionExtensions
             var credential = new DefaultAzureCredential();
             dataSourceBuilder.UsePeriodicPasswordProvider(async (_, ct) =>
             {
-                var context = new Azure.Core.TokenRequestContext(
+                var context = new TokenRequestContext(
                     ["https://ossrdbms-aad.database.windows.net/.default"]);
                 var token = await credential.GetTokenAsync(context, ct);
                 return token.Token;

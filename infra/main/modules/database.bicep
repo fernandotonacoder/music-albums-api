@@ -95,13 +95,15 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     highAvailability: {
       mode: 'Disabled'
     }
-    network: isProduction ? {
-      delegatedSubnetResourceId: postgresSubnetId
-      privateDnsZoneArmResourceId: postgresDnsZoneId
-      publicNetworkAccess: 'Disabled'
-    } : {
-      publicNetworkAccess: 'Enabled'
-    }
+    network: isProduction
+      ? {
+          delegatedSubnetResourceId: postgresSubnetId
+          privateDnsZoneArmResourceId: postgresDnsZoneId
+          publicNetworkAccess: 'Disabled'
+        }
+      : {
+          publicNetworkAccess: 'Enabled'
+        }
   }
 }
 

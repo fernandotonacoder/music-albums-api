@@ -84,10 +84,12 @@ resource containerEnv 'Microsoft.App/managedEnvironments@2024-03-01' = {
         sharedKey: logAnalyticsPrimarySharedKey
       }
     }
-    vnetConfiguration: !empty(containerAppSubnetId) ? {
-      infrastructureSubnetId: containerAppSubnetId
-      internal: false
-    } : null
+    vnetConfiguration: !empty(containerAppSubnetId)
+      ? {
+          infrastructureSubnetId: containerAppSubnetId
+          internal: false
+        }
+      : null
     zoneRedundant: false
     workloadProfiles: [
       {
