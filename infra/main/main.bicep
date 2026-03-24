@@ -2,13 +2,16 @@
 // Music Albums API - Azure Infrastructure (Modularized)
 // ============================================================================
 // Prerequisites and setup instructions: see README.md
-// 
+//
 // This file orchestrates the deployment of all infrastructure modules:
 // - Network: VNet, Subnets, Private DNS (prod only)
 // - Monitoring: Log Analytics & Application Insights
 // - Database: PostgreSQL Flexible Server (private in prod, public in dev)
 // - Security: Key Vault & Secrets (private endpoint in prod only)
 // - Compute: Container Apps Environment & Container App (VNet in prod only)
+//
+// Authentication: The Container App uses Microsoft Entra ID (passwordless)
+// to connect to PostgreSQL — no database password in the connection string.
 // ============================================================================
 
 @description('Location for all resources')
@@ -24,11 +27,11 @@ param baseName string = 'music-albums'
 @description('Deployment suffix used in resource names')
 param deploymentSuffix string = 'dev'
 
-@description('PostgreSQL administrator login')
+@description('PostgreSQL administrator login (required at server creation time)')
 param postgresAdminLogin string
 
 @secure()
-@description('PostgreSQL administrator password')
+@description('PostgreSQL administrator password (required at server creation time)')
 param postgresAdminPassword string
 
 @description('Container image tag')
@@ -130,11 +133,11 @@ module security './modules/security.bicep' = {
     location: location
     keyVaultName: resourceNames.keyVault
     tenantId: subscription().tenantId
+    jwtKey: jwtKey
+    apiKey: apiKey
     dbConnectionString: database.outputs.connectionString
     postgresAdminLogin: postgresAdminLogin
     postgresAdminPassword: postgresAdminPassword
-    jwtKey: jwtKey
-    apiKey: apiKey
     privateEndpointSubnetId: network.outputs.privateEndpointsSubnetId
     keyVaultDnsZoneId: network.outputs.keyVaultDnsZoneId
     deploymentEnvironment: deploymentSuffix
@@ -156,7 +159,7 @@ module compute './modules/compute.bicep' = {
     aspNetCoreEnvironment: aspNetCoreEnvironment
     logAnalyticsCustomerId: monitoring.outputs.logAnalyticsCustomerId
     logAnalyticsPrimarySharedKey: monitoring.outputs.logAnalyticsPrimarySharedKey
-    dbConnectionSecretUri: security.outputs.dbConnectionSecretUri
+    dbConnectionString: database.outputs.connectionString
     jwtKeySecretUri: security.outputs.jwtKeySecretUri
     apiKeySecretUri: security.outputs.apiKeySecretUri
     jwtIssuer: jwtIssuer
@@ -185,6 +188,24 @@ resource keyVaultSecretUserRole 'Microsoft.Authorization/roleAssignments@2022-04
       'Microsoft.Authorization/roleDefinitions',
       '4633458b-17de-408a-b874-0445c86b69e6'
     )
+  }
+}
+
+// ============================================================================
+// Entra ID: Register Container App as PostgreSQL administrator
+// ============================================================================
+// The Container App's system-assigned managed identity is added as an
+// Entra ID administrator on the PostgreSQL server. This allows the app
+// to authenticate using tokens from DefaultAzureCredential instead of
+// a database password.
+
+module entraAdmin './modules/entra-admin.bicep' = {
+  name: 'entra-admin-deployment'
+  params: {
+    postgresServerName: database.outputs.postgresServerName
+    principalId: compute.outputs.containerAppPrincipalId
+    principalName: resourceNames.containerApp
+    tenantId: subscription().tenantId
   }
 }
 

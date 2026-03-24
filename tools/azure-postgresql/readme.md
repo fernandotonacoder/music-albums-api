@@ -11,3 +11,7 @@
 5. `chmod +x pg_dump_v18`
 6. `./azure-pg-clone.sh`
 7. Follow the instructions on the terminal
+
+## Note on Passwordless Authentication
+
+The main API uses Microsoft Entra ID (passwordless) to connect to PostgreSQL. In **prod**, password auth is disabled on the server — this tool will only work against the **dev** environment where password auth remains enabled. The admin credentials can be found in the dev Key Vault (`pg-admin-login`, `pg-admin-password`).

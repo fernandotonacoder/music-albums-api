@@ -9,8 +9,9 @@
 // 
 // NEVER commit main.bicepparam to source control!
 // 
-// Note: These secrets are only used during initial deployment to populate
-// Azure Key Vault. After that, secrets can be rotated directly in Key Vault.
+// Note: postgresAdminLogin/Password are required for server creation but the
+// app itself uses passwordless Entra ID authentication (not these credentials).
+// jwtKey and apiKey are stored in Key Vault and can be rotated there directly.
 // ============================================================================
 
 using 'main.bicep'
