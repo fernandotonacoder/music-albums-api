@@ -159,7 +159,7 @@ module compute './modules/compute.bicep' = {
     aspNetCoreEnvironment: aspNetCoreEnvironment
     logAnalyticsCustomerId: monitoring.outputs.logAnalyticsCustomerId
     logAnalyticsPrimarySharedKey: monitoring.outputs.logAnalyticsPrimarySharedKey
-    dbConnectionString: database.outputs.connectionString
+    dbConnectionString: '${database.outputs.connectionString}Username=${resourceNames.containerApp};'
     jwtKeySecretUri: security.outputs.jwtKeySecretUri
     apiKeySecretUri: security.outputs.apiKeySecretUri
     jwtIssuer: jwtIssuer
