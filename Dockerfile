@@ -17,6 +17,7 @@ RUN dotnet publish "MusicAlbums.Api.csproj" -c Release -o /app/publish /p:UseApp
 FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
 EXPOSE 8080
+RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
 
 # Ensure .NET listens on port 8080
