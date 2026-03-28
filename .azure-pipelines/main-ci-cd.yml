@@ -159,12 +159,12 @@ stages:
               command: "restore"
               projects: "**/*.csproj"
 
-          - task: SonarQubePrepare@7
+          - task: SonarQubePrepare@8
             displayName: "SonarQube — Prepare analysis"
             inputs:
               SonarQube: "sonarqube-ft"
               scannerMode: "dotnet"
-              projectKey: "projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
+              projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
                 sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/coverage/**/coverage.opencover.xml
@@ -191,10 +191,10 @@ stages:
                 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
               publishTestResults: true
 
-          - task: SonarQubeAnalyze@7
+          - task: SonarQubeAnalyze@8
             displayName: "SonarQube — Run analysis"
 
-          - task: SonarQubePublish@7
+          - task: SonarQubePublish@8
             displayName: "SonarQube — Publish results"
             inputs:
               pollingTimeoutSec: "300"
