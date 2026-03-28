@@ -175,6 +175,15 @@ stages:
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs
 
+          # SonarQube task v8 automatically injects sonar.branch.name into
+          # SONARQUBE_SCANNER_PARAMS, which Community Edition rejects. Strip it
+          # before the scanner runs. Remove this step if upgrading to Developer Edition.
+          - bash: |
+              FILTERED=$(echo "$SONARQUBE_SCANNER_PARAMS" | sed -E 's/"sonar\.branch\.name":"[^"]*",?//g')
+              echo "##vso[task.setvariable variable=SONARQUBE_SCANNER_PARAMS]$FILTERED"
+            displayName: "SonarQube — Strip branch name (CE workaround)"
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
+
           - task: DotNetCoreCLI@2
             displayName: "Build solution"
             inputs:
