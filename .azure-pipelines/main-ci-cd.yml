@@ -159,8 +159,12 @@ stages:
               command: "restore"
               projects: "**/*.csproj"
 
+          # Community Edition does not support branch analysis (sonar.branch.name).
+          # These three tasks are restricted to main only. If upgrading to Developer
+          # Edition or above, remove the condition to enable PR/branch analysis.
           - task: SonarQubePrepare@8
             displayName: "SonarQube — Prepare analysis"
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
             inputs:
               SonarQube: "sonarqube-ft"
               scannerMode: "dotnet"
@@ -192,9 +196,11 @@ stages:
 
           - task: SonarQubeAnalyze@8
             displayName: "SonarQube — Run analysis"
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
 
           - task: SonarQubePublish@8
             displayName: "SonarQube — Publish results"
+            condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
             inputs:
               pollingTimeoutSec: "300"
 
