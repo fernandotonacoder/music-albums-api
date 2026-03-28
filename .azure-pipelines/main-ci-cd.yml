@@ -167,7 +167,7 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/coverage/**/coverage.opencover.xml
+                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs
 
@@ -187,7 +187,6 @@ stages:
                 --configuration Release
                 --no-restore
                 --collect:"XPlat Code Coverage"
-                --results-directory $(Agent.TempDirectory)/coverage
                 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
               publishTestResults: true
 
