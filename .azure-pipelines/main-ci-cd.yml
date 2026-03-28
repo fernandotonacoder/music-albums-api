@@ -145,7 +145,7 @@ stages:
     dependsOn: Build
     jobs:
       - job: UnitTests
-        displayName: "Unit Tests"
+        displayName: "Unit Tests + SonarQube Analysis"
         steps:
           - task: UseDotNet@2
             displayName: "Use .NET SDK"
@@ -159,13 +159,45 @@ stages:
               command: "restore"
               projects: "**/*.csproj"
 
+          - task: SonarQubePrepare@7
+            displayName: "SonarQube — Prepare analysis"
+            inputs:
+              SonarQube: "sonarqube-ft"
+              scannerMode: "dotnet"
+              projectKey: "projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
+              projectName: "music-albums-api"
+              extraProperties: |
+                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/coverage/**/coverage.opencover.xml
+                sonar.exclusions=**/Migrations/**,**/wwwroot/**
+                sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs
+
+          - task: DotNetCoreCLI@2
+            displayName: "Build solution"
+            inputs:
+              command: "build"
+              projects: "**/*.csproj"
+              arguments: "--configuration Release --no-restore"
+
           - task: DotNetCoreCLI@2
             displayName: "Run unit tests"
             inputs:
               command: "test"
               projects: "tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj"
-              arguments: "--configuration Release --no-restore"
+              arguments: >
+                --configuration Release
+                --no-restore
+                --collect:"XPlat Code Coverage"
+                --results-directory $(Agent.TempDirectory)/coverage
+                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
               publishTestResults: true
+
+          - task: SonarQubeAnalyze@7
+            displayName: "SonarQube — Run analysis"
+
+          - task: SonarQubePublish@7
+            displayName: "SonarQube — Publish results"
+            inputs:
+              pollingTimeoutSec: "300"
 
   - stage: Push
     displayName: Push Docker Image
