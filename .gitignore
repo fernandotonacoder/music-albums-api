@@ -34,6 +34,7 @@ Properties/launchSettings.json
 
 # JetBrains Rider
 .idea/
+qodana.yaml
 
 # Azure Infrastructure Parameters (sensitive information)
 parameters.json
