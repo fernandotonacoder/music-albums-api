@@ -16,10 +16,12 @@ public static class MusicAlbumsControllerTestFactory
     {
         var serviceMock = new Mock<IMusicAlbumService>();
         serviceMock
-            .Setup(x => x.GetAllAsync(It.IsAny<GetAllMusicAlbumsOptions>(), CancellationToken.None))
-            .ReturnsAsync(Array.Empty<MusicAlbum>());
+            .Setup(x => x.GetAllAsync(
+                It.IsAny<GetAllMusicAlbumsOptions>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
         serviceMock
-            .Setup(x => x.GetCountAsync(It.IsAny<string?>(), It.IsAny<int?>(), CancellationToken.None))
+            .Setup(x => x.GetCountAsync(
+                It.IsAny<string?>(), It.IsAny<int?>(), It.IsAny<CancellationToken>()))
             .ReturnsAsync(0);
 
         var outputCacheStoreMock = new Mock<IOutputCacheStore>();
@@ -48,4 +50,3 @@ public static class MusicAlbumsControllerTestFactory
         return httpContext;
     }
 }
-

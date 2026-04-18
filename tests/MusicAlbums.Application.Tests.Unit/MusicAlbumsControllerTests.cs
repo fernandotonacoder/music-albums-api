@@ -1,6 +1,8 @@
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using MusicAlbums.Application.Models;
+using MusicAlbums.Application.Services;
 using MusicAlbums.Application.Tests.Unit.Factories;
 using MusicAlbums.Contracts.Requests;
 using MusicAlbums.Contracts.Responses;
@@ -10,6 +12,8 @@ namespace MusicAlbums.Application.Tests.Unit;
 
 public class MusicAlbumsControllerTests
 {
+    #region GetAll method
+
     [Fact]
     public async Task GetAll_ReturnsOkObjectResult()
     {
@@ -26,7 +30,8 @@ public class MusicAlbumsControllerTests
         var request = new GetAllMusicAlbumsRequest { Page = 3, PageSize = 20 };
         var (controller, serviceMock, _) = MusicAlbumsControllerTestFactory.CreateSut();
         serviceMock
-            .Setup(x => x.GetCountAsync(It.IsAny<string?>(), It.IsAny<int?>(), CancellationToken.None))
+            .Setup(x => x.GetCountAsync(
+                It.IsAny<string?>(), It.IsAny<int?>(), CancellationToken.None))
             .ReturnsAsync(57);
 
         var result = await controller.GetAll(request, CancellationToken.None);
@@ -54,7 +59,8 @@ public class MusicAlbumsControllerTests
         GetAllMusicAlbumsOptions? capturedOptions = null;
         var (controller, serviceMock, _) = MusicAlbumsControllerTestFactory.CreateSut(userId);
         serviceMock
-            .Setup(x => x.GetAllAsync(It.IsAny<GetAllMusicAlbumsOptions>(), CancellationToken.None))
+            .Setup(x => x.GetAllAsync(
+                It.IsAny<GetAllMusicAlbumsOptions>(), CancellationToken.None))
             .Callback<GetAllMusicAlbumsOptions, CancellationToken>((options, _) => capturedOptions = options)
             .ReturnsAsync(Array.Empty<MusicAlbum>());
 
@@ -94,4 +100,120 @@ public class MusicAlbumsControllerTests
             x => x.EvictByTagAsync(It.IsAny<string>(), It.IsAny<CancellationToken>()),
             Times.Never);
     }
+
+    #endregion
+
+    #region Create method
+
+    [Fact]
+    public async Task Create_WhenRequestIsValid_ReturnsCreatedAtActionToGetWithResponse()
+    {
+        var (controller, serviceMock, _) = MusicAlbumsControllerTestFactory.CreateSut();
+
+        var request = BuildValidCreateRequest();
+
+        MusicAlbum? capturedAlbum = null;
+        serviceMock.Setup(x => x.CreateAsync(It.IsAny<MusicAlbum>(), It.IsAny<CancellationToken>()))
+            .Callback<MusicAlbum, CancellationToken>((album, _) => capturedAlbum = album)
+            .ReturnsAsync(true);
+
+        var result = await controller.Create(request, CancellationToken.None);
+        var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+
+        Assert.Equal(StatusCodes.Status201Created, createdAtActionResult.StatusCode);
+        Assert.Equal(nameof(controller.Get), createdAtActionResult.ActionName);
+        Assert.NotNull(createdAtActionResult.RouteValues);
+        Assert.True(createdAtActionResult.RouteValues.TryGetValue("idOrSlug", out var idOrSlug));
+
+        var response = Assert.IsType<MusicAlbumResponse>(createdAtActionResult.Value);
+        Assert.NotNull(capturedAlbum);
+        Assert.Equal(capturedAlbum!.Id, response.Id);
+        Assert.Equal(capturedAlbum.Id.ToString(), idOrSlug?.ToString());
+        Assert.Equal(request.Title, response.Title);
+        Assert.Equal(request.YearOfRelease, response.YearOfRelease);
+        Assert.Equal(request.Tracks.Count(), response.Tracks.Count());
+    }
+
+    [Fact]
+    public async Task Create_WhenRequestIsValid_CallsCreateAsyncWithMappedAlbum()
+    {
+        var (controller, serviceMock, _) = MusicAlbumsControllerTestFactory.CreateSut();
+
+        var request = BuildValidCreateRequest();
+        SetupCreateSucceeds(serviceMock);
+
+        await controller.Create(request, CancellationToken.None);
+
+        serviceMock.Verify(
+            x => x.CreateAsync(It.Is<MusicAlbum>(album =>
+                    album.Title == request.Title
+                    && album.YearOfRelease == request.YearOfRelease
+                    && album.Tracks.Count == request.Tracks.Count()
+                    && album.Genres.SequenceEqual(request.Genres)
+                    && album.Artists.Select(a => a.Name).SequenceEqual(request.ArtistNames)),
+                It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    [Fact]
+    public async Task Create_WhenRequestIsValid_EvictsAlbumsCacheTag()
+    {
+        var (controller, serviceMock, outputCacheStoreMock) = MusicAlbumsControllerTestFactory.CreateSut();
+
+        var request = BuildValidCreateRequest();
+        SetupCreateSucceeds(serviceMock);
+
+        await controller.Create(request, CancellationToken.None);
+
+        outputCacheStoreMock.Verify(
+            x => x.EvictByTagAsync("albums", It.IsAny<CancellationToken>()),
+            Times.Once);
+    }
+
+    #endregion
+
+    #region private helper methods
+
+    private static CreateMusicAlbumRequest BuildValidCreateRequest()
+    {
+        return new CreateMusicAlbumRequest()
+        {
+            Title = "Test Album",
+            YearOfRelease = 2026,
+            Genres = ["Rock", "Pop"],
+            ArtistNames = ["TestArtist1", "TestArtist2"],
+            Tracks =
+            [
+                new CreateTrackRequest
+                {
+                    Title = "Test Track 1",
+                    DurationInSeconds = 240,
+                    ArtistNames =
+                    [
+                        "TestArtist1"
+                    ],
+                    TrackNumber = 1
+                },
+                new CreateTrackRequest
+                {
+                    Title = "Test Track 2",
+                    DurationInSeconds = 200,
+                    ArtistNames =
+                    [
+                        "TestArtist2"
+                    ],
+                    TrackNumber = 2
+                }
+            ]
+        };
+    }
+
+    private static void SetupCreateSucceeds(Mock<IMusicAlbumService> serviceMock)
+    {
+        serviceMock
+            .Setup(x => x.CreateAsync(It.IsAny<MusicAlbum>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync(true);
+    }
+
+    #endregion
 }
