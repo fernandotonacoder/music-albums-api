@@ -78,6 +78,8 @@ builder.Services.AddOutputCache(x =>
 
 builder.Services.AddControllers();
 
+builder.Services.AddApplicationInsightsTelemetry();
+
 // builder.Services.AddCors(options =>
 // {
 //     options.AddDefaultPolicy(builder =>
