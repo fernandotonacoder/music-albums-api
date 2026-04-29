@@ -1,5 +1,8 @@
+using System.Text;
 using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MusicAlbums.Api.Auth;
@@ -9,7 +12,6 @@ using MusicAlbums.Api.Swagger;
 using MusicAlbums.Application;
 using MusicAlbums.Application.Database;
 using Swashbuckle.AspNetCore.SwaggerGen;
-using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,16 +46,13 @@ builder.Services.AddAuthentication(x =>
     };
 });
 
-builder.Services.AddAuthorization(x =>
-{
-    x.AddPolicy(AuthConstants.AdminUserPolicyName,
-        p => p.AddRequirements(new AdminAuthRequirement(config)));
+builder.Services.AddScoped<IAuthorizationHandler, AdminAuthHandler>();
 
-    x.AddPolicy(AuthConstants.TrustedMemberPolicyName,
-        p => p.RequireAssertion(c =>
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy(AuthConstants.AdminUserPolicyName, p => p.AddRequirements(new AdminAuthRequirement()))
+    .AddPolicy(AuthConstants.TrustedMemberPolicyName, p => p.RequireAssertion(c =>
             c.User.HasClaim(m => m is { Type: AuthConstants.AdminUserClaimName, Value: "true" }) ||
             c.User.HasClaim(m => m is { Type: AuthConstants.TrustedMemberClaimName, Value: "true" })));
-});
 
 builder.Services.AddScoped<ApiKeyAuthFilter>();
 builder.Services.AddSingleton<IConfiguration>(config);
@@ -116,13 +115,13 @@ if (app.Environment.IsDevelopment())
 app.MapHealthChecks("_health");
 
 // Liveness probe - basic check that the app is running (no DB check)
-app.MapHealthChecks("_health/live", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapHealthChecks("_health/live", new HealthCheckOptions
 {
     Predicate = _ => false // No checks - just confirms the app responds
 });
 
 // Readiness probe - confirms app can handle requests (includes DB check)
-app.MapHealthChecks("_health/ready", new Microsoft.AspNetCore.Diagnostics.HealthChecks.HealthCheckOptions
+app.MapHealthChecks("_health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Name == DatabaseHealthCheck.Name
 });
