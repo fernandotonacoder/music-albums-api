@@ -1,0 +1,22 @@
+<Project Sdk="Aspire.AppHost.Sdk/13.3.5">
+
+  <ItemGroup>
+    <ProjectReference Include="..\src\MusicAlbums.Api\MusicAlbums.Api.csproj" />
+    <ProjectReference Include="..\tools\Identity.Api\Identity.Api.csproj" />
+    <ProjectReference Include="..\MusicAlbumsApi.ServiceDefaults\MusicAlbumsApi.ServiceDefaults.csproj" IsAspireProjectResource="false" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Aspire.Hosting.AppHost" />
+    <PackageReference Include="Aspire.Hosting.PostgreSQL" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <UserSecretsId>69f1de46-2cdc-4d44-a6c2-4c891dd40a91</UserSecretsId>
+  </PropertyGroup>
+
+</Project>

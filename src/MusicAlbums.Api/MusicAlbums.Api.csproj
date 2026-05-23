@@ -20,6 +20,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MusicAlbums.Application\MusicAlbums.Application.csproj" />
     <ProjectReference Include="..\MusicAlbums.Contracts\MusicAlbums.Contracts.csproj" />
+    <ProjectReference Include="..\..\MusicAlbumsApi.ServiceDefaults\MusicAlbumsApi.ServiceDefaults.csproj" />
   </ItemGroup>
 
 </Project>

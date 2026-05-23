@@ -8,12 +8,27 @@ Generates JWT tokens with custom claims for testing authorization in the main Mu
 
 ## Running Locally
 
+### Aspire (recommended)
+
+From the repo root:
+
+```bash
+aspire start
+```
+
+When started by the AppHost, the Identity API is exposed on:
+
+- HTTP: `http://localhost:5003`
+- HTTPS: `https://localhost:5004`
+
+### Direct run (legacy)
+
 ```bash
 cd tools/Identity.Api
 dotnet run
 ```
 
-Server runs at: `http://localhost:5003`
+Direct execution still works if you want to run the helper tool without Aspire.
 
 ---
 
@@ -103,7 +118,7 @@ Copy the token and use it in requests to the Music Albums API:
 
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-     http://localhost:5001/api/albums
+     https://localhost:5002/api/albums
 ```
 
 ---
@@ -111,10 +126,10 @@ curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
 ## Quick Test
 
 ```bash
-dotnet run &
-sleep 2
+aspire start &
+sleep 10
 
-curl -X POST http://localhost:5003/token \
+curl -X POST https://localhost:5004/token \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "550e8400-e29b-41d4-a716-446655440000",
