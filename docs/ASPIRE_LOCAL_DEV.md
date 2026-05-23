@@ -76,7 +76,7 @@ cd MusicAlbumsApi.AppHost
 dotnet run --launch-profile "Aspire - Ephemeral DB"
 ```
 
-Or pick the `managed-db` launch profile in Rider/Visual Studio.
+Or pick the `Aspire - Ephemeral DB` launch profile in Rider/Visual Studio.
 
 In this mode Aspire starts its own PostgreSQL container and wires the Music Albums API to it automatically. When you stop the AppHost, the container is removed with the rest of the managed resources.
 
