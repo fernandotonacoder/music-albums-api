@@ -33,7 +33,6 @@
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "DOTNET_ENVIRONMENT": "Development",
-        "ConnectionStrings__albums": "Server=localhost;Port=5433;Database=albums;User ID=dev;Password=changeme;",
         "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21286",
         "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22156"
       }
