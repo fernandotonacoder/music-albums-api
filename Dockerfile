@@ -27,4 +27,7 @@ COPY --from=build /app/publish .
 # Ensure .NET listens on port 8080
 ENV ASPNETCORE_URLS=http://+:8080
 
+RUN useradd -m appuser
+USER appuser
+
 ENTRYPOINT ["dotnet", "MusicAlbums.Api.dll"]

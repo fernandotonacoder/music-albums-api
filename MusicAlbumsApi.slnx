@@ -1,0 +1,26 @@
+<Solution>
+  <Configurations>
+    <Platform Name="Any CPU" />
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Folder Name="/docs/">
+    <File Path="docs/API_TESTING_GUIDE.md" />
+    <File Path="docs/ASPIRE_LOCAL_DEV.md" />
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/MusicAlbums.Api/MusicAlbums.Api.csproj" />
+    <Project Path="src/MusicAlbums.Application/MusicAlbums.Application.csproj" />
+    <Project Path="src/MusicAlbums.Contracts/MusicAlbums.Contracts.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/MusicAlbums.Api.Tests.Integration/MusicAlbums.Api.Tests.Integration.csproj" />
+    <Project Path="tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <File Path="tools/MusicAlbumsApi.postman_collection.json" />
+    <Project Path="tools/Identity.Api/Identity.Api.csproj" />
+  </Folder>
+  <Project Path="MusicAlbumsApi.AppHost/MusicAlbumsApi.AppHost.csproj" />
+  <Project Path="MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj" />
+</Solution>

@@ -75,11 +75,5 @@ output logAnalyticsCustomerId string = logAnalytics.properties.customerId
 @secure()
 output logAnalyticsPrimarySharedKey string = logAnalytics.listKeys().primarySharedKey
 
-@description('Application Insights ID')
-output appInsightsId string = appInsights.id
-
 @description('Application Insights connection string')
 output appInsightsConnectionString string = appInsights.properties.ConnectionString
-
-@description('Application Insights instrumentation key')
-output appInsightsInstrumentationKey string = appInsights.properties.InstrumentationKey
