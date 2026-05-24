@@ -18,6 +18,7 @@
 # PIPELINE RUNTIME:
 #   - Choose parameter: targetEnvironment (dev | prod)
 #   - Choose parameter: deployInfra (default false)
+#   - Choose parameter: destroyInfra (default false) — manual only, deletes the whole RG
 #   - Pipeline loads matching variable group automatically
 #
 # ============================================================================
@@ -25,6 +26,10 @@
 parameters:
   - name: deployInfra
     displayName: Deploy infrastructure (Bicep)
+    type: boolean
+    default: false
+  - name: destroyInfra
+    displayName: Destroy infrastructure (delete resource group)
     type: boolean
     default: false
   - name: targetEnvironment
@@ -490,3 +495,29 @@ stages:
                     echo "GitHub Deployment status updated to $STATUS"
                   displayName: Update GitHub Deployment status
                   condition: always()
+
+  - stage: DestroyInfra
+    displayName: Destroy Infrastructure
+    dependsOn: []
+    condition: and(eq('${{ parameters.destroyInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
+    jobs:
+      - job: DestroyResources
+        displayName: Delete Resource Group
+        steps:
+          - task: AzureCLI@2
+            displayName: Delete resource group
+            inputs:
+              azureSubscription: $(azureServiceConnection)
+              scriptType: bash
+              scriptLocation: inlineScript
+              inlineScript: |
+                if [ "$(az group exists --name '$(RESOURCE_GROUP)')" = "false" ]; then
+                  echo "Resource group $(RESOURCE_GROUP) does not exist. Nothing to delete."
+                  exit 0
+                fi
+
+                echo "Deleting resource group $(RESOURCE_GROUP) and all its resources..."
+                az group delete \
+                  --name '$(RESOURCE_GROUP)' \
+                  --yes
+                echo "Resource group $(RESOURCE_GROUP) deleted."

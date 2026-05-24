@@ -16,6 +16,12 @@
 
 Music Albums REST API written in C# / .NET, using Dapper, PostgreSQL, and Aspire for local orchestration.
 
+This project follows a pragmatic **Layered Architecture**, organized by technical concerns:
+
+- **`MusicAlbums.Api`** (Presentation): MVC Controllers, auth handlers, request/response mapping, health checks, and Swagger configuration.
+- **`MusicAlbums.Application`** (Business & Data): Core business logic (`Services`), data access (`Repositories` & `Database`), domain models, and input validation (`Validators`).
+- **`MusicAlbums.Contracts`** (HTTP Contracts): Request and Response DTOs that define the API's public interface.
+
 ## 🌐 Live Demo
 
 - **🔗 [Music Albums API — Swagger](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/swagger/index.html)**
@@ -73,6 +79,10 @@ code ~/.microsoft/usersecrets/<UserSecretsId>/secrets.json
 Find `<UserSecretsId>` in `MusicAlbumsApi.AppHost.csproj`.
 
 ## ☁️ Cloud Deployment (Azure Container Apps)
+
+| Dev | Prod |
+|-----|------|
+| ![Azure Resource Group — Dev](docs/images/azure-music-albums-rg-dev.png) | ![Azure Resource Group — Prod](docs/images/azure-music-albums-rg-prod.png) |
 
 Create two Azure DevOps variable groups (`music-albums-dev` / `music-albums-prod`) with the required variables, then queue `.azure-pipelines/main-ci-cd.yml` with:
 
