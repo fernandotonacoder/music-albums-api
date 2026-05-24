@@ -8,26 +8,47 @@ Generates JWT tokens with custom claims for testing authorization in the main Mu
 
 ## Running Locally
 
+### Aspire (recommended)
+
+From the repo root:
+
+```bash
+aspire start
+```
+
+When started by the AppHost, the Identity API is exposed on:
+
+- HTTP: `http://localhost:5003`
+- HTTPS: `https://localhost:5004`
+
+### Direct run (legacy)
+
 ```bash
 cd tools/Identity.Api
 dotnet run
 ```
 
-Server runs at: `http://localhost:5003`
+Direct execution still works if you want to run the helper tool without Aspire.
 
 ---
 
 ## Configuration
 
-The Identity API requires `Jwt:Key` (user-secrets, min 32 characters).
+The Identity API requires `Jwt:Key` (min 32 characters). The secret must match the `Jwt:Key` used by the main Music Albums API so that tokens validate correctly.
 
-**Setup (first time):**
+**Via Aspire (recommended):** the AppHost reads `jwt-key` from `MusicAlbumsApi.AppHost` user-secrets and injects it into both services as the `Jwt:Key` env var. Set it once on the AppHost:
+
+```bash
+cd MusicAlbumsApi.AppHost
+dotnet user-secrets set "jwt-key" "your-secret-key-min-32-chars"
+```
+
+**Direct run (legacy):** when running the Identity API standalone with `dotnet run`, set the secret on the Identity API project itself:
+
 ```bash
 cd tools/Identity.Api
 dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
 ```
-
-This secret must match the `Jwt:Key` used in the main Music Albums API for token validation.
 
 On startup, the API validates the secret and fails fast if missing or too short.
 
@@ -103,7 +124,7 @@ Copy the token and use it in requests to the Music Albums API:
 
 ```bash
 curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
-     http://localhost:5001/api/albums
+     https://localhost:5002/api/albums
 ```
 
 ---
@@ -111,10 +132,10 @@ curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
 ## Quick Test
 
 ```bash
-dotnet run &
-sleep 2
+aspire start &
+sleep 10
 
-curl -X POST http://localhost:5003/token \
+curl -X POST https://localhost:5004/token \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "550e8400-e29b-41d4-a716-446655440000",
@@ -122,8 +143,6 @@ curl -X POST http://localhost:5003/token \
     "customClaims": {}
   }'
 ```
-
----
 
 ---
 

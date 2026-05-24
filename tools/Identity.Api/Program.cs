@@ -1,6 +1,5 @@
 var builder = WebApplication.CreateBuilder(args);
 
-
 var jwtSecret = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)
 {

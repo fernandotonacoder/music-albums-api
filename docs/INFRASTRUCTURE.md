@@ -122,7 +122,11 @@ Without this, the PostgreSQL server cannot validate Entra ID tokens and the app 
 
 ### How local dev works
 
-Local development uses docker-compose with a plain PostgreSQL container and password auth. The connection string in user-secrets includes a `Password` field, so the Entra ID token provider is automatically skipped (see `ApplicationServiceCollectionExtensions.AddDatabase()`).
+Local development runs PostgreSQL via the Aspire AppHost. The AppHost declares a Postgres resource with `ContainerLifetime.Persistent` and a named data volume, so the container and the data survive AppHost stops. See [Aspire Local Dev](ASPIRE_LOCAL_DEV.md) for the workflow.
+
+The main API uses a plain PostgreSQL connection string for local development (injected by the AppHost via `Database:ConnectionString`). Because the connection string includes a `Password` field, the Entra ID token provider is automatically skipped (see `ApplicationServiceCollectionExtensions.AddDatabase()`).
+
+A legacy `docker-compose` Postgres setup is preserved under [`tools/local-postgres/`](../tools/local-postgres/) for the rare cases where a standalone, Aspire-free Postgres is wanted.
 
 ## Resource Naming
 

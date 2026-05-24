@@ -11,11 +11,15 @@ using MusicAlbums.Api.Mapping;
 using MusicAlbums.Api.Swagger;
 using MusicAlbums.Application;
 using MusicAlbums.Application.Database;
+using MusicAlbumsApi.ServiceDefaults;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration;
+
+// Add Aspire service defaults (OTel, service discovery, resilience, health checks)
+builder.AddServiceDefaults();
 
 
 var jwtKey = config["Jwt:Key"];
@@ -77,7 +81,13 @@ builder.Services.AddOutputCache(x =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddApplicationInsightsTelemetry();
+// AppInsights SDK v3 wires the Azure Monitor exporter into the OTel MeterProvider eagerly;
+// without a connection string it throws at host startup. Skip it when not configured (e.g. local dev).
+if (!string.IsNullOrEmpty(config["APPLICATIONINSIGHTS_CONNECTION_STRING"])
+    || !string.IsNullOrEmpty(config["ApplicationInsights:ConnectionString"]))
+{
+    builder.Services.AddApplicationInsightsTelemetry();
+}
 
 // builder.Services.AddCors(options =>
 // {
@@ -136,6 +146,9 @@ app.UseOutputCache();
 
 app.UseMiddleware<ValidationMappingMiddleware>();
 app.MapControllers();
+
+// Map default Aspire health check endpoints
+app.MapDefaultEndpoints();
 
 var dbInitializer = app.Services.GetRequiredService<DbInitializer>();
 await dbInitializer.InitializeAsync(CancellationToken.None);

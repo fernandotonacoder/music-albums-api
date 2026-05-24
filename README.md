@@ -11,108 +11,79 @@
 [![JWT](https://img.shields.io/badge/JWT-Authentication-000000?logo=jsonwebtokens&logoColor=white)](#authentication)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Music Albums REST API written in C# / .NET Core, with Dapper and PostgreSQL
+Music Albums REST API written in C# / .NET, using Dapper, PostgreSQL, and Aspire for local orchestration.
 
 ## 🌐 Live Demo
 
-A live version of this API is deployed on Azure Container Apps:
-
 **🔗 [Swagger UI](https://music-albums-05-api-dev.orangeforest-b7d25f37.swedencentral.azurecontainerapps.io/swagger/index.html)**
 
-> **Note:** This is a demo instance and may be scaled down to zero when not in use. The first request might take a few seconds while the container starts.
+> This demo may scale to zero when idle. The first request can take a few seconds.
 
-## � Documentation
+## 📚 Documentation
 
-- [API Testing Guide](docs/API_TESTING_GUIDE.md) - HTTP requests for testing all endpoints
+- [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) - database, dashboard workflow, and startup commands
+- [API Testing Guide](docs/API_TESTING_GUIDE.md) - copy-pastable requests for all endpoints
 - [Infrastructure](docs/INFRASTRUCTURE.md) - Bicep modules and Azure deployment
 - [Identity API](docs/IDENTITY_API.md) - JWT token generator (helper tool)
+- [Standalone Postgres](tools/local-postgres/README.md) - legacy `docker-compose` Postgres, kept for non-Aspire workflows
 
-## �🚀 Local Setup
+## 🚀 Local Development
 
-Secrets are stored in **User Secrets** (outside the repo, never committed).
-
-### First Time Setup:
-
-**1. Set your secrets (User Secrets for main API):**
+Aspire is the local orchestrator. It brings up the API, the Identity API helper, and a persistent PostgreSQL container in one command:
 
 ```bash
-cd src/MusicAlbums.Api
-dotnet user-secrets set "Database:ConnectionString" "Server=localhost;Port=5433;Database=albums;User ID=dev;Password=changeme;"
-dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
-dotnet user-secrets set "ApiKey" "your-api-key"
+aspire start
 ```
 
-**2. Set Identity API secret (User Secrets):**
+See [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) for the full workflow (data persistence, reset, endpoints).
+
+### Architecture
+
+![Aspire Resources Graph](docs/images/aspire-resources-graph.png)
+
+### First-time secrets (AppHost)
 
 ```bash
-cd tools/Identity.Api
-dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
+cd MusicAlbumsApi.AppHost
+dotnet user-secrets set "jwt-key" "your-secret-key-min-32-chars"
+dotnet user-secrets set "api-key" "your-api-key"
+dotnet user-secrets set "pg-password" "your-local-postgres-password"
 ```
 
-This key must match the `Jwt:Key` used by `src/MusicAlbums.Api` for token validation to work.
+The `pg-password` is what Aspire uses to bring up the local Postgres container; set it once and Aspire reuses it across runs.
 
-**3. Configure database credentials (Docker - Optional):**
-
-Docker Compose uses these defaults: `dev` / `changeme` / `albums` on port `5433`
-
-If you want different values, copy the example and customize:
+### View your secrets
 
 ```bash
-cp .env.example .env
-# Edit .env with your values
-```
-
-**Note:** Don't edit `docker-compose.yml` directly - use `.env` to override defaults.
-
-**Keep ports in sync:** If you change `POSTGRES_PORT` in `.env`, update your connection string to match:
-
-```bash
-cd src/MusicAlbums.Api
-dotnet user-secrets set "Database:ConnectionString" "Server=localhost;Port=YOUR_NEW_PORT;Database=albums;User ID=dev;Password=changeme;"
-```
-
-### Run:
-
-```bash
-docker-compose up -d  # Start database
-cd src/MusicAlbums.Api
-dotnet run
-```
-
-## 🔍 View Your Secrets:
-
-```bash
-# List all secrets
-cd src/MusicAlbums.Api
+# List AppHost secrets
+cd MusicAlbumsApi.AppHost
 dotnet user-secrets list
 
-# Open secrets file directly (Windows)
+# Open the secrets file directly (Windows)
 code "$env:APPDATA\Microsoft\UserSecrets\<UserSecretsId>\secrets.json"
 
-# Open secrets file directly (Linux/macOS)
+# Open the secrets file directly (Linux/macOS)
 code ~/.microsoft/usersecrets/<UserSecretsId>/secrets.json
 ```
 
-Find `<UserSecretsId>` in `MusicAlbums.Api.csproj` or `Identity.Api.csproj`.
+Find `<UserSecretsId>` in `MusicAlbumsApi.AppHost.csproj`.
 
 ## ☁️ Cloud Deployment (Azure Container Apps)
 
-### Setup
-
-Create two Azure DevOps variable groups (`music-albums-dev` / `music-albums-prod`) with the required variables, then queue `.azure-pipelines/main-ci-cd.yml` with parameters:
+Create two Azure DevOps variable groups (`music-albums-dev` / `music-albums-prod`) with the required variables, then queue `.azure-pipelines/main-ci-cd.yml` with:
 
 - `targetEnvironment`: `dev` or `prod`
 - `deployInfra`: `false` by default (set to `true` to deploy/update infrastructure)
 
-See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for full details on modules, variable groups, dev vs prod differences, and pipelines.
+See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for the full deployment model, variable groups, dev vs prod differences, and pipelines.
 
-### Health Endpoints
+## 🩺 Health endpoints
 
-- `/_health` - General health status
-- `/_health/live` - Liveness probe
-- `/_health/ready` - Readiness probe (checks database)
+- `/_health` - general health status
+- `/_health/live` - liveness probe
+- `/_health/ready` - readiness probe (checks database)
 
-**Build Docker Image:**
+## 🐳 Build the Docker image
 
 ```bash
 docker build -t music-albums-api .

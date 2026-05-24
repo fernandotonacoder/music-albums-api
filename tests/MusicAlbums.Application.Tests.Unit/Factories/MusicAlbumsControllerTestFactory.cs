@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OutputCaching;
@@ -5,7 +6,6 @@ using Moq;
 using MusicAlbums.Api.Controllers;
 using MusicAlbums.Application.Models;
 using MusicAlbums.Application.Services;
-using System.Security.Claims;
 
 namespace MusicAlbums.Application.Tests.Unit.Factories;
 

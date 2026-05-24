@@ -14,7 +14,7 @@ Complete collection of copy-pastable HTTP requests for testing all API endpoints
 
 ## Prerequisites
 
-**Base URL**: `http://localhost:5000` (adjust port as needed)
+**Base URL (Aspire)**: `https://localhost:5002`
 
 **Required Headers**:
 
@@ -27,7 +27,7 @@ Authorization: Bearer YOUR_TOKEN_HERE
 
 ```bash
 # Get Admin Token
-curl -X POST http://localhost:5001/token \
+curl -X POST https://localhost:5004/token \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "00000000-0000-0000-0000-000000000001",
@@ -39,7 +39,7 @@ curl -X POST http://localhost:5001/token \
   }'
 
 # Get Trusted Member Token
-curl -X POST http://localhost:5001/token \
+curl -X POST https://localhost:5004/token \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "00000000-0000-0000-0000-000000000002",
@@ -50,7 +50,7 @@ curl -X POST http://localhost:5001/token \
   }'
 
 # Get Regular User Token
-curl -X POST http://localhost:5001/token \
+curl -X POST https://localhost:5004/token \
   -H "Content-Type: application/json" \
   -d '{
     "userId": "00000000-0000-0000-0000-000000000003",
@@ -70,7 +70,7 @@ curl -X POST http://localhost:5001/token \
 **Scenario**: Simple album with one artist and tracks
 
 ```bash
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -113,7 +113,7 @@ curl -X POST http://localhost:5000/api/albums \
 **Scenario**: Album with multiple main artists
 
 ```bash
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -146,7 +146,7 @@ curl -X POST http://localhost:5000/api/albums \
 **Scenario**: Album artist with featured artists on specific tracks
 
 ```bash
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -190,7 +190,7 @@ curl -X POST http://localhost:5000/api/albums \
 **Scenario**: Compilation where each track has different artists
 
 ```bash
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -232,7 +232,7 @@ curl -X POST http://localhost:5000/api/albums \
 **Scenario**: Create album with just basic info
 
 ```bash
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -249,7 +249,7 @@ curl -X POST http://localhost:5000/api/albums \
 **Scenario**: Tracks where duration is optional
 
 ```bash
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -281,7 +281,7 @@ curl -X POST http://localhost:5000/api/albums \
 
 ```bash
 # Replace {album-id} with actual ID from create response
-curl -X GET http://localhost:5000/api/albums/{album-id}
+curl -X GET https://localhost:5002/api/albums/{album-id}
 ```
 
 ### 8. Get Album by Slug
@@ -290,7 +290,7 @@ curl -X GET http://localhost:5000/api/albums/{album-id}
 **Auth**: None required
 
 ```bash
-curl -X GET http://localhost:5000/api/albums/the-dark-side-of-the-moon-1973
+curl -X GET https://localhost:5002/api/albums/the-dark-side-of-the-moon-1973
 ```
 
 ### 9. Get All Albums (No Filters)
@@ -299,7 +299,7 @@ curl -X GET http://localhost:5000/api/albums/the-dark-side-of-the-moon-1973
 **Auth**: None required
 
 ```bash
-curl -X GET http://localhost:5000/api/albums
+curl -X GET https://localhost:5002/api/albums
 ```
 
 ### 10. Get All Albums - With Pagination
@@ -307,7 +307,7 @@ curl -X GET http://localhost:5000/api/albums
 **Query Parameters**: `page`, `pageSize`
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?page=1&pageSize=10"
+curl -X GET "https://localhost:5002/api/albums?page=1&pageSize=10"
 ```
 
 ### 11. Get All Albums - Filter by Title
@@ -315,7 +315,7 @@ curl -X GET "http://localhost:5000/api/albums?page=1&pageSize=10"
 **Query Parameter**: `title`
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?title=dark"
+curl -X GET "https://localhost:5002/api/albums?title=dark"
 ```
 
 ### 12. Get All Albums - Filter by Year
@@ -323,7 +323,7 @@ curl -X GET "http://localhost:5000/api/albums?title=dark"
 **Query Parameter**: `year`
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?year=1973"
+curl -X GET "https://localhost:5002/api/albums?year=1973"
 ```
 
 ### 13. Get All Albums - Combined Filters
@@ -331,7 +331,7 @@ curl -X GET "http://localhost:5000/api/albums?year=1973"
 **Query Parameters**: Multiple filters
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?title=moon&year=1973&page=1&pageSize=5"
+curl -X GET "https://localhost:5002/api/albums?title=moon&year=1973&page=1&pageSize=5"
 ```
 
 ### 14. Get All Albums - Sort by Title (Ascending)
@@ -339,25 +339,25 @@ curl -X GET "http://localhost:5000/api/albums?title=moon&year=1973&page=1&pageSi
 **Query Parameter**: `sortBy`
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?sortBy=title"
+curl -X GET "https://localhost:5002/api/albums?sortBy=title"
 ```
 
 ### 15. Get All Albums - Sort by Title (Descending)
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?sortBy=-title"
+curl -X GET "https://localhost:5002/api/albums?sortBy=-title"
 ```
 
 ### 16. Get All Albums - Sort by Year
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?sortBy=yearOfRelease"
+curl -X GET "https://localhost:5002/api/albums?sortBy=yearOfRelease"
 ```
 
 ### 17. Get All Albums - Sort Descending
 
 ```bash
-curl -X GET "http://localhost:5000/api/albums?sortBy=-yearOfRelease"
+curl -X GET "https://localhost:5002/api/albums?sortBy=-yearOfRelease"
 ```
 
 ### 18. Update Album - Change Title and Year
@@ -366,7 +366,7 @@ curl -X GET "http://localhost:5000/api/albums?sortBy=-yearOfRelease"
 **Auth**: Trusted Member required
 
 ```bash
-curl -X PUT http://localhost:5000/api/albums/{album-id} \
+curl -X PUT https://localhost:5002/api/albums/{album-id} \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -394,7 +394,7 @@ curl -X PUT http://localhost:5000/api/albums/{album-id} \
 **Scenario**: Update album to have different artists
 
 ```bash
-curl -X PUT http://localhost:5000/api/albums/{album-id} \
+curl -X PUT https://localhost:5002/api/albums/{album-id} \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -417,7 +417,7 @@ curl -X PUT http://localhost:5000/api/albums/{album-id} \
 **Scenario**: Expand track list
 
 ```bash
-curl -X PUT http://localhost:5000/api/albums/{album-id} \
+curl -X PUT https://localhost:5002/api/albums/{album-id} \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -461,7 +461,7 @@ curl -X PUT http://localhost:5000/api/albums/{album-id} \
 **Auth**: Admin required
 
 ```bash
-curl -X DELETE http://localhost:5000/api/albums/{album-id} \
+curl -X DELETE https://localhost:5002/api/albums/{album-id} \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
@@ -476,7 +476,7 @@ curl -X DELETE http://localhost:5000/api/albums/{album-id} \
 
 ```bash
 # Rate 5 stars
-curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
+curl -X PUT https://localhost:5002/api/albums/{album-id}/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -d '{
@@ -487,7 +487,7 @@ curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
 ### 23. Rate an Album (1 star)
 
 ```bash
-curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
+curl -X PUT https://localhost:5002/api/albums/{album-id}/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -d '{
@@ -500,7 +500,7 @@ curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
 **Note**: PUT on same album updates the rating
 
 ```bash
-curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
+curl -X PUT https://localhost:5002/api/albums/{album-id}/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -d '{
@@ -514,7 +514,7 @@ curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
 **Auth**: Any authenticated user
 
 ```bash
-curl -X DELETE http://localhost:5000/api/albums/{album-id}/ratings \
+curl -X DELETE https://localhost:5002/api/albums/{album-id}/ratings \
   -H "Authorization: Bearer YOUR_USER_TOKEN"
 ```
 
@@ -524,7 +524,7 @@ curl -X DELETE http://localhost:5000/api/albums/{album-id}/ratings \
 **Auth**: Any authenticated user
 
 ```bash
-curl -X GET http://localhost:5000/api/ratings/me \
+curl -X GET https://localhost:5002/api/ratings/me \
   -H "Authorization: Bearer YOUR_USER_TOKEN"
 ```
 
@@ -538,7 +538,7 @@ curl -X GET http://localhost:5000/api/ratings/me \
 
 ```bash
 # 1. Create Album
-RESPONSE=$(curl -X POST http://localhost:5000/api/albums \
+RESPONSE=$(curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -559,10 +559,10 @@ RESPONSE=$(curl -X POST http://localhost:5000/api/albums \
 ALBUM_ID=$(echo $RESPONSE | jq -r '.id')
 
 # 2. Get Album by ID
-curl -X GET http://localhost:5000/api/albums/$ALBUM_ID
+curl -X GET https://localhost:5002/api/albums/$ALBUM_ID
 
 # 3. Update Album
-curl -X PUT http://localhost:5000/api/albums/$ALBUM_ID \
+curl -X PUT https://localhost:5002/api/albums/$ALBUM_ID \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -580,21 +580,21 @@ curl -X PUT http://localhost:5000/api/albums/$ALBUM_ID \
   }'
 
 # 4. Rate Album
-curl -X PUT http://localhost:5000/api/albums/$ALBUM_ID/ratings \
+curl -X PUT https://localhost:5002/api/albums/$ALBUM_ID/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -d '{"rating": 4}'
 
 # 5. Get Album with Rating
-curl -X GET http://localhost:5000/api/albums/$ALBUM_ID \
+curl -X GET https://localhost:5002/api/albums/$ALBUM_ID \
   -H "Authorization: Bearer YOUR_USER_TOKEN"
 
 # 6. Delete Rating
-curl -X DELETE http://localhost:5000/api/albums/$ALBUM_ID/ratings \
+curl -X DELETE https://localhost:5002/api/albums/$ALBUM_ID/ratings \
   -H "Authorization: Bearer YOUR_USER_TOKEN"
 
 # 7. Delete Album
-curl -X DELETE http://localhost:5000/api/albums/$ALBUM_ID \
+curl -X DELETE https://localhost:5002/api/albums/$ALBUM_ID \
   -H "Authorization: Bearer YOUR_ADMIN_TOKEN"
 ```
 
@@ -604,7 +604,7 @@ curl -X DELETE http://localhost:5000/api/albums/$ALBUM_ID \
 
 ```bash
 # Create first album with "The Beatles"
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -616,7 +616,7 @@ curl -X POST http://localhost:5000/api/albums \
   }'
 
 # Create second album with "The Beatles" (should reuse same artist)
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -636,7 +636,7 @@ curl -X POST http://localhost:5000/api/albums \
 
 ```bash
 # Create with "The Beatles"
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -648,7 +648,7 @@ curl -X POST http://localhost:5000/api/albums \
   }'
 
 # Create with "the beatles" (lowercase)
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -668,13 +668,13 @@ curl -X POST http://localhost:5000/api/albums \
 
 ```bash
 # Get page 1
-curl -X GET "http://localhost:5000/api/albums?page=1&pageSize=5"
+curl -X GET "https://localhost:5002/api/albums?page=1&pageSize=5"
 
 # Get page 2
-curl -X GET "http://localhost:5000/api/albums?page=2&pageSize=5"
+curl -X GET "https://localhost:5002/api/albums?page=2&pageSize=5"
 
 # Get page 3
-curl -X GET "http://localhost:5000/api/albums?page=3&pageSize=5"
+curl -X GET "https://localhost:5002/api/albums?page=3&pageSize=5"
 
 # Verify total count is consistent across pages
 ```
@@ -687,25 +687,25 @@ curl -X GET "http://localhost:5000/api/albums?page=3&pageSize=5"
 ALBUM_ID="your-album-id-here"
 
 # User 1 rates 5 stars
-curl -X PUT http://localhost:5000/api/albums/$ALBUM_ID/ratings \
+curl -X PUT https://localhost:5002/api/albums/$ALBUM_ID/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer USER1_TOKEN" \
   -d '{"rating": 5}'
 
 # User 2 rates 3 stars
-curl -X PUT http://localhost:5000/api/albums/$ALBUM_ID/ratings \
+curl -X PUT https://localhost:5002/api/albums/$ALBUM_ID/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer USER2_TOKEN" \
   -d '{"rating": 3}'
 
 # User 3 rates 4 stars
-curl -X PUT http://localhost:5000/api/albums/$ALBUM_ID/ratings \
+curl -X PUT https://localhost:5002/api/albums/$ALBUM_ID/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer USER3_TOKEN" \
   -d '{"rating": 4}'
 
 # Get album (should show average rating of 4.0)
-curl -X GET http://localhost:5000/api/albums/$ALBUM_ID
+curl -X GET https://localhost:5002/api/albums/$ALBUM_ID
 ```
 
 ---
@@ -716,13 +716,13 @@ curl -X GET http://localhost:5000/api/albums/$ALBUM_ID
 
 ```bash
 # Rating 0 (should fail)
-curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
+curl -X PUT https://localhost:5002/api/albums/{album-id}/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -d '{"rating": 0}'
 
 # Rating 6 (should fail)
-curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
+curl -X PUT https://localhost:5002/api/albums/{album-id}/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_USER_TOKEN" \
   -d '{"rating": 6}'
@@ -732,7 +732,7 @@ curl -X PUT http://localhost:5000/api/albums/{album-id}/ratings \
 
 ```bash
 # Missing title
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -743,7 +743,7 @@ curl -X POST http://localhost:5000/api/albums \
   }'
 
 # Missing artists
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -758,7 +758,7 @@ curl -X POST http://localhost:5000/api/albums \
 
 ```bash
 # Two tracks with same number (should fail)
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -785,7 +785,7 @@ curl -X POST http://localhost:5000/api/albums \
 
 ```bash
 # Try to create without token (should fail 401)
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -d '{
     "title": "Test",
@@ -796,7 +796,7 @@ curl -X POST http://localhost:5000/api/albums \
   }'
 
 # Try to delete with regular user token (should fail 403)
-curl -X DELETE http://localhost:5000/api/albums/{album-id} \
+curl -X DELETE https://localhost:5002/api/albums/{album-id} \
   -H "Authorization: Bearer YOUR_REGULAR_USER_TOKEN"
 ```
 
@@ -804,17 +804,17 @@ curl -X DELETE http://localhost:5000/api/albums/{album-id} \
 
 ```bash
 # Get non-existent ID (should return 404)
-curl -X GET http://localhost:5000/api/albums/00000000-0000-0000-0000-000000000000
+curl -X GET https://localhost:5002/api/albums/00000000-0000-0000-0000-000000000000
 
 # Get non-existent slug (should return 404)
-curl -X GET http://localhost:5000/api/albums/this-album-does-not-exist-9999
+curl -X GET https://localhost:5002/api/albums/this-album-does-not-exist-9999
 ```
 
 ### 6. Future Year Validation
 
 ```bash
 # Album from future year (should fail)
-curl -X POST http://localhost:5000/api/albums \
+curl -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
@@ -940,13 +940,13 @@ curl -X POST http://localhost:5000/api/albums \
 
 ```bash
 # 1. Get a token
-TOKEN=$(curl -s -X POST http://localhost:5001/token \
+TOKEN=$(curl -s -X POST https://localhost:5004/token \
   -H "Content-Type: application/json" \
   -d '{"userId":"00000000-0000-0000-0000-000000000002","email":"user@example.com","customClaims":{"trusted_member":"true"}}' \
   | jq -r '.token')
 
 # 2. Create an album
-ALBUM=$(curl -s -X POST http://localhost:5000/api/albums \
+ALBUM=$(curl -s -X POST https://localhost:5002/api/albums \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"title":"Test Album","yearOfRelease":2024,"artistNames":["Test Artist"],"genres":["Rock"],"tracks":[{"title":"Track 1","trackNumber":1}]}')
@@ -955,16 +955,16 @@ ALBUM=$(curl -s -X POST http://localhost:5000/api/albums \
 ALBUM_ID=$(echo $ALBUM | jq -r '.id')
 
 # 4. Get the album
-curl -s -X GET http://localhost:5000/api/albums/$ALBUM_ID | jq
+curl -s -X GET https://localhost:5002/api/albums/$ALBUM_ID | jq
 
 # 5. Rate it
-curl -s -X PUT http://localhost:5000/api/albums/$ALBUM_ID/ratings \
+curl -s -X PUT https://localhost:5002/api/albums/$ALBUM_ID/ratings \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"rating":5}' | jq
 
 # 6. Get all albums
-curl -s -X GET http://localhost:5000/api/albums | jq
+curl -s -X GET https://localhost:5002/api/albums | jq
 ```
 
 ---
