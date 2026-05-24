@@ -81,14 +81,6 @@ builder.Services.AddOutputCache(x =>
 
 builder.Services.AddControllers();
 
-// AppInsights SDK v3 wires the Azure Monitor exporter into the OTel MeterProvider eagerly;
-// without a connection string it throws at host startup. Skip it when not configured (e.g. local dev).
-if (!string.IsNullOrEmpty(config["APPLICATIONINSIGHTS_CONNECTION_STRING"])
-    || !string.IsNullOrEmpty(config["ApplicationInsights:ConnectionString"]))
-{
-    builder.Services.AddApplicationInsightsTelemetry();
-}
-
 // builder.Services.AddCors(options =>
 // {
 //     options.AddDefaultPolicy(builder =>

@@ -190,7 +190,7 @@ Create two variable groups: `music-albums-dev` and `music-albums-prod`.
 | `api-key`                | —                     | Yes                                             |
 | `GITHUB_TOKEN`           | —                     | Yes                                             |
 
-> `GITHUB_TOKEN` is a GitHub Fine-grained PAT scoped to the repo with **Deployments: Read and write** permission. Used to create GitHub Deployments with environment URLs.
+> **`GITHUB_TOKEN`** — Mirrors Azure DevOps deployments into GitHub's native Deployments feature (Environments tab, PR/commit markers, "View deployment" link to the live Container App). GitHub **Fine-grained PAT** scoped to this repo with **Deployments: Read and write** — nothing else.
 
 ### Identity API
 

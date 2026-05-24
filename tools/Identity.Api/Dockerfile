@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
 COPY ["Identity.Api.csproj", "./"]
@@ -10,7 +10,7 @@ COPY ["Properties/", "Properties/"]
 COPY ["Program.cs", "./"]
 RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 5003
 COPY --from=build /app/publish .

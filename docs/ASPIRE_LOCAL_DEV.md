@@ -2,12 +2,30 @@
 
 This repository uses Aspire as the local orchestrator. Postgres is managed by Aspire — there is no separate `docker-compose` step in the daily workflow.
 
+## Prerequisites
+
+Aspire uses a container runtime to manage PostgreSQL and the integration test containers. You need **Docker** or **Podman** installed.
+
+By default Aspire assumes Docker. To use Podman instead:
+
+**Linux/macOS:**
+```bash
+export ASPIRE_CONTAINER_RUNTIME=podman
+```
+
+**Windows:**
+```powershell
+[Environment]::SetEnvironmentVariable("ASPIRE_CONTAINER_RUNTIME", "podman", "User")
+# Close and reopen your terminal, then verify:
+$env:ASPIRE_CONTAINER_RUNTIME  # should print: podman
+```
+
 ## How the database works
 
 The AppHost (`MusicAlbumsApi.AppHost`) declares a single PostgreSQL resource:
 
 ```csharp
-var db = builder.AddPostgres("postgres", password: pgPassword, port: 5433)
+var db = builder.AddPostgres("musicalbums-postgres", password: pgPassword, port: 5433)
     .WithLifetime(ContainerLifetime.Persistent)
     .WithDataVolume("musicalbums-postgres-data")
     .AddDatabase("albums");
@@ -22,7 +40,7 @@ What this gives you:
 In the Aspire dashboard graph you'll see both resources typed:
 
 ```
-postgres (server)
+musicalbums-postgres (server)
   └── albums (database)
 ```
 
@@ -78,6 +96,17 @@ When the AppHost is running, open the Aspire dashboard to:
 - PostgreSQL: `localhost:5433` (user `postgres`, password from `pg-password` parameter)
 
 These ports are fixed in the AppHost so they are easy to find and predictable.
+
+## Observability
+
+Telemetry (traces, metrics, logs) behaves differently depending on the environment:
+
+| Environment | How it works |
+| ----------- | ------------ |
+| **Local (Aspire)** | The AppHost sets `OTEL_EXPORTER_OTLP_ENDPOINT` automatically. All OTel data flows to the **Aspire dashboard** — visible under Traces and Metrics without any extra setup. |
+| **Cloud (Azure)** | The infra injects `APPLICATIONINSIGHTS_CONNECTION_STRING`. The app exports via the Azure Monitor OpenTelemetry exporter directly to **Application Insights**. |
+
+Neither exporter is active in the other's environment, so there is no duplication.
 
 ## Standalone Postgres (legacy)
 
