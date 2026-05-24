@@ -2,6 +2,24 @@
 
 This repository uses Aspire as the local orchestrator. Postgres is managed by Aspire — there is no separate `docker-compose` step in the daily workflow.
 
+## Prerequisites
+
+Aspire uses a container runtime to manage PostgreSQL and the integration test containers. You need **Docker** or **Podman** installed.
+
+By default Aspire assumes Docker. To use Podman instead:
+
+**Linux/macOS:**
+```bash
+export ASPIRE_CONTAINER_RUNTIME=podman
+```
+
+**Windows:**
+```powershell
+[Environment]::SetEnvironmentVariable("ASPIRE_CONTAINER_RUNTIME", "podman", "User")
+# Close and reopen your terminal, then verify:
+$env:ASPIRE_CONTAINER_RUNTIME  # should print: podman
+```
+
 ## How the database works
 
 The AppHost (`MusicAlbumsApi.AppHost`) declares a single PostgreSQL resource:
