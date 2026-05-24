@@ -2,10 +2,14 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
+# Central Package Management config — csproj files reference packages without versions
+COPY ["Directory.Packages.props", "./"]
+
 # Copy project files for restore (optimizes Docker layer caching)
 COPY ["src/MusicAlbums.Api/MusicAlbums.Api.csproj", "src/MusicAlbums.Api/"]
 COPY ["src/MusicAlbums.Application/MusicAlbums.Application.csproj", "src/MusicAlbums.Application/"]
 COPY ["src/MusicAlbums.Contracts/MusicAlbums.Contracts.csproj", "src/MusicAlbums.Contracts/"]
+COPY ["MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj", "MusicAlbumsApi.ServiceDefaults/"]
 RUN dotnet restore "src/MusicAlbums.Api/MusicAlbums.Api.csproj"
 
 # Copy source code and build
