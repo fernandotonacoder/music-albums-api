@@ -24,31 +24,6 @@
         "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "http://localhost:19070",
         "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "http://localhost:20037"
       }
-    },
-    "Aspire - Persisted DB": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:17105;http://localhost:15242",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "DOTNET_ENVIRONMENT": "Development",
-        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21286",
-        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22156"
-      }
-    },
-    "Aspire - Ephemeral DB": {
-      "commandName": "Project",
-      "dotnetRunMessages": true,
-      "launchBrowser": true,
-      "applicationUrl": "https://localhost:17105;http://localhost:15242",
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Development",
-        "DOTNET_ENVIRONMENT": "Development",
-        "UseManagedPostgres": "true",
-        "ASPIRE_DASHBOARD_OTLP_ENDPOINT_URL": "https://localhost:21286",
-        "ASPIRE_RESOURCE_SERVICE_ENDPOINT_URL": "https://localhost:22156"
-      }
     }
   }
 }

@@ -1,6 +1,3 @@
 ﻿namespace MusicAlbums.Contracts.Responses;
 
-public class MusicAlbumsResponse : PagedResponse<MusicAlbumResponse>
-{
-    
-}
+public class MusicAlbumsResponse : PagedResponse<MusicAlbumResponse>;

@@ -11,6 +11,7 @@ using MusicAlbums.Api.Mapping;
 using MusicAlbums.Api.Swagger;
 using MusicAlbums.Application;
 using MusicAlbums.Application.Database;
+using MusicAlbumsApi.ServiceDefaults;
 using Swashbuckle.AspNetCore.SwaggerGen;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -1,86 +1,64 @@
 # Aspire Local Development
 
-This repository now uses Aspire as the default local orchestrator.
+This repository uses Aspire as the local orchestrator. Postgres is managed by Aspire — there is no separate `docker-compose` step in the daily workflow.
 
-## Local database modes
+## How the database works
 
-| Mode | Start command | Best for | Dashboard hint |
-| ---- | ------------- | -------- | -------------- |
-| Persisted | `docker-compose up -d` + `aspire start` | Daily development, debugging, ad-hoc SQL | `db-mode = Persisted docker-compose Postgres` |
-| Ephemeral | `UseManagedPostgres=true aspire start` | Quick validation, clean runs, other machines | `db-mode = Aspire-managed ephemeral Postgres` |
+The AppHost (`MusicAlbumsApi.AppHost`) declares a single PostgreSQL resource:
 
-### IDE launch profiles
+```csharp
+var db = builder.AddPostgres("postgres", password: pgPassword, port: 5433)
+    .WithLifetime(ContainerLifetime.Persistent)
+    .WithDataVolume("musicalbums-postgres-data")
+    .AddDatabase("albums");
+```
 
-In Rider / Visual Studio you can pick these AppHost launch profiles directly:
+What this gives you:
 
-- `Aspire - Persisted DB`
-- `Aspire - Ephemeral DB`
+- **Persistent container** — the Postgres container survives `aspire start` / stop cycles. The next time you `aspire start`, the existing container is reused, not recreated.
+- **Persistent volume** — the data lives in a named Docker volume (`musicalbums-postgres-data`), separate from the container. Data survives even if the container is removed.
+- **Visible in Docker Desktop** — it's a normal Docker container. You can stop, start, inspect logs, attach `psql`, or use any Postgres client (DBeaver, pgcli, …) on `localhost:5433` even when the AppHost is not running.
 
-The existing `https` / `http` profiles still work, but the explicit names are easier to choose when switching modes.
+In the Aspire dashboard graph you'll see both resources typed:
 
-### 1) Persisted database for daily development
+```
+postgres (server)
+  └── albums (database)
+```
 
-Use your existing `docker-compose.yml` PostgreSQL container when you want:
-
-- stable data across restarts
-- manual debugging in Docker Desktop
-- ad-hoc SQL queries without the AppHost running
-
-**Start it:**
+## Start it
 
 ```bash
-docker-compose up -d
 aspire start
 ```
 
-Or run the AppHost explicitly with the persisted profile:
+That's it. On the first run, Aspire creates the container and the volume; on subsequent runs it just reuses them.
+
+## First-time secrets
+
+The AppHost reads sensitive values from its user-secrets store:
 
 ```bash
 cd MusicAlbumsApi.AppHost
-dotnet run --launch-profile "Aspire - Persisted DB"
+dotnet user-secrets set "jwt-key" "your-super-secret-32-plus-character-jwt-key"
+dotnet user-secrets set "api-key" "your-api-key"
+dotnet user-secrets set "pg-password" "your-local-postgres-password"
 ```
 
-The AppHost reads the persisted connection string from its own configuration:
+The `pg-password` is used by Aspire when it brings up the Postgres container. You only need to set this once — Aspire reuses it across runs.
 
-- `ConnectionStrings:albums` in `MusicAlbumsApi.AppHost` user-secrets
+## Resetting the database
 
-Set this once in the AppHost user-secrets to point at the local Docker Compose database:
-
-- host: `localhost`
-- port: `5433`
-- database: `albums`
-- user: `dev`
-- password: `changeme`
-
-If you change the compose port or credentials, update the AppHost user-secrets to match:
+When you want a clean database:
 
 ```bash
-cd MusicAlbumsApi.AppHost
-dotnet user-secrets set "ConnectionStrings:albums" "Server=localhost;Port=5433;Database=albums;User ID=dev;Password=changeme;"
+# Stop the AppHost first (Ctrl+C), then:
+docker volume rm musicalbums-postgres-data
 ```
 
-### 2) Aspire-managed ephemeral database
+On the next `aspire start`, Aspire recreates the volume and the schema is re-initialised by `DbInitializer`.
 
-Use this mode when you want a disposable database for a quick checkup or a clean test run.
-
-**Start it:**
-
-```bash
-UseManagedPostgres=true aspire start
-```
-
-Or run the AppHost explicitly with the ephemeral profile:
-
-```bash
-cd MusicAlbumsApi.AppHost
-dotnet run --launch-profile "Aspire - Ephemeral DB"
-```
-
-Or pick the `Aspire - Ephemeral DB` launch profile in Rider/Visual Studio.
-
-In this mode Aspire starts its own PostgreSQL container and wires the Music Albums API to it automatically. When you stop the AppHost, the container is removed with the rest of the managed resources.
-
-The dashboard also shows a small `db-mode` resource so you can tell at a glance which mode the AppHost is using.
+Alternatively, use the Aspire dashboard or Docker Desktop UI to delete the volume.
 
 ## Dashboard workflow
 
@@ -91,38 +69,16 @@ When the AppHost is running, open the Aspire dashboard to:
 - restart resources
 - stop/start managed resources
 
-For the managed PostgreSQL resource, the dashboard is the easiest place to restart or stop the container when you want a fresh database.
-
-## Secrets
-
-The AppHost uses user-secrets for sensitive values such as:
-
-- `jwt-key`
-- `api-key`
-- `ConnectionStrings:albums`
-
-Set them once in `MusicAlbumsApi.AppHost`:
-
-```bash
-cd MusicAlbumsApi.AppHost
-dotnet user-secrets set "jwt-key" "your-super-secret-32-plus-character-jwt-key"
-dotnet user-secrets set "api-key" "your-api-key"
-dotnet user-secrets set "ConnectionStrings:albums" "Server=localhost;Port=5433;Database=albums;User ID=dev;Password=changeme;"
-```
-
-## Useful endpoints in Aspire mode
+## Useful endpoints
 
 - Music Albums API Swagger: `https://localhost:5002/swagger`
 - Identity API Swagger: `https://localhost:5004/swagger`
 - Music Albums API HTTP endpoint: `http://localhost:5001`
 - Identity API HTTP endpoint: `http://localhost:5003`
+- PostgreSQL: `localhost:5433` (user `postgres`, password from `pg-password` parameter)
 
-These ports are set in the AppHost so they are easy to find in the dashboard and predictable in the IDE.
+These ports are fixed in the AppHost so they are easy to find and predictable.
 
-## Recommended workflow
+## Standalone Postgres (legacy)
 
-- **Persistent dev/debugging**: `docker-compose up -d` + `aspire start`
-- **Disposable test run**: `UseManagedPostgres=true aspire start`
-- **Manual SQL investigation**: keep using the Docker Desktop container from `docker-compose`
-
-
+The previous `docker-compose.yml`-based Postgres setup lives under [tools/local-postgres/](../tools/local-postgres/) for the rare cases where you want a Postgres instance outside Aspire. The Aspire-managed Postgres uses the same host port (5433) by default, so don't run both at the same time without overriding the port in the Compose `.env`.

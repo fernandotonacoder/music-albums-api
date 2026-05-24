@@ -1,5 +1,5 @@
-using Npgsql;
 using System.Data;
+using Npgsql;
 
 namespace MusicAlbums.Application.Database;
 

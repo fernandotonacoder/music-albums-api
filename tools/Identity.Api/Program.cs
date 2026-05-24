@@ -1,3 +1,5 @@
+using MusicAlbumsApi.ServiceDefaults;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add Aspire service defaults (OTel, service discovery, resilience, health checks)

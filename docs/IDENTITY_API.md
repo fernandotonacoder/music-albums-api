@@ -34,15 +34,21 @@ Direct execution still works if you want to run the helper tool without Aspire.
 
 ## Configuration
 
-The Identity API requires `Jwt:Key` (user-secrets, min 32 characters).
+The Identity API requires `Jwt:Key` (min 32 characters). The secret must match the `Jwt:Key` used by the main Music Albums API so that tokens validate correctly.
 
-**Setup (first time):**
+**Via Aspire (recommended):** the AppHost reads `jwt-key` from `MusicAlbumsApi.AppHost` user-secrets and injects it into both services as the `Jwt:Key` env var. Set it once on the AppHost:
+
+```bash
+cd MusicAlbumsApi.AppHost
+dotnet user-secrets set "jwt-key" "your-secret-key-min-32-chars"
+```
+
+**Direct run (legacy):** when running the Identity API standalone with `dotnet run`, set the secret on the Identity API project itself:
+
 ```bash
 cd tools/Identity.Api
 dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
 ```
-
-This secret must match the `Jwt:Key` used in the main Music Albums API for token validation.
 
 On startup, the API validates the secret and fails fast if missing or too short.
 
@@ -137,8 +143,6 @@ curl -X POST https://localhost:5004/token \
     "customClaims": {}
   }'
 ```
-
----
 
 ---
 
