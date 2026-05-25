@@ -18,9 +18,7 @@ var builder = WebApplication.CreateBuilder(args);
 
 var config = builder.Configuration;
 
-// Add Aspire service defaults (OTel, service discovery, resilience, health checks)
 builder.AddServiceDefaults();
-
 
 var jwtKey = config["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtKey) || jwtKey.Length < 32)
@@ -138,9 +136,6 @@ app.UseOutputCache();
 
 app.UseMiddleware<ValidationMappingMiddleware>();
 app.MapControllers();
-
-// Map default Aspire health check endpoints
-app.MapDefaultEndpoints();
 
 var dbInitializer = app.Services.GetRequiredService<DbInitializer>();
 await dbInitializer.InitializeAsync(CancellationToken.None);

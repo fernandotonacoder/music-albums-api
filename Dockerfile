@@ -9,7 +9,7 @@ COPY ["Directory.Packages.props", "./"]
 COPY ["src/MusicAlbums.Api/MusicAlbums.Api.csproj", "src/MusicAlbums.Api/"]
 COPY ["src/MusicAlbums.Application/MusicAlbums.Application.csproj", "src/MusicAlbums.Application/"]
 COPY ["src/MusicAlbums.Contracts/MusicAlbums.Contracts.csproj", "src/MusicAlbums.Contracts/"]
-COPY ["MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj", "MusicAlbumsApi.ServiceDefaults/"]
+COPY ["src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj", "src/MusicAlbumsApi.ServiceDefaults/"]
 RUN dotnet restore "src/MusicAlbums.Api/MusicAlbums.Api.csproj"
 
 # Copy source code and build

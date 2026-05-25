@@ -164,7 +164,7 @@ stages:
               command: "restore"
               projects: |
                 **/*.csproj
-                !MusicAlbumsApi.AppHost/**/*.csproj
+                !src/MusicAlbumsApi.AppHost/**/*.csproj
 
           # Community Edition does not support branch analysis (sonar.branch.name).
           # These three tasks are restricted to main only. If upgrading to Developer
@@ -197,7 +197,7 @@ stages:
               command: "build"
               projects: |
                 **/*.csproj
-                !MusicAlbumsApi.AppHost/**/*.csproj
+                !src/MusicAlbumsApi.AppHost/**/*.csproj
               arguments: "--configuration Release --no-restore"
 
           - task: DotNetCoreCLI@2

@@ -47,7 +47,9 @@ infra/
 ### monitoring.bicep
 
 - Log Analytics Workspace
-- Application Insights
+- Application Insights (workspace-based, linked to the Log Analytics above)
+
+See [Observability stack](#observability-stack) for how the app uses these resources.
 
 ### database.bicep
 
@@ -100,6 +102,38 @@ RBAC (grants Container App → Key Vault Secrets User)
        ↓
 Entra Admin (registers Container App identity as PostgreSQL Entra ID admin)
 ```
+
+## Observability stack
+
+Telemetry is unified on **OpenTelemetry** — the classic Application Insights SDK is not used. Instrumentation is configured once in `MusicAlbumsApi.ServiceDefaults` (`AddServiceDefaults()` → `ConfigureOpenTelemetry()`) and used by every service that references it (the main API and the Identity API).
+
+The same code runs in both local and cloud — only the active exporter changes, gated by environment variables:
+
+| Variable | Set by | Effect |
+| -------- | ------ | ------ |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | Aspire AppHost (local) | Enables the OTLP exporter → Aspire dashboard. |
+| `APPLICATIONINSIGHTS_CONNECTION_STRING` | `compute.bicep` (cloud) | Enables the Azure Monitor OpenTelemetry exporter → Application Insights. |
+
+Both are mutually exclusive in practice, so there is no duplication.
+
+### Two log paths in Azure
+
+In production, application logs reach Azure via **two independent paths**:
+
+1. **OpenTelemetry → Application Insights** (app-level, structured)
+   - `ILogger<T>` calls flow through the OTel SDK and land in App Insights as structured traces/logs with correlation IDs.
+   - Use for application behaviour, business events, request/response correlation.
+
+2. **Container stdout/stderr → Log Analytics** (platform-level, raw)
+   - Configured in `compute.bicep` via `appLogsConfiguration` on the Container Apps Environment.
+   - Captures container console output (including startup errors before OTel is ready, native crashes, etc.).
+   - Use for infrastructure debugging.
+
+This is intentional — they complement each other. App Insights gives you structured app observability; Log Analytics gives you container-level telemetry that survives even when the app fails to start.
+
+### Health probes excluded from traces
+
+The OTel ASP.NET Core instrumentation filters out requests to `/_health*` so the Container Apps liveness/readiness probes (every ~10s) do not pollute App Insights traces. Filter lives in [`MusicAlbumsApi.ServiceDefaults/Extensions.cs`](../src/MusicAlbumsApi.ServiceDefaults/Extensions.cs).
 
 ## Passwordless Database Authentication (Entra ID)
 

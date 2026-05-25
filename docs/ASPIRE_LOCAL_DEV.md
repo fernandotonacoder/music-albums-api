@@ -46,24 +46,50 @@ musicalbums-postgres (server)
 
 ## Start it
 
+You can either use the CLI or run from your IDE — both do the same thing:
+
 ```bash
 aspire start
 ```
 
-That's it. On the first run, Aspire creates the container and the volume; on subsequent runs it just reuses them.
+Or, in your IDE: open the solution and **F5 / Run** the `MusicAlbumsApi.AppHost` project (set it as the startup project if needed). Supported in:
+
+- **Visual Studio** — native Aspire tooling, no extra setup
+- **JetBrains Rider** — native Aspire support since 2024.2
+- **VS Code** — install the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension
+
+The IDE flow has the same effect as `aspire start`, plus integrated debugging (breakpoints, watch, step-through) across every service the AppHost orchestrates.
+
+On the first run, Aspire creates the Postgres container and the data volume; on subsequent runs it reuses them.
 
 ## First-time secrets
 
 The AppHost reads sensitive values from its user-secrets store:
 
 ```bash
-cd MusicAlbumsApi.AppHost
+cd src/MusicAlbumsApi.AppHost
 dotnet user-secrets set "jwt-key" "your-super-secret-32-plus-character-jwt-key"
 dotnet user-secrets set "api-key" "your-api-key"
 dotnet user-secrets set "pg-password" "your-local-postgres-password"
 ```
 
 The `pg-password` is used by Aspire when it brings up the Postgres container. You only need to set this once — Aspire reuses it across runs.
+
+### Inspecting the stored secrets
+
+```bash
+# List values from the AppHost user-secrets store
+cd src/MusicAlbumsApi.AppHost
+dotnet user-secrets list
+
+# Open the underlying secrets file directly
+# Windows:
+code "$env:APPDATA\Microsoft\UserSecrets\<UserSecretsId>\secrets.json"
+# Linux/macOS:
+code ~/.microsoft/usersecrets/<UserSecretsId>/secrets.json
+```
+
+`<UserSecretsId>` is declared in `MusicAlbumsApi.AppHost.csproj`.
 
 ## Resetting the database
 
@@ -76,7 +102,7 @@ docker volume rm musicalbums-postgres-data
 
 On the next `aspire start`, Aspire recreates the volume and the schema is re-initialised by `DbInitializer`.
 
-Alternatively, use the Aspire dashboard or Docker Desktop UI to delete the volume.
+Alternatively, delete the volume from the Docker Desktop UI under **Volumes**.
 
 ## Dashboard workflow
 
@@ -99,14 +125,16 @@ These ports are fixed in the AppHost so they are easy to find and predictable.
 
 ## Observability
 
-Telemetry (traces, metrics, logs) behaves differently depending on the environment:
+Telemetry (traces, metrics, logs) is configured in `MusicAlbumsApi.ServiceDefaults` (`AddServiceDefaults()`) and behaves differently depending on the environment:
 
 | Environment | How it works |
 | ----------- | ------------ |
-| **Local (Aspire)** | The AppHost sets `OTEL_EXPORTER_OTLP_ENDPOINT` automatically. All OTel data flows to the **Aspire dashboard** — visible under Traces and Metrics without any extra setup. |
-| **Cloud (Azure)** | The infra injects `APPLICATIONINSIGHTS_CONNECTION_STRING`. The app exports via the Azure Monitor OpenTelemetry exporter directly to **Application Insights**. |
+| **Local (Aspire)** | The AppHost sets `OTEL_EXPORTER_OTLP_ENDPOINT` automatically. All OTel data from both the API and the Identity API flows to the **Aspire dashboard** — visible under Traces and Metrics without any extra setup. |
+| **Cloud (Azure)** | The infra injects `APPLICATIONINSIGHTS_CONNECTION_STRING`. The app exports via the Azure Monitor OpenTelemetry exporter directly to **Application Insights**. The Identity API is not wired to App Insights (its Bicep does not inject the connection string), since it's a helper tool. |
 
-Neither exporter is active in the other's environment, so there is no duplication.
+Both exporters are gated by environment variables — only one is active at a time, so there is no duplication.
+
+Health probe requests (`/_health`, `/_health/live`, `/_health/ready`) are excluded from traces to avoid polluting Application Insights with noise from Container Apps probes (which run every ~10 seconds).
 
 ## Standalone Postgres (legacy)
 

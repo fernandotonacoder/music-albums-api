@@ -16,11 +16,16 @@
 
 Music Albums REST API written in C# / .NET, using Dapper, PostgreSQL, and Aspire for local orchestration.
 
-This project follows a pragmatic **Layered Architecture**, organized by technical concerns:
+This project is a **monolith** with a pragmatic **Layered Architecture**, organized by technical concerns:
 
 - **`MusicAlbums.Api`** (Presentation): MVC Controllers, auth handlers, request/response mapping, health checks, and Swagger configuration.
 - **`MusicAlbums.Application`** (Business & Data): Core business logic (`Services`), data access (`Repositories` & `Database`), domain models, and input validation (`Validators`).
 - **`MusicAlbums.Contracts`** (HTTP Contracts): Request and Response DTOs that define the API's public interface.
+- **`MusicAlbumsApi.ServiceDefaults`** (Shared Infrastructure): Cross-cutting runtime concerns — OpenTelemetry instrumentation, service discovery, HTTP client resilience. Referenced by both the API and the Identity API via `builder.AddServiceDefaults()`, and **runs in both local and cloud** — only the telemetry exporter changes (OTLP to the Aspire dashboard locally, Azure Monitor to Application Insights in production).
+
+One additional project handles local orchestration only:
+
+- **`MusicAlbumsApi.AppHost`** — [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/) orchestrator. Declares the local dev topology (PostgreSQL, the API, the Identity API helper) and is invoked by `aspire start`. **Local development only** — not built into the Docker image, not deployed to the cloud.
 
 ## 🌐 Live Demo
 
@@ -39,44 +44,21 @@ This project follows a pragmatic **Layered Architecture**, organized by technica
 
 ## 🚀 Local Development
 
-Aspire is the local orchestrator. It brings up the API, the Identity API helper, and a persistent PostgreSQL container in one command:
+Aspire is the local orchestrator. It brings up the API, the Identity API helper, and a persistent PostgreSQL container in one go.
+
+**From the terminal:**
 
 ```bash
 aspire start
 ```
 
-See [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) for the full workflow (data persistence, reset, endpoints).
+**From your IDE:** F5 / Run the `MusicAlbumsApi.AppHost` project. Works in **Visual Studio**, **Rider**, and **VS Code** (with the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension) — same result as the CLI, plus integrated breakpoints across every service the AppHost orchestrates.
 
-### Architecture
+See [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) for first-time setup (user-secrets for the AppHost), the daily workflow (data persistence, reset, endpoints), and the observability story.
+
+### Local orchestration (Aspire Resources Graph)
 
 ![Aspire Resources Graph](docs/images/aspire-resources-graph.png)
-
-### First-time secrets (AppHost)
-
-```bash
-cd MusicAlbumsApi.AppHost
-dotnet user-secrets set "jwt-key" "your-secret-key-min-32-chars"
-dotnet user-secrets set "api-key" "your-api-key"
-dotnet user-secrets set "pg-password" "your-local-postgres-password"
-```
-
-The `pg-password` is what Aspire uses to bring up the local Postgres container; set it once and Aspire reuses it across runs.
-
-### View your secrets
-
-```bash
-# List AppHost secrets
-cd MusicAlbumsApi.AppHost
-dotnet user-secrets list
-
-# Open the secrets file directly (Windows)
-code "$env:APPDATA\Microsoft\UserSecrets\<UserSecretsId>\secrets.json"
-
-# Open the secrets file directly (Linux/macOS)
-code ~/.microsoft/usersecrets/<UserSecretsId>/secrets.json
-```
-
-Find `<UserSecretsId>` in `MusicAlbumsApi.AppHost.csproj`.
 
 ## ☁️ Cloud Deployment (Azure Container Apps)
 
@@ -86,8 +68,24 @@ Find `<UserSecretsId>` in `MusicAlbumsApi.AppHost.csproj`.
 
 Create two Azure DevOps variable groups (`music-albums-dev` / `music-albums-prod`) with the required variables, then queue `.azure-pipelines/main-ci-cd.yml` with:
 
-- `targetEnvironment`: `dev` or `prod`
-- `deployInfra`: `false` by default (set to `true` to deploy/update infrastructure)
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `targetEnvironment` | `dev` | Target environment (`dev` or `prod`) |
+| `deployInfra` | `false` | Deploy or update infrastructure via Bicep |
+| `destroyInfra` | `false` | Delete the entire resource group (manual only) |
+
+The `destroyInfra` flag tears down all resources in the resource group — useful for cost savings when the environment is no longer needed. Re-deploy from scratch with `deployInfra=true`.
+
+### Identity API (optional helper)
+
+The [Identity API](docs/IDENTITY_API.md) is a JWT token generator for testing. It is deployed into the **same resource group** as the main API and shares its Container Apps Environment. Its infrastructure is managed separately via `.azure-pipelines/optional-identity-api.yml`:
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `deployInfra` | `false` | Deploy the Identity API Container App |
+| `destroyInfra` | `false` | Delete the Identity API Container App (manual only) |
+
+Deploy it when you need remote testing; destroy it when done to avoid unnecessary costs.
 
 See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for the full deployment model, variable groups, dev vs prod differences, and pipelines.
 
@@ -96,9 +94,3 @@ See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for the full deployment model
 - `/_health` - general health status
 - `/_health/live` - liveness probe
 - `/_health/ready` - readiness probe (checks database)
-
-## 🐳 Build the Docker image
-
-```bash
-docker build -t music-albums-api .
-```
