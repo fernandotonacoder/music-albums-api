@@ -7,7 +7,8 @@ COPY ["src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj"
 
 RUN dotnet restore "tools/Identity.Api/Identity.Api.csproj"
 
-COPY . .
+COPY ["tools/Identity.Api/", "tools/Identity.Api/"]
+COPY ["src/MusicAlbumsApi.ServiceDefaults/", "src/MusicAlbumsApi.ServiceDefaults/"]
 WORKDIR "/app/tools/Identity.Api"
 RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
