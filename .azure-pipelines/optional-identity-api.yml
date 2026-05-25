@@ -81,8 +81,9 @@ stages:
               containerRegistry: github-ghcr
               repository: fernandotonacoder/identity-api
               command: build
-              dockerfile: tools/Identity.Api/Dockerfile
+              Dockerfile: tools/Identity.Api/Dockerfile
               buildContext: $(Build.SourcesDirectory)
+              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
@@ -127,8 +128,9 @@ stages:
               containerRegistry: github-ghcr
               repository: fernandotonacoder/identity-api
               command: buildAndPush
-              dockerfile: tools/Identity.Api/Dockerfile
+              Dockerfile: tools/Identity.Api/Dockerfile
               buildContext: $(Build.SourcesDirectory)
+              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}

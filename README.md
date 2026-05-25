@@ -74,6 +74,8 @@ Create two Azure DevOps variable groups (`music-albums-dev` / `music-albums-prod
 | `deployInfra` | `false` | Deploy or update infrastructure via Bicep |
 | `destroyInfra` | `false` | Delete the entire resource group (manual only) |
 
+![Azure Pipeline — main-ci-cd](docs/images/azure-pipeline-main-ci-cd.png)
+
 The `destroyInfra` flag tears down all resources in the resource group — useful for cost savings when the environment is no longer needed. Re-deploy from scratch with `deployInfra=true`.
 
 ### Identity API (optional helper)
@@ -84,6 +86,8 @@ The [Identity API](docs/IDENTITY_API.md) is a JWT token generator for testing. I
 |-----------|---------|-------------|
 | `deployInfra` | `false` | Deploy the Identity API Container App |
 | `destroyInfra` | `false` | Delete the Identity API Container App (manual only) |
+
+![Azure Pipeline — optional-identity-api](docs/images/azure-pipeline-optional-identity-api.png)
 
 Deploy it when you need remote testing; destroy it when done to avoid unnecessary costs.
 
