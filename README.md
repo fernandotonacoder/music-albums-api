@@ -14,7 +14,7 @@
 [![JWT](https://img.shields.io/badge/JWT-Authentication-000000?logo=jsonwebtokens&logoColor=white)](docs/IDENTITY_API.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Music Albums REST API written in C# / .NET, using Dapper, PostgreSQL, and Aspire for local orchestration.
+Music Albums REST API in .NET / C#, with Dapper and PostgreSQL. **Locally orchestrated by Aspire** and **deployed to Azure Container Apps** through Bicep's Infrastructure as Code (IaC) and Azure Pipelines CI/CD.
 
 This project is a **monolith** with a pragmatic **Layered Architecture**, organized by technical concerns:
 
