@@ -69,6 +69,7 @@ pool:
 stages:
   - stage: Build
     displayName: Build
+    condition: ne('${{ parameters.destroyInfra }}', 'true')
     jobs:
       - job: Build
         displayName: Build Docker Image
@@ -115,7 +116,7 @@ stages:
   - stage: Push
     displayName: Push Docker Image
     dependsOn: Build
-    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'))
+    condition: and(succeeded(), ne(variables['Build.Reason'], 'PullRequest'), ne('${{ parameters.destroyInfra }}', 'true'))
     jobs:
       - job: Push
         displayName: Push to GitHub Container Registry
@@ -139,7 +140,7 @@ stages:
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
     dependsOn: Build
-    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
+    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), ne('${{ parameters.destroyInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
       - job: WhatIf
         displayName: Run What-If Analysis
@@ -205,7 +206,7 @@ stages:
   - stage: DeployInfra
     displayName: Deploy Infrastructure
     dependsOn: PreviewInfra
-    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
+    condition: and(succeeded(), eq('${{ parameters.deployInfra }}', 'true'), ne('${{ parameters.destroyInfra }}', 'true'), eq(variables['Build.Reason'], 'Manual'))
     jobs:
       - deployment: DeployBicep
         displayName: Deploy Bicep Template
@@ -281,7 +282,8 @@ stages:
         eq(dependencies.Push.result, 'Succeeded'),
         in(dependencies.PreviewInfra.result, 'Succeeded', 'Skipped'),
         in(dependencies.DeployInfra.result, 'Succeeded', 'Skipped'),
-        ne(variables['Build.Reason'], 'PullRequest')
+        ne(variables['Build.Reason'], 'PullRequest'),
+        ne('${{ parameters.destroyInfra }}', 'true')
       )
     jobs:
       - deployment: DeployToAzure
