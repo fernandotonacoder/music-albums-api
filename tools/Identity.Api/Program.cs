@@ -1,4 +1,8 @@
+using MusicAlbumsApi.ServiceDefaults;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 
 var jwtSecret = builder.Configuration["Jwt:Key"];
 if (string.IsNullOrWhiteSpace(jwtSecret) || jwtSecret.Length < 32)

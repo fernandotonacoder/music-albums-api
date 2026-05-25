@@ -1,8 +1,8 @@
 <Project Sdk="Aspire.AppHost.Sdk/13.3.5">
 
   <ItemGroup>
-    <ProjectReference Include="..\src\MusicAlbums.Api\MusicAlbums.Api.csproj" />
-    <ProjectReference Include="..\tools\Identity.Api\Identity.Api.csproj" />
+    <ProjectReference Include="..\MusicAlbums.Api\MusicAlbums.Api.csproj" />
+    <ProjectReference Include="..\..\tools\Identity.Api\Identity.Api.csproj" />
     <ProjectReference Include="..\MusicAlbumsApi.ServiceDefaults\MusicAlbumsApi.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 

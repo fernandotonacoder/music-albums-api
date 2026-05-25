@@ -8,49 +8,30 @@ Generates JWT tokens with custom claims for testing authorization in the main Mu
 
 ## Running Locally
 
-### Aspire (recommended)
+The Identity API requires `Jwt:Key` (min 32 characters). The key **must match** the one used by the main Music Albums API, otherwise tokens won't validate. On startup, the app fails fast if the key is missing or too short.
 
-From the repo root:
+### Via Aspire (recommended)
+
+The AppHost reads `jwt-key` from its user-secrets and injects it as `Jwt:Key` into both services — set it once and both API and Identity API pick it up:
 
 ```bash
+cd src/MusicAlbumsApi.AppHost
+dotnet user-secrets set "jwt-key" "your-secret-key-min-32-chars"
+cd ..
 aspire start
 ```
 
-When started by the AppHost, the Identity API is exposed on:
+Exposed on `http://localhost:5003` and `https://localhost:5004`.
 
-- HTTP: `http://localhost:5003`
-- HTTPS: `https://localhost:5004`
+### Standalone (without Aspire)
 
-### Direct run (legacy)
-
-```bash
-cd tools/Identity.Api
-dotnet run
-```
-
-Direct execution still works if you want to run the helper tool without Aspire.
-
----
-
-## Configuration
-
-The Identity API requires `Jwt:Key` (min 32 characters). The secret must match the `Jwt:Key` used by the main Music Albums API so that tokens validate correctly.
-
-**Via Aspire (recommended):** the AppHost reads `jwt-key` from `MusicAlbumsApi.AppHost` user-secrets and injects it into both services as the `Jwt:Key` env var. Set it once on the AppHost:
-
-```bash
-cd MusicAlbumsApi.AppHost
-dotnet user-secrets set "jwt-key" "your-secret-key-min-32-chars"
-```
-
-**Direct run (legacy):** when running the Identity API standalone with `dotnet run`, set the secret on the Identity API project itself:
+Configure the secret on the Identity API project itself, then run:
 
 ```bash
 cd tools/Identity.Api
 dotnet user-secrets set "Jwt:Key" "your-secret-key-min-32-chars"
+dotnet run
 ```
-
-On startup, the API validates the secret and fails fast if missing or too short.
 
 ---
 

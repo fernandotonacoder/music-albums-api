@@ -12,6 +12,8 @@
     <Project Path="src/MusicAlbums.Api/MusicAlbums.Api.csproj" />
     <Project Path="src/MusicAlbums.Application/MusicAlbums.Application.csproj" />
     <Project Path="src/MusicAlbums.Contracts/MusicAlbums.Contracts.csproj" />
+    <Project Path="src/MusicAlbumsApi.AppHost/MusicAlbumsApi.AppHost.csproj" />
+    <Project Path="src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MusicAlbums.Api.Tests.Integration/MusicAlbums.Api.Tests.Integration.csproj" />
@@ -21,6 +23,4 @@
     <File Path="tools/MusicAlbumsApi.postman_collection.json" />
     <Project Path="tools/Identity.Api/Identity.Api.csproj" />
   </Folder>
-  <Project Path="MusicAlbumsApi.AppHost/MusicAlbumsApi.AppHost.csproj" />
-  <Project Path="MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj" />
 </Solution>

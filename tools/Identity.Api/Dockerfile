@@ -1,13 +1,15 @@
 FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
 WORKDIR /app
 
-COPY ["Identity.Api.csproj", "./"]
-RUN dotnet restore "Identity.Api.csproj"
+COPY ["Directory.Packages.props", "./"]
+COPY ["tools/Identity.Api/Identity.Api.csproj", "tools/Identity.Api/"]
+COPY ["src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj", "src/MusicAlbumsApi.ServiceDefaults/"]
 
-COPY ["Contracts/", "Contracts/"]
-COPY ["Controllers/", "Controllers/"]
-COPY ["Properties/", "Properties/"]
-COPY ["Program.cs", "./"]
+RUN dotnet restore "tools/Identity.Api/Identity.Api.csproj"
+
+COPY ["tools/Identity.Api/", "tools/Identity.Api/"]
+COPY ["src/MusicAlbumsApi.ServiceDefaults/", "src/MusicAlbumsApi.ServiceDefaults/"]
+WORKDIR "/app/tools/Identity.Api"
 RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
