@@ -1,15 +1,18 @@
 **/.git
 **/.gitignore
 **/.vscode
+**/.idea
+**/.github
 **/.azure-pipelines
 
 **/bin
 **/obj
 
 **/tests
-**/tools
 **/docs
 **/infra
+tools
+!tools/Identity.Api
 
 **/*.md
 **/*.env
@@ -23,3 +26,4 @@ Dockerfile
 .dockerignore
 LICENSE
 *.slnx
+qodana.yaml
