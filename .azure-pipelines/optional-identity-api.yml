@@ -82,6 +82,7 @@ stages:
               repository: fernandotonacoder/identity-api
               command: build
               dockerfile: tools/Identity.Api/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
@@ -127,6 +128,7 @@ stages:
               repository: fernandotonacoder/identity-api
               command: buildAndPush
               dockerfile: tools/Identity.Api/Dockerfile
+              buildContext: $(Build.SourcesDirectory)
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
