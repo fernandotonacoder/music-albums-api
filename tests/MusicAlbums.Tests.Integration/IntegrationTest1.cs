@@ -1,6 +1,4 @@
-using Microsoft.Extensions.Logging;
-
-namespace MusicAlbums.IntegrationTests.Tests;
+namespace MusicAlbums.Tests.Integration;
 
 public class IntegrationTest1
 {

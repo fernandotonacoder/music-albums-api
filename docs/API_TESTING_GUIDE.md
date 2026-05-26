@@ -23,7 +23,7 @@ Content-Type: application/json
 Authorization: Bearer YOUR_TOKEN_HERE
 ```
 
-**Get a Token**: First, get a token from your Identity API:
+**Get a Token**: First, get a token from your Identity API (see [Identity API](IDENTITY_API.md) for full details on roles and claims):
 
 ```bash
 # Get Admin Token

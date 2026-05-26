@@ -115,8 +115,8 @@ When the AppHost is running, open the Aspire dashboard to:
 
 ## Useful endpoints
 
-- Music Albums API Swagger: `https://localhost:5002/swagger`
-- Identity API Swagger: `https://localhost:5004/swagger`
+- Music Albums API docs (Scalar): `https://localhost:5002/scalar/v1`
+- Identity API docs (Scalar): `https://localhost:5004/scalar/v1`
 - Music Albums API HTTP endpoint: `http://localhost:5001`
 - Identity API HTTP endpoint: `http://localhost:5003`
 - PostgreSQL: `localhost:5433` (user `postgres`, password from `pg-password` parameter)
@@ -134,7 +134,7 @@ Telemetry (traces, metrics, logs) is configured in `MusicAlbumsApi.ServiceDefaul
 
 Both exporters are gated by environment variables — only one is active at a time, so there is no duplication.
 
-Health probe requests (`/_health`, `/_health/live`, `/_health/ready`) are excluded from traces to avoid polluting Application Insights with noise from Container Apps probes (which run every ~10 seconds).
+Health probe requests to the main API (`/_health`, `/_health/live`, `/_health/ready`) are excluded from traces to avoid polluting Application Insights with noise from Container Apps probes (which run every ~10 seconds). The Identity API does not expose health endpoints — it's a helper tool, not a probed service.
 
 ## Standalone Postgres (legacy)
 

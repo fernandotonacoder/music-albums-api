@@ -1,4 +1,5 @@
 using MusicAlbumsApi.ServiceDefaults;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -15,24 +16,22 @@ builder.Services.AddControllers();
 
 if (builder.Environment.IsDevelopment())
 {
-	builder.Services.AddEndpointsApiExplorer();
-	builder.Services.AddSwaggerGen(options =>
-	{
-		var xmlFile = $"{typeof(Program).Assembly.GetName().Name}.xml";
-		var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-		if (File.Exists(xmlPath))
-		{
-			options.IncludeXmlComments(xmlPath);
-		}
-	});
+    builder.Services.AddOpenApi();
 }
 
 var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-	app.UseSwagger();
-	app.UseSwaggerUI();
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
+    {
+        options
+            .WithTitle("Identity API")
+            .WithClassicLayout()
+            .ForceDarkMode()
+            .WithProxy(null!);
+    });
 }
 
 app.UseAuthorization();

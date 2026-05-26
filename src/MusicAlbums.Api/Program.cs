@@ -3,16 +3,15 @@ using Asp.Versioning;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Diagnostics.HealthChecks;
-using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using MusicAlbums.Api.Auth;
 using MusicAlbums.Api.Health;
 using MusicAlbums.Api.Mapping;
-using MusicAlbums.Api.Swagger;
+using MusicAlbums.Api.OpenApi;
 using MusicAlbums.Application;
 using MusicAlbums.Application.Database;
 using MusicAlbumsApi.ServiceDefaults;
-using Swashbuckle.AspNetCore.SwaggerGen;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -92,8 +91,11 @@ builder.Services.AddControllers();
 builder.Services.AddHealthChecks()
     .AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name);
 
-builder.Services.AddTransient<IConfigureOptions<SwaggerGenOptions>, ConfigureSwaggerOptions>();
-builder.Services.AddSwaggerGen(x => x.OperationFilter<SwaggerDefaultValues>());
+builder.Services.AddOpenApi("v1", options =>
+{
+    options.AddDocumentTransformer<BearerSecurityTransformer>();
+    options.ShouldInclude = _ => true;
+});
 
 builder.Services.AddApplication();
 builder.Services.AddDatabase(config["Database:ConnectionString"]!);
@@ -102,13 +104,15 @@ var app = builder.Build();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(x =>
+    app.MapOpenApi();
+    app.MapScalarApiReference(options =>
     {
-        foreach (var groupName in app.DescribeApiVersions().Select(description => description.GroupName))
-        {
-            x.SwaggerEndpoint($"/swagger/{groupName}/swagger.json", groupName);
-        }
+        options
+            .WithTitle("Music Albums API")
+            .WithClassicLayout()
+            .ForceDarkMode()
+            .AddPreferredSecuritySchemes(JwtBearerDefaults.AuthenticationScheme)
+            .WithProxy(null!);
     });
 }
 

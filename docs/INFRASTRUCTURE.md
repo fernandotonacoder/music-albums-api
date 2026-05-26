@@ -2,6 +2,8 @@
 
 Modular Bicep architecture for the Music Albums API. The Identity API helper tool is optional and deployed separately.
 
+> Looking for pipeline parameters, service connections, variable groups, or manual deploy commands (Bicep + Container App image update)? Those live in [CI/CD](CI_CD.md).
+
 ## Structure
 
 ```
@@ -25,7 +27,7 @@ infra/
 | Concern                         | Dev                                | Prod                                                 |
 | ------------------------------- | ---------------------------------- | ---------------------------------------------------- |
 | **Subscription**                | Azure for Students                 | VS Professional ($50/month)                          |
-| **Service Connection**          | `azure-service-connection`         | `azure-service-connection-prod`                      |
+| **Service Connection**          | `azure-service-connection` ([details](CI_CD.md#azure-devops-service-connections)) | `azure-service-connection-prod`                      |
 | **Network**                     | No VNet, no private endpoints      | Full VNet with subnets, NSGs, private DNS            |
 | **PostgreSQL**                  | Public access                      | VNet-integrated (delegated subnet), no public access |
 | **PostgreSQL auth**             | Entra ID + password (both enabled) | Entra ID only (password disabled)                    |
@@ -77,6 +79,7 @@ See [Observability stack](#observability-stack) for how the app uses these resou
 - Health probes (startup + liveness)
 - Key Vault secret references via managed identity (JWT key, API key)
 - Passwordless database connection string (plain env var, no credentials)
+- JWT issuer/audience exposed as Bicep parameters (`jwtIssuer` / `jwtAudience`, defaults `MusicAlbumsIdentity` / `MusicAlbumsApi`). Must match the values the Identity API uses to **emit** tokens — locally they're injected by [`AppHost.cs`](../src/MusicAlbumsApi.AppHost/AppHost.cs) into both services; in the cloud they come from these Bicep defaults on the main API side, and the Identity API helper pipeline injects the same constants.
 
 ## Resource Groups
 
@@ -175,90 +178,13 @@ Example with `baseName=music-albums`, `suffix=dev`:
 | Key Vault     | `music-albums-kv-dev`       |
 | App Insights  | `music-albums-insights-dev` |
 | Log Analytics | `music-albums-logs-dev`     |
-| VNet (prod)   | `music-albums-vnet-prod`    |
+| VNet          | `music-albums-vnet-prod`    |
+
+> The VNet (and NSGs, Private DNS zones) only exist in **prod** — in dev, `network.bicep` runs but creates no resources (outputs return empty strings). Naming pattern is the same for both envs; the row above shows the prod name because it's the only env where the resource exists.
 
 All resources tagged: `application=music-albums-api`, `environment=dev|prod`, `managedBy=bicep`.
 
-## Pipelines
+### Running multiple instances in the same subscription
 
-### Music Albums API — `.azure-pipelines/main-ci-cd.yml`
+The `baseName` parameter feeds every resource name, so changing it in the variable group (e.g., `BASE_NAME=music-albums-07`) lets you spin up a parallel set of resources side-by-side with the default deployment — useful for spike work, throwaway demos, or working around globally-unique names (Key Vault, Container App FQDN) when a previous deployment is in soft-delete.
 
-Triggers on push to `main` (when `src/`, `Dockerfile`, or `infra/main/` change).
-
-Parameters:
-
-- `targetEnvironment`: `dev` | `prod` (default: `dev`)
-- `deployInfra`: `true` | `false` (default: `false`)
-
-Stages: Build → Preview Infrastructure (What-If) → Deploy Infrastructure → Deploy Application
-
-### Identity API — `.azure-pipelines/optional-identity-api.yml`
-
-Manual queue only. Use to deploy a temporary JWT token generator for remote testing.
-
-Both pipelines select the service connection automatically based on the target environment:
-
-- `dev` → `azure-service-connection` (Azure for Students)
-- `prod` → `azure-service-connection-prod` (VS Professional)
-
-Parameters:
-
-- `deployInfra` / `destroyInfra`: deploy or cleanup
-- `environment`: `dev` | `prod`
-
-## Azure DevOps Variable Groups
-
-Create two variable groups: `music-albums-dev` and `music-albums-prod`.
-
-### Main API Variables
-
-| Variable                 | Example               | Secret?                                         |
-| ------------------------ | --------------------- | ----------------------------------------------- |
-| `RESOURCE_GROUP`         | `music-albums-rg-dev` | No                                              |
-| `BASE_NAME`              | `music-albums`        | No                                              |
-| `LOCATION`               | `swedencentral`       | No                                              |
-| `aspNetCoreEnvironment`  | `Development`         | No                                              |
-| `pg-admin-login`         | —                     | Yes (server creation only, not used at runtime) |
-| `pg-admin-password`      | —                     | Yes (server creation only, not used at runtime) |
-| `jwt-key` (min 32 chars) | —                     | Yes                                             |
-| `api-key`                | —                     | Yes                                             |
-| `GITHUB_TOKEN`           | —                     | Yes                                             |
-
-> **`GITHUB_TOKEN`** — Mirrors Azure DevOps deployments into GitHub's native Deployments feature (Environments tab, PR/commit markers, "View deployment" link to the live Container App). GitHub **Fine-grained PAT** scoped to this repo with **Deployments: Read and write** — nothing else.
-
-### Identity API
-
-The Identity API pipeline also reads from `music-albums-dev` / `music-albums-prod` but only uses the shared variables (`RESOURCE_GROUP`, `BASE_NAME`, `LOCATION`, `GITHUB_TOKEN`, etc.). It derives its resource names from `BASE_NAME` (e.g. `id-api-music-albums-dev`) and deploys into the same resource group and Container App Environment as the main API.
-
-## GitHub Actions
-
-A scheduled GitHub Actions workflow (`.github/workflows/cleanup-ghcr.yml`) runs weekly to clean up old container images from GHCR. It keeps the 10 most recent versions of each package (`music-albums-api` and `identity-api`) and deletes the rest. Can also be triggered manually via **Actions → Cleanup GHCR → Run workflow**.
-
-Requires both packages to have **Admin** role assigned to the repo under **Package Settings → Manage Actions access**.
-
-## Local Deployment
-
-```bash
-# Copy sample params and fill in values
-cp infra/main/main.sample.bicepparam infra/main/main.bicepparam
-
-# Validate
-az deployment group validate \
-  --resource-group <your-rg> \
-  --template-file infra/main/main.bicep \
-  --parameters infra/main/main.bicepparam
-
-# Preview
-az deployment group what-if \
-  --resource-group <your-rg> \
-  --template-file infra/main/main.bicep \
-  --parameters infra/main/main.bicepparam
-
-# Deploy
-az deployment group create \
-  --resource-group <your-rg> \
-  --template-file infra/main/main.bicep \
-  --parameters infra/main/main.bicepparam
-```
-
-> Never commit `main.bicepparam` — it contains secrets.

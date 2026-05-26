@@ -15,7 +15,7 @@
 // ============================================================================
 
 @description('Location for all resources')
-param location string = 'westeurope'
+param location string = 'swedencentral'
 
 @description('Base name for all resources')
 param baseName string = 'music-albums'

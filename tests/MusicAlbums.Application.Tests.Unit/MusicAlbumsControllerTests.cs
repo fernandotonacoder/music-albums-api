@@ -6,7 +6,6 @@ using MusicAlbums.Application.Services;
 using MusicAlbums.Application.Tests.Unit.Factories;
 using MusicAlbums.Contracts.Requests;
 using MusicAlbums.Contracts.Responses;
-using Xunit;
 
 namespace MusicAlbums.Application.Tests.Unit;
 

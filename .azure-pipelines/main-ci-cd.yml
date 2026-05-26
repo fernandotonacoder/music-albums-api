@@ -1,28 +1,3 @@
-# ============================================================================
-# Music Albums API - Azure DevOps Pipeline
-# ============================================================================
-#
-# PREREQUISITES (Azure DevOps project setup):
-#   1. Service Connections:
-#      - azure-service-connection        (dev — Azure for Students)
-#      - azure-service-connection-prod   (prod — VS Professional)
-#   2. Variable groups:
-#      - music-albums-dev
-#      - music-albums-prod
-#   3. Each group should define:
-#      - RESOURCE_GROUP, LOCATION, BASE_NAME, aspNetCoreEnvironment
-#      - pg-admin-login, pg-admin-password (server creation only — not used at runtime)
-#      - jwt-key, api-key (mark as secrets)
-#      - GITHUB_TOKEN (GitHub Fine-grained PAT with Deployments: Read and write)
-#
-# PIPELINE RUNTIME:
-#   - Choose parameter: targetEnvironment (dev | prod)
-#   - Choose parameter: deployInfra (default false)
-#   - Choose parameter: destroyInfra (default false) — manual only, deletes the whole RG
-#   - Pipeline loads matching variable group automatically
-#
-# ============================================================================
-
 parameters:
   - name: deployInfra
     displayName: Deploy infrastructure (Bicep)
@@ -73,7 +48,7 @@ variables:
   - name: tag
     value: "$(Build.BuildId)"
   - name: LOCATION
-    value: "westeurope"
+    value: "swedencentral"
   - name: BASE_NAME
     value: "music-albums"
   - name: aspNetCoreEnvironment
