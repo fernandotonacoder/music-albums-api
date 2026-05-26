@@ -112,10 +112,9 @@ curl -H "Authorization: Bearer YOUR_TOKEN_HERE" \
 
 ## Quick Test
 
-```bash
-aspire start &
-sleep 10
+With `aspire start` running in another terminal:
 
+```bash
 curl -X POST https://localhost:5004/token \
   -H "Content-Type: application/json" \
   -d '{

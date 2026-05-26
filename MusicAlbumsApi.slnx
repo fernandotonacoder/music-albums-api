@@ -16,8 +16,8 @@
     <Project Path="src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
-    <Project Path="tests/MusicAlbums.Api.Tests.Integration/MusicAlbums.Api.Tests.Integration.csproj" />
     <Project Path="tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj" />
+    <Project Path="tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj" />
   </Folder>
   <Folder Name="/tools/">
     <File Path="tools/MusicAlbumsApi.postman_collection.json" />

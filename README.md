@@ -1,7 +1,7 @@
 # Music Albums API
 
-[![Build Status](https://dev.azure.com/fernandotonadev/music-albums-api/_apis/build/status%2FMusic%20Albums%20API%20Build%20and%20Deploy?branchName=main)](https://dev.azure.com/fernandotonadev/music-albums-api/_build/latest?definitionId=1&branchName=main)
-[![Azure Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078D4?logo=microsoft-azure&logoColor=white)](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/swagger/index.html)
+[![Build Status](https://dev.azure.com/fernandotonacoder/music-albums-api/_apis/build/status%2FMusic%20Albums%20API%20Build%20and%20Deploy?branchName=main)](https://dev.azure.com/fernandotonacoder/music-albums-api/_build/latest?definitionId=1&branchName=main)
+[![Azure Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078D4?logo=microsoft-azure&logoColor=white)](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)
 [![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![Bicep](https://img.shields.io/badge/Bicep-IaC-orange?logo=microsoft-azure&logoColor=white)](infra/main/main.bicep)
 
@@ -10,7 +10,7 @@
 [![Dapper](https://img.shields.io/badge/Dapper-Micro%20ORM-2496ED)](https://github.com/DapperLib/Dapper)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-observability-F5A800?logo=opentelemetry&logoColor=white)](https://opentelemetry.io/)
-[![Swagger](https://img.shields.io/badge/Swagger-OpenAPI-85EA2D?logo=swagger&logoColor=black)](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/swagger/index.html)
+[![Scalar](https://img.shields.io/badge/Scalar-API%20Reference-1F2937)](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)
 [![JWT](https://img.shields.io/badge/JWT-Authentication-000000?logo=jsonwebtokens&logoColor=white)](docs/IDENTITY_API.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
@@ -18,7 +18,7 @@ Music Albums REST API in .NET / C#, with Dapper and PostgreSQL. **Locally orches
 
 This project is a **monolith** with a pragmatic **Layered Architecture**, organized by technical concerns:
 
-- **`MusicAlbums.Api`** (Presentation): MVC Controllers, auth handlers, request/response mapping, health checks, and Swagger configuration.
+- **`MusicAlbums.Api`** (Presentation): MVC Controllers, auth handlers, request/response mapping, health checks, and OpenAPI / Scalar configuration.
 - **`MusicAlbums.Application`** (Business & Data): Core business logic (`Services`), data access (`Repositories` & `Database`), domain models, and input validation (`Validators`).
 - **`MusicAlbums.Contracts`** (HTTP Contracts): Request and Response DTOs that define the API's public interface.
 - **`MusicAlbumsApi.ServiceDefaults`** (Shared Infrastructure): Cross-cutting runtime concerns — OpenTelemetry instrumentation, service discovery, HTTP client resilience. Referenced by both the API and the Identity API via `builder.AddServiceDefaults()`, and **runs in both local and cloud** — only the telemetry exporter changes (OTLP to the Aspire dashboard locally, Azure Monitor to Application Insights in production).
@@ -29,32 +29,29 @@ One additional project handles local orchestration only:
 
 ## 🌐 Live Demo
 
-- **🔗 [Music Albums API — Swagger](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/swagger/index.html)**
-- **🔗 [Identity API — Swagger](https://id-api-music-albums-07-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/swagger/index.html)** (helper for generating JWTs)
+- **🔗 [Music Albums API — Scalar](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)**
+- **🔗 [Identity API — Scalar](https://id-api-music-albums-07-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)** (helper for generating JWTs)
 
 > Development environment. Demo may scale to zero when idle — the first request can take a few seconds.
+
+![Scalar API Reference](docs/images/scalar.png)
+
+> The API reference UI was initially built on Swagger UI (Swashbuckle) and later migrated to [Scalar](https://scalar.com/) on top of .NET 10's built-in `Microsoft.AspNetCore.OpenApi` (OpenAPI 3.1).
 
 ## 📚 Documentation
 
 - [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) - database, dashboard workflow, and startup commands
 - [API Testing Guide](docs/API_TESTING_GUIDE.md) - copy-pastable requests for all endpoints
-- [Infrastructure](docs/INFRASTRUCTURE.md) - Bicep modules and Azure deployment
+- [Infrastructure](docs/INFRASTRUCTURE.md) - Bicep modules and Azure resources
+- [CI/CD](docs/CI_CD.md) - Azure Pipelines, service connections, variable groups, GitHub Actions
 - [Identity API](docs/IDENTITY_API.md) - JWT token generator (helper tool)
 - [Standalone Postgres](tools/local-postgres/README.md) - legacy `docker-compose` Postgres, kept for non-Aspire workflows
 
 ## 🚀 Local Development
 
-Aspire is the local orchestrator. It brings up the API, the Identity API helper, and a persistent PostgreSQL container in one go.
+Aspire is the local orchestrator. It brings up the API, the Identity API helper, and a persistent PostgreSQL container in one go — from the CLI (`aspire start`) or via F5 in your IDE.
 
-**From the terminal:**
-
-```bash
-aspire start
-```
-
-**From your IDE:** F5 / Run the `MusicAlbumsApi.AppHost` project. Works in **Visual Studio**, **Rider**, and **VS Code** (with the [C# Dev Kit](https://marketplace.visualstudio.com/items?itemName=ms-dotnettools.csdevkit) extension) — same result as the CLI, plus integrated breakpoints across every service the AppHost orchestrates.
-
-See [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) for first-time setup (user-secrets for the AppHost), the daily workflow (data persistence, reset, endpoints), and the observability story.
+See [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) for first-time setup, the daily workflow, supported IDEs, and the OpenTelemetry observability setup.
 
 ### Local orchestration (Aspire Resources Graph)
 
@@ -66,32 +63,17 @@ See [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) for first-time setup (user-secr
 |-----|------|
 | ![Azure Resource Group — Dev](docs/images/azure-music-albums-rg-dev.png) | ![Azure Resource Group — Prod](docs/images/azure-music-albums-rg-prod.png) |
 
-Create two Azure DevOps variable groups (`music-albums-dev` / `music-albums-prod`) with the required variables, then queue `.azure-pipelines/main-ci-cd.yml` with:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `targetEnvironment` | `dev` | Target environment (`dev` or `prod`) |
-| `deployInfra` | `false` | Deploy or update infrastructure via Bicep |
-| `destroyInfra` | `false` | Delete the entire resource group (manual only) |
+Two Azure Pipelines drive the cloud: `.azure-pipelines/main-ci-cd.yml` for the main API and infrastructure, and `.azure-pipelines/optional-identity-api.yml` for the Identity API helper.
 
 ![Azure Pipeline — main-ci-cd](docs/images/azure-pipeline-main-ci-cd.png)
 
-The `destroyInfra` flag tears down all resources in the resource group — useful for cost savings when the environment is no longer needed. Re-deploy from scratch with `deployInfra=true`.
-
 ### Identity API (optional helper)
 
-The [Identity API](docs/IDENTITY_API.md) is a JWT token generator for testing. It is deployed into the **same resource group** as the main API and shares its Container Apps Environment. Its infrastructure is managed separately via `.azure-pipelines/optional-identity-api.yml`:
-
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `deployInfra` | `false` | Deploy the Identity API Container App |
-| `destroyInfra` | `false` | Delete the Identity API Container App (manual only) |
+The [Identity API](docs/IDENTITY_API.md) is a JWT token generator for testing. It is deployed into the **same resource group** as the main API and shares its Container Apps Environment, but its infrastructure is managed by its own pipeline so it can be deployed/destroyed independently.
 
 ![Azure Pipeline — optional-identity-api](docs/images/azure-pipeline-optional-identity-api.png)
 
-Deploy it when you need remote testing; destroy it when done to avoid unnecessary costs.
-
-See [Infrastructure Guide](docs/INFRASTRUCTURE.md) for the full deployment model, variable groups, dev vs prod differences, and pipelines.
+See [Infrastructure](docs/INFRASTRUCTURE.md) for the deployment model and dev vs prod differences, and [CI/CD](docs/CI_CD.md) for pipeline parameters, service connections, and variable groups.
 
 ## 🩺 Health endpoints
 

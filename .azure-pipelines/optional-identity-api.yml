@@ -1,13 +1,3 @@
-# ============================================================================
-# Identity API - Azure DevOps Pipeline
-# ============================================================================
-# Builds on push to main (when Identity API files change).
-# Deploy/destroy infrastructure is manual only.
-#
-# Use this to generate JWT tokens when testing remotely.
-# Remember to destroy resources when done to save costs!
-# ============================================================================
-
 trigger:
   branches:
     include:
