@@ -10,11 +10,11 @@
 [![Dapper](https://img.shields.io/badge/Dapper-Micro%20ORM-2496ED)](https://github.com/DapperLib/Dapper)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-18-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 [![OpenTelemetry](https://img.shields.io/badge/OpenTelemetry-observability-F5A800?logo=opentelemetry&logoColor=white)](https://opentelemetry.io/)
-[![Scalar](https://img.shields.io/badge/Scalar-API%20Reference-1F2937)](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)
+[![Scalar](https://scalar.com/)
 [![JWT](https://img.shields.io/badge/JWT-Authentication-000000?logo=jsonwebtokens&logoColor=white)](docs/IDENTITY_API.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-Music Albums REST API in .NET / C#, with Dapper and PostgreSQL. **Locally orchestrated by Aspire** and **deployed to Azure Container Apps** through Bicep's Infrastructure as Code (IaC) and Azure Pipelines CI/CD.
+Music Albums REST API in .NET / C#, with Dapper and PostgreSQL. **Locally orchestrated by Aspire** and **deployed to Azure Container Apps** through Bicep's Infrastructure as Code (IaC) and Azure Pipelines CI/CD. Development follows **[GitHub Flow](docs/CONTRIBUTING.md)** — all changes go through PRs (direct push to `main` is not allowed), CI required, squash merge enforced.
 
 This project is a **monolith** with a pragmatic **Layered Architecture**, organized by technical concerns:
 
@@ -29,8 +29,8 @@ One additional project handles local orchestration only:
 
 ## 🌐 Live Demo
 
-- **🔗 [Music Albums API — Scalar](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)**
-- **🔗 [Identity API — Scalar](https://id-api-music-albums-07-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)** (helper for generating JWTs)
+- **🔗 [Music Albums API — Scalar](https://music-albums-api-dev.happysand-f026cd85.swedencentral.azurecontainerapps.io/scalar/v1)**
+- **🔗 [Identity API — Scalar](https://id-api-music-albums-dev.happysand-f026cd85.swedencentral.azurecontainerapps.io/scalar/v1)** (helper for generating JWTs)
 
 > Development environment. Demo may scale to zero when idle — the first request can take a few seconds.
 
@@ -40,6 +40,7 @@ One additional project handles local orchestration only:
 
 ## 📚 Documentation
 
+- [Contributing](docs/CONTRIBUTING.md) - Git workflow, branch naming, PR requirements, deploy flow
 - [Aspire Local Dev](docs/ASPIRE_LOCAL_DEV.md) - database, dashboard workflow, and startup commands
 - [API Testing Guide](docs/API_TESTING_GUIDE.md) - copy-pastable requests for all endpoints
 - [Infrastructure](docs/INFRASTRUCTURE.md) - Bicep modules and Azure resources
