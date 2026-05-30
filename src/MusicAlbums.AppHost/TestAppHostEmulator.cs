@@ -19,7 +19,7 @@ public static class TestAppHostEmulator
         var jwtKey = builder.AddParameter("jwt-key", TestJwtKey, secret: true);
         var apiKey = builder.AddParameter("api-key", TestApiKey, secret: true);
 
-        var postgres = builder.AddPostgres("musicalbums-postgres-aspire-testing")
+        var postgres = builder.AddPostgres("test-music-albums-postgres")
             .AddDatabase("albums");
 
         return (postgres, jwtKey, apiKey);
