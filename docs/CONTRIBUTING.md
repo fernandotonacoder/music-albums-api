@@ -29,7 +29,7 @@ main ─────────────────────────
 
 3. **Push and open a PR** against `main` on GitHub.
 
-4. **CI runs automatically** on the PR — build, unit tests, Bicep lint, SonarQube analysis (main branch only).
+4. **CI runs automatically** on the PR — build, unit tests, Aspire-driven integration tests, Bicep lint, SonarQube analysis (main branch only).
 
 5. **Get a review** — at least one approval required.
 
@@ -39,7 +39,7 @@ main ─────────────────────────
 
 | Check | Enforced by |
 | ----- | ----------- |
-| CI pipeline green (build + unit tests) | Azure Pipelines status check on GitHub |
+| CI pipeline green (build + unit tests + integration tests) | Azure Pipelines status check on GitHub |
 | At least 1 reviewer approval | GitHub branch protection |
 | Branch up-to-date with `main` | GitHub branch protection |
 | Squash merge only (no merge commits) | GitHub repo settings |
@@ -48,7 +48,7 @@ main ─────────────────────────
 
 ## What happens after merge to `main`
 
-Merging a PR to `main` triggers `.azure-pipelines/main-ci-cd.yml` automatically (when `src/`, `Dockerfile`, or `infra/main/` changed):
+Merging a PR to `main` triggers `.azure-pipelines/main-ci-cd.yml` automatically when one of these paths changed: `src/`, `tests/`, `Dockerfile`, `infra/main/`, `Directory.Packages.props`, `MusicAlbumsApi.slnx`, `global.json`, or `.azure-pipelines/main-ci-cd.yml` itself.
 
 ```
 Build ──► Test ──► Push image ──► (approval) ──► Deploy to dev

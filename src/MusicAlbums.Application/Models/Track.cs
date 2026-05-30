@@ -10,9 +10,6 @@ public class Track
     
     public required int TrackNumber { get; set; }
     
-    /// <summary>
-    /// Duration in seconds
-    /// </summary>
     public int? DurationInSeconds { get; set; }
     
     /// <summary>

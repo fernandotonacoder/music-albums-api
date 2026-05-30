@@ -20,9 +20,6 @@ public partial class MusicAlbum
     
     public List<Track> Tracks { get; set; } = new();
     
-    /// <summary>
-    /// Artists associated with this album
-    /// </summary>
     public List<Artist> Artists { get; set; } = new();
     
     private string GenerateSlug()

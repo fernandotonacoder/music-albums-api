@@ -6,7 +6,7 @@ Pipeline configuration for the Music Albums API. Two Azure Pipelines handle depl
 
 ### Music Albums API — `.azure-pipelines/main-ci-cd.yml`
 
-Triggers on push to `main` (when `src/`, `Dockerfile`, or `infra/main/` change).
+Triggers on push to `main` (and on PRs against `main`) when any of these paths change: `src/`, `tests/`, `Dockerfile`, `infra/main/`, `Directory.Packages.props`, `MusicAlbumsApi.slnx`, `global.json`, or `.azure-pipelines/main-ci-cd.yml` itself.
 
 Parameters:
 
@@ -14,7 +14,7 @@ Parameters:
 - `deployInfra`: `true` | `false` (default: `false`) — deploy or update infrastructure via Bicep
 - `destroyInfra`: `true` | `false` (default: `false`) — manual only, deletes the entire resource group. Useful for cost savings when the environment is no longer needed; re-deploy from scratch with `deployInfra=true`
 
-Stages: Build → Preview Infrastructure (What-If) → Deploy Infrastructure → Deploy Application
+Stages: Build → Test → Push → Preview Infrastructure (What-If) → Deploy Infrastructure → Deploy Application. The Test stage runs unit tests and Aspire-driven integration tests in the same job so SonarQube can collect coverage from both. Push, Deploy stages, and infra stages skip on PR runs.
 
 ### Identity API — `.azure-pipelines/optional-identity-api.yml`
 
@@ -154,7 +154,7 @@ Configure under **Project Settings → Service connections**. All five are requi
 | `azure-service-connection`      | Azure Resource Manager | Deploys to the **dev** subscription (Azure for Students). Selected when `targetEnvironment=dev`.           |
 | `azure-service-connection-prod` | Azure Resource Manager | Deploys to the **prod** subscription (VS Professional). Selected when `targetEnvironment=prod`.            |
 | `github-ghcr`                 | Docker Registry        | Pushes container images to GitHub Container Registry (`ghcr.io/fernandotonacoder/{music-albums-api,identity-api}`). Uses a GitHub PAT with `write:packages`. |
-| `sonarqube-ft`                | SonarQube Server self-hosted on Azure     | Used by the `SonarQubePrepare` / `SonarQubeAnalyze` tasks in the Build stage for code quality + coverage analysis. |
+| `sonarqube-ft`                | SonarQube Server self-hosted on Azure     | Used by the `SonarQubePrepare` / `SonarQubeAnalyze` / `SonarQubePublish` tasks in the Test stage for code quality + coverage analysis. Coverage is collected from both unit and integration tests. |
 | `fernandotonacoder`           | GitHub                 | Source repository connection — lets Azure DevOps pull from `github.com/fernandotonacoder/music-albums-api`. Distinct from the `GITHUB_TOKEN` variable, which is used at runtime for the Deployments API. |
 
 > The Azure service connections (`azure-service-connection` / `-prod`) must be granted **Contributor** at the subscription scope so Bicep can create/update resource groups and Container Apps.

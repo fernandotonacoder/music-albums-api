@@ -3,7 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\MusicAlbums.Api\MusicAlbums.Api.csproj" />
     <ProjectReference Include="..\..\tools\Identity.Api\Identity.Api.csproj" />
-    <ProjectReference Include="..\MusicAlbumsApi.ServiceDefaults\MusicAlbumsApi.ServiceDefaults.csproj" IsAspireProjectResource="false" />
+    <ProjectReference Include="..\MusicAlbums.ServiceDefaults\MusicAlbums.ServiceDefaults.csproj" IsAspireProjectResource="false" />
   </ItemGroup>
 
   <ItemGroup>

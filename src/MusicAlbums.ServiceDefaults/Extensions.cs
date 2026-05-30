@@ -6,7 +6,7 @@ using OpenTelemetry;
 using OpenTelemetry.Metrics;
 using OpenTelemetry.Trace;
 
-namespace MusicAlbumsApi.ServiceDefaults;
+namespace MusicAlbums.ServiceDefaults;
 
 public static class Extensions
 {

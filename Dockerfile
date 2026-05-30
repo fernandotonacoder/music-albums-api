@@ -9,7 +9,7 @@ COPY ["Directory.Packages.props", "./"]
 COPY ["src/MusicAlbums.Api/MusicAlbums.Api.csproj", "src/MusicAlbums.Api/"]
 COPY ["src/MusicAlbums.Application/MusicAlbums.Application.csproj", "src/MusicAlbums.Application/"]
 COPY ["src/MusicAlbums.Contracts/MusicAlbums.Contracts.csproj", "src/MusicAlbums.Contracts/"]
-COPY ["src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj", "src/MusicAlbumsApi.ServiceDefaults/"]
+COPY ["src/MusicAlbums.ServiceDefaults/MusicAlbums.ServiceDefaults.csproj", "src/MusicAlbums.ServiceDefaults/"]
 
 RUN dotnet restore "src/MusicAlbums.Api/MusicAlbums.Api.csproj"
 
@@ -17,7 +17,7 @@ RUN dotnet restore "src/MusicAlbums.Api/MusicAlbums.Api.csproj"
 COPY ["src/MusicAlbums.Api/", "src/MusicAlbums.Api/"]
 COPY ["src/MusicAlbums.Application/", "src/MusicAlbums.Application/"]
 COPY ["src/MusicAlbums.Contracts/", "src/MusicAlbums.Contracts/"]
-COPY ["src/MusicAlbumsApi.ServiceDefaults/", "src/MusicAlbumsApi.ServiceDefaults/"]
+COPY ["src/MusicAlbums.ServiceDefaults/", "src/MusicAlbums.ServiceDefaults/"]
 
 WORKDIR "/app/src/MusicAlbums.Api"
 

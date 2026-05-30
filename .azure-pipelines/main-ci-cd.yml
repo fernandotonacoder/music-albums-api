@@ -22,8 +22,13 @@ trigger:
   paths:
     include:
       - src/**
+      - tests/**
       - Dockerfile
       - infra/main/**
+      - Directory.Packages.props
+      - MusicAlbumsApi.slnx
+      - global.json
+      - .azure-pipelines/main-ci-cd.yml
 
 pr:
   branches:
@@ -32,8 +37,13 @@ pr:
   paths:
     include:
       - src/**
+      - tests/**
       - Dockerfile
-      - infra/**
+      - infra/main/**
+      - Directory.Packages.props
+      - MusicAlbumsApi.slnx
+      - global.json
+      - .azure-pipelines/main-ci-cd.yml
 
 pool:
   vmImage: ubuntu-latest
@@ -126,26 +136,25 @@ stages:
     dependsOn: Build
     condition: and(succeeded(), ne('${{ parameters.destroyInfra }}', 'true'))
     jobs:
-      - job: UnitTests
-        displayName: "Unit Tests + SonarQube Analysis"
+      - job: Tests
+        displayName: "Tests + SonarQube Analysis"
         steps:
           - task: UseDotNet@2
-            displayName: "Use .NET SDK"
+            displayName: "Use .NET 10 SDK"
             inputs:
               packageType: "sdk"
               version: "10.x"
+
+          - bash: docker info
+            displayName: "Verify Docker daemon is available (required by Aspire integration tests)"
 
           - task: DotNetCoreCLI@2
             displayName: "Restore packages"
             inputs:
               command: "restore"
-              projects: |
-                **/*.csproj
-                !src/MusicAlbumsApi.AppHost/**/*.csproj
+              projects: "**/*.csproj"
 
-          # Community Edition does not support branch analysis (sonar.branch.name).
-          # These three tasks are restricted to main only. If upgrading to Developer
-          # Edition or above, remove the condition to enable PR/branch analysis.
+          # Community Edition has no branch analysis; these tasks run on main only.
           - task: SonarQubePrepare@8
             displayName: "SonarQube — Prepare analysis"
             condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -155,13 +164,11 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+                sonar.cs.cobertura.reportsPaths=$(Agent.TempDirectory)/**/coverage.cobertura.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
-                sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs
+                sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
-          # SonarQube task v8 automatically injects sonar.branch.name into
-          # SONARQUBE_SCANNER_PARAMS, which Community Edition rejects. Strip it
-          # before the scanner runs. Remove this step if upgrading to Developer Edition.
+          # SonarQube task v8 injects sonar.branch.name, which Community Edition rejects — strip it.
           - bash: |
               FILTERED=$(echo "$SONARQUBE_SCANNER_PARAMS" | sed -E 's/"sonar\.branch\.name":"[^"]*",?//g')
               echo "##vso[task.setvariable variable=SONARQUBE_SCANNER_PARAMS]$FILTERED"
@@ -172,22 +179,76 @@ stages:
             displayName: "Build solution"
             inputs:
               command: "build"
-              projects: |
-                **/*.csproj
-                !src/MusicAlbumsApi.AppHost/**/*.csproj
+              projects: "**/*.csproj"
               arguments: "--configuration Release --no-restore"
 
-          - task: DotNetCoreCLI@2
+          # Must match the tag Aspire.Hosting.PostgreSQL resolves to. Bump alongside the Aspire package.
+          - bash: docker pull postgres:17.6
+            displayName: Pre‑pull PostgreSQL image
+
+          - script: >
+              dotnet test
+              --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
+              --configuration Release
+              --no-build
+              --coverage
+              --coverage-output-format cobertura
+              --coverage-output $(Agent.TempDirectory)/TestResults/unit/coverage.cobertura.xml
+              --report-trx
+              --results-directory $(Agent.TempDirectory)/TestResults/unit
             displayName: "Run unit tests"
+
+          - script: >
+              dotnet test
+              --project tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
+              --configuration Release
+              --no-build
+              --coverage
+              --coverage-output-format cobertura
+              --coverage-output $(Agent.TempDirectory)/TestResults/integration/coverage.cobertura.xml
+              --report-trx
+              --results-directory $(Agent.TempDirectory)/TestResults/integration
+            displayName: "Run integration tests (Aspire)"
+
+          - bash: |
+              dotnet tool update --global dotnet-reportgenerator-globaltool || dotnet tool install --global dotnet-reportgenerator-globaltool
+              export PATH="$PATH:$HOME/.dotnet/tools"
+              reportgenerator \
+                -reports:"$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml" \
+                -targetdir:"$(Build.ArtifactStagingDirectory)/coverage-report" \
+                -reporttypes:"HtmlInline_AzurePipelines"
+            displayName: "Generate coverage report (HTML)"
+
+          - task: PublishCodeCoverageResults@2
+            displayName: 'Publish code coverage'
             inputs:
-              command: "test"
-              projects: "tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj"
-              arguments: >
-                --configuration Release
-                --no-restore
-                --collect:"XPlat Code Coverage"
-                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
-              publishTestResults: true
+              codeCoverageTool: 'Cobertura'
+              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+              reportDirectory: '$(Build.ArtifactStagingDirectory)/coverage-report'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish coverage report (HTML)
+            condition: always()
+            continueOnError: true
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/coverage-report'
+              artifact: 'coverage-report'
+
+          - task: PublishTestResults@2
+            displayName: "Publish test results"
+            condition: always()
+            inputs:
+              testResultsFormat: VSTest
+              testResultsFiles: "$(Agent.TempDirectory)/TestResults/**/*.trx"
+              failTaskOnFailedTests: true
+
+          - task: PublishPipelineArtifact@1
+            displayName: Upload test logs
+            condition: always()
+            continueOnError: true
+            inputs:
+              targetPath: "$(Agent.TempDirectory)/TestResults"
+              artifact: "test-logs"
 
           - task: SonarQubeAnalyze@8
             displayName: "SonarQube — Run analysis"
@@ -427,19 +488,16 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      # FIX: Replaced brittle sleep 30 with a retry loop.
-                      # Retries up to 10 times with 15s gaps (2.5 min total
-                      # window) before failing the pipeline.
                       APP_URL=$(az containerapp show \
                         --name '$(containerAppName)' \
                         --resource-group '$(RESOURCE_GROUP)' \
                         --query 'properties.configuration.ingress.fqdn' -o tsv)
 
-                      echo "Checking health at https://$APP_URL/_health"
+                      echo "Checking readiness at https://$APP_URL/_health/ready"
                       echo "##vso[task.setvariable variable=appFqdn]$APP_URL"
 
                       for i in {1..10}; do
-                        if curl -sf "https://$APP_URL/_health"; then
+                        if curl -sf "https://$APP_URL/_health/ready"; then
                           echo "Deployment successful!"
                           exit 0
                         fi
