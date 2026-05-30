@@ -164,7 +164,7 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.cobertura.reportsPaths=$(Agent.TempDirectory)/**/coverage.cobertura.xml
+                sonar.cs.cobertura.reportsPaths=TestResults/**/coverage.cobertura.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
@@ -193,9 +193,9 @@ stages:
               --no-build
               --coverage
               --coverage-output-format cobertura
-              --coverage-output $(Agent.TempDirectory)/TestResults/unit/coverage.cobertura.xml
+              --coverage-output $(Build.SourcesDirectory)/TestResults/unit/coverage.cobertura.xml
               --report-trx
-              --results-directory $(Agent.TempDirectory)/TestResults/unit
+              --results-directory $(Build.SourcesDirectory)/TestResults/unit
             displayName: "Run unit tests"
 
           - script: >
@@ -205,16 +205,16 @@ stages:
               --no-build
               --coverage
               --coverage-output-format cobertura
-              --coverage-output $(Agent.TempDirectory)/TestResults/integration/coverage.cobertura.xml
+              --coverage-output $(Build.SourcesDirectory)/TestResults/integration/coverage.cobertura.xml
               --report-trx
-              --results-directory $(Agent.TempDirectory)/TestResults/integration
+              --results-directory $(Build.SourcesDirectory)/TestResults/integration
             displayName: "Run integration tests (Aspire)"
 
           - bash: |
               dotnet tool update --global dotnet-reportgenerator-globaltool || dotnet tool install --global dotnet-reportgenerator-globaltool
               export PATH="$PATH:$HOME/.dotnet/tools"
               reportgenerator \
-                -reports:"$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml" \
+                -reports:"$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.xml" \
                 -targetdir:"$(Build.ArtifactStagingDirectory)/coverage-report" \
                 -reporttypes:"HtmlInline_AzurePipelines"
             displayName: "Generate coverage report (HTML)"
@@ -223,7 +223,7 @@ stages:
             displayName: 'Publish code coverage'
             inputs:
               codeCoverageTool: 'Cobertura'
-              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.xml'
               reportDirectory: '$(Build.ArtifactStagingDirectory)/coverage-report'
 
           - task: PublishPipelineArtifact@1
@@ -247,7 +247,7 @@ stages:
             condition: always()
             continueOnError: true
             inputs:
-              targetPath: "$(Agent.TempDirectory)/TestResults"
+              targetPath: "$(Build.SourcesDirectory)/TestResults"
               artifact: "test-logs"
 
           - task: SonarQubeAnalyze@8

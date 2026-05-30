@@ -42,3 +42,6 @@ parameters.json
 !*.sample.bicepparam
 
 .vscode/settings.json
+
+# Test coverage
+TestResults/
