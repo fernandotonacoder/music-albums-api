@@ -210,7 +210,7 @@ stages:
               --results-directory $(Agent.TempDirectory)/TestResults/integration
             displayName: "Run integration tests (Aspire)"
 
-          - task: PublishCodeCoverageResults@1
+          - task: PublishCodeCoverageResults@2
             displayName: 'Publish code coverage'
             inputs:
               codeCoverageTool: 'Cobertura'
