@@ -8,7 +8,7 @@ namespace MusicAlbums.Tests.Integration;
 
 public class DistributedAppFixture : IAsyncLifetime
 {
-    private static readonly TimeSpan StartupTimeout = TimeSpan.FromSeconds(120);
+    private static readonly TimeSpan StartupTimeout = TimeSpan.FromSeconds(180);
 
     private DistributedApplication _app = null!;
     private DbConnection _dbConnection = null!;
