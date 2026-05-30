@@ -1,10 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Identity.Api.Contracts;
+﻿namespace Identity.Api.Contracts;
 
 public class TokenGenerationRequest
 {
-    [Required]
     public Guid UserId { get; set; }
     
     public string? Email { get; set; }
