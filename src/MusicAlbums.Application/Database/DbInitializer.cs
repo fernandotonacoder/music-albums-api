@@ -54,7 +54,7 @@ public class DbInitializer(IDbConnectionFactory dbConnectionFactory, ILogger<DbI
         logger.LogInformation("Database schema initialized successfully.");
     }
     
-    private async Task SetMusicAlbumsTable(IDbConnection connection)
+    private static async Task SetMusicAlbumsTable(IDbConnection connection)
     {
         await connection.ExecuteAsync($"""
             CREATE TABLE IF NOT EXISTS {DatabaseTables.MusicAlbums} (
@@ -74,7 +74,7 @@ public class DbInitializer(IDbConnectionFactory dbConnectionFactory, ILogger<DbI
         """);
     }
     
-    private async Task SetGenresTable(IDbConnection connection)
+    private static async Task SetGenresTable(IDbConnection connection)
     {
         await connection.ExecuteAsync($"""
             CREATE TABLE IF NOT EXISTS {DatabaseTables.Genres} (
@@ -84,7 +84,7 @@ public class DbInitializer(IDbConnectionFactory dbConnectionFactory, ILogger<DbI
         """);
     }
 
-    private async Task SetArtistsTable(IDbConnection connection)
+    private static async Task SetArtistsTable(IDbConnection connection)
     {
         await connection.ExecuteAsync($"""
             CREATE TABLE IF NOT EXISTS {DatabaseTables.Artists} (
@@ -107,7 +107,7 @@ public class DbInitializer(IDbConnectionFactory dbConnectionFactory, ILogger<DbI
         """);
     }
 
-    private async Task SetMusicAlbumGenresTable(IDbConnection connection)
+    private static async Task SetMusicAlbumGenresTable(IDbConnection connection)
     {
         await connection.ExecuteAsync($"""
             CREATE TABLE IF NOT EXISTS {DatabaseTables.MusicAlbumGenres} (
@@ -123,7 +123,7 @@ public class DbInitializer(IDbConnectionFactory dbConnectionFactory, ILogger<DbI
         """);
     }
 
-    private async Task SetTracksTable(IDbConnection connection)
+    private static async Task SetTracksTable(IDbConnection connection)
     {
         await connection.ExecuteAsync($"""
             CREATE TABLE IF NOT EXISTS {DatabaseTables.Tracks} (
