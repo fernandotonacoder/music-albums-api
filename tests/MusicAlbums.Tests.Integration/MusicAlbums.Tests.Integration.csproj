@@ -13,14 +13,10 @@
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.Testing" />
         <PackageReference Include="FluentAssertions" />
-        <PackageReference Include="coverlet.collector">
-          <PrivateAssets>all</PrivateAssets>
-          <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-        </PackageReference>
-        <PackageReference Include="Microsoft.NET.Test.Sdk" />
-        <PackageReference Include="Respawn" />
-        <PackageReference Include="xunit.runner.visualstudio" />
         <PackageReference Include="xunit.v3" />
+        <PackageReference Include="Respawn" />
+        <PackageReference Include="Microsoft.Testing.Extensions.CodeCoverage" />
+        <PackageReference Include="Microsoft.Testing.Extensions.TrxReport" />
     </ItemGroup>
 
     <ItemGroup>
@@ -33,7 +29,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\src\MusicAlbums.AppHost\MusicAlbums.AppHost.csproj" />
+        <ProjectReference Include="..\..\src\MusicAlbums.AppHost\MusicAlbums.AppHost.csproj" />
     </ItemGroup>
 
 </Project>

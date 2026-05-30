@@ -164,7 +164,7 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
+                sonar.cs.cobertura.reportsPaths=$(Agent.TempDirectory)/**/coverage.cobertura.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
@@ -184,6 +184,9 @@ stages:
               projects: "**/*.csproj"
               arguments: "--configuration Release --no-restore"
 
+          - bash: docker pull postgres:latest
+            displayName: Pre‑pull PostgreSQL image
+
           - task: DotNetCoreCLI@2
             displayName: "Run unit tests"
             inputs:
@@ -193,8 +196,9 @@ stages:
                 --configuration Release
                 --no-restore
                 --no-build
-                --collect:"XPlat Code Coverage"
-                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+                --coverage
+                --report-trx
+                --results-directory $(Agent.TempDirectory)/TestResults
               publishTestResults: true
 
           - task: DotNetCoreCLI@2
@@ -206,16 +210,17 @@ stages:
                 --configuration Release
                 --no-restore
                 --no-build
-                --collect:"XPlat Code Coverage"
-                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+                --coverage
+                --report-trx
+                --results-directory $(Agent.TempDirectory)/TestResults
               publishTestResults: true
 
           - task: PublishPipelineArtifact@1
             displayName: Upload integration test logs
             condition: always()
             inputs:
-              targetPath: '$(System.DefaultWorkingDirectory)/tests/MusicAlbums.Tests.Integration/bin/Release/net10.0/TestResults'
-              artifact: 'integration-test-logs'
+              targetPath: "$(Agent.TempDirectory)/TestResults"
+              artifact: "integration-test-logs"
 
           - task: SonarQubeAnalyze@8
             displayName: "SonarQube — Run analysis"
