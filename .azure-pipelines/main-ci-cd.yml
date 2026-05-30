@@ -95,7 +95,6 @@ stages:
               repository: "$(imageRepository)"
               command: build
               Dockerfile: "$(dockerfilePath)"
-              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(tag)
                 $(tag)-${{ parameters.targetEnvironment }}
@@ -313,7 +312,6 @@ stages:
               repository: "$(imageRepository)"
               command: buildAndPush
               Dockerfile: "$(dockerfilePath)"
-              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(tag)
                 $(tag)-${{ parameters.targetEnvironment }}

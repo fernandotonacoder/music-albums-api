@@ -74,7 +74,6 @@ stages:
               command: build
               Dockerfile: tools/Identity.Api/Dockerfile
               buildContext: $(Build.SourcesDirectory)
-              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
@@ -123,7 +122,6 @@ stages:
               command: buildAndPush
               Dockerfile: tools/Identity.Api/Dockerfile
               buildContext: $(Build.SourcesDirectory)
-              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
