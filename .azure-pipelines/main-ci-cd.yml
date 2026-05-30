@@ -193,7 +193,7 @@ stages:
               --no-build
               --coverage
               --coverage-output-format cobertura
-              --coverage-output coverage.cobertura.xml
+              --coverage-output $(Agent.TempDirectory)/TestResults/unit/coverage.cobertura.xml
               --report-trx
               --results-directory $(Agent.TempDirectory)/TestResults/unit
             displayName: "Run unit tests"
@@ -205,17 +205,34 @@ stages:
               --no-build
               --coverage
               --coverage-output-format cobertura
-              --coverage-output coverage.cobertura.xml
+              --coverage-output $(Agent.TempDirectory)/TestResults/integration/coverage.cobertura.xml
               --report-trx
               --results-directory $(Agent.TempDirectory)/TestResults/integration
             displayName: "Run integration tests (Aspire)"
+
+          - bash: |
+              dotnet tool update --global dotnet-reportgenerator-globaltool || dotnet tool install --global dotnet-reportgenerator-globaltool
+              export PATH="$PATH:$HOME/.dotnet/tools"
+              reportgenerator \
+                -reports:"$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml" \
+                -targetdir:"$(Build.ArtifactStagingDirectory)/coverage-report" \
+                -reporttypes:"HtmlInline_AzurePipelines"
+            displayName: "Generate coverage report (HTML)"
 
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish code coverage'
             inputs:
               codeCoverageTool: 'Cobertura'
-              summaryFileLocation: '$(System.DefaultWorkingDirectory)/**/coverage.cobertura.xml'
-              reportDirectory: '$(Agent.BuildDirectory)/coverage'          
+              summaryFileLocation: '$(Agent.TempDirectory)/TestResults/**/coverage.cobertura.xml'
+              reportDirectory: '$(Build.ArtifactStagingDirectory)/coverage-report'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish coverage report (HTML)
+            condition: always()
+            continueOnError: true
+            inputs:
+              targetPath: '$(Build.ArtifactStagingDirectory)/coverage-report'
+              artifact: 'coverage-report'
 
           - task: PublishTestResults@2
             displayName: "Publish test results"
