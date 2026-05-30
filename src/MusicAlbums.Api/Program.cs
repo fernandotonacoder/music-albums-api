@@ -134,11 +134,14 @@ app.MapHealthChecks("_health/ready", new HealthCheckOptions
     Predicate = check => check.Name == DatabaseHealthCheck.Name
 }).CacheOutput("HealthReadiness");
 
-// Health endpoints must stay reachable over plain HTTP: orchestrators (Container Apps,
-// Aspire) probe them without TLS, so a redirect to HTTPS would break the probe.
-app.UseWhen(
-    context => !context.Request.Path.StartsWithSegments("/_health"),
-    branch => branch.UseHttpsRedirection());
+// Skip HTTPS redirect in test mode: CI has no trusted dev cert, and test clients
+// connect over plain HTTP. In production the container is HTTP-only, so this
+// middleware is also a no-op there (no HTTPS port → UseHttpsRedirection skips itself).
+var isTestMode = bool.TryParse(config["TestMode"], out var tm) && tm;
+if (!isTestMode)
+{
+    app.UseHttpsRedirection();
+}
 
 app.UseAuthentication();
 app.UseAuthorization();

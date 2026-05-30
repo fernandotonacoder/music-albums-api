@@ -44,7 +44,10 @@ if (isTestMode)
 {
     // The API's launch profile is HTTPS-only; CI agents have no trusted dev certificate.
     // Expose a plain-HTTP endpoint so the health probe and test clients can connect.
-    musicAlbumsApi.WithHttpEndpoint(name: "http");
+    // TestMode=true tells the API to skip HTTPS redirect (no trusted cert on CI).
+    musicAlbumsApi
+        .WithHttpEndpoint(name: "http")
+        .WithEnvironment("TestMode", "true");
 }
 else
 {
