@@ -138,7 +138,7 @@ stages:
         displayName: "Tests + SonarQube Analysis"
         steps:
           - task: UseDotNet@2
-            displayName: "Use .NET SDK"
+            displayName: "Use .NET 10 SDK"
             inputs:
               packageType: "sdk"
               version: "10.x"
@@ -218,6 +218,7 @@ stages:
           - task: PublishPipelineArtifact@1
             displayName: Upload integration test logs
             condition: always()
+            continueOnError: true
             inputs:
               targetPath: "$(Agent.TempDirectory)/TestResults"
               artifact: "integration-test-logs"
