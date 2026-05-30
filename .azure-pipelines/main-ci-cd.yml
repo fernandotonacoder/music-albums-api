@@ -187,39 +187,52 @@ stages:
           - bash: docker pull postgres:latest
             displayName: Pre‑pull PostgreSQL image
 
-          - task: DotNetCoreCLI@2
+          # xunit.v3 runs on Microsoft.Testing.Platform (MTP), which `dotnet test` is opted
+          # into via global.json. MTP takes the project through `--project` and uses its own
+          # coverage/report flags, so these run as plain `dotnet test` script steps rather than
+          # the VSTest-oriented DotNetCoreCLI@2 `test` command (which injects `--logger trx` and
+          # passes the project positionally — both incompatible with MTP). Coverage is emitted as
+          # Cobertura for SonarQube; each project writes to its own results subfolder so the two
+          # coverage.cobertura.xml files don't overwrite each other.
+          - script: >
+              dotnet test
+              --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
+              --configuration Release
+              --no-build
+              --coverage
+              --coverage-output-format cobertura
+              --coverage-output coverage.cobertura.xml
+              --report-trx
+              --results-directory $(Agent.TempDirectory)/TestResults/unit
             displayName: "Run unit tests"
-            inputs:
-              command: "test"
-              projects: "tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj"
-              arguments: >
-                --configuration Release
-                --no-restore
-                --no-build
-                --coverage
-                --report-trx
-                --results-directory $(Agent.TempDirectory)/TestResults
 
-          - task: DotNetCoreCLI@2
+          - script: >
+              dotnet test
+              --project tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
+              --configuration Release
+              --no-build
+              --coverage
+              --coverage-output-format cobertura
+              --coverage-output coverage.cobertura.xml
+              --report-trx
+              --results-directory $(Agent.TempDirectory)/TestResults/integration
             displayName: "Run integration tests (Aspire)"
+
+          - task: PublishTestResults@2
+            displayName: "Publish test results"
+            condition: always()
             inputs:
-              command: "test"
-              projects: "tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj"
-              arguments: >
-                --configuration Release
-                --no-restore
-                --no-build
-                --coverage
-                --report-trx
-                --results-directory $(Agent.TempDirectory)/TestResults
+              testResultsFormat: VSTest
+              testResultsFiles: "$(Agent.TempDirectory)/TestResults/**/*.trx"
+              failTaskOnFailedTests: true
 
           - task: PublishPipelineArtifact@1
-            displayName: Upload integration test logs
+            displayName: Upload test logs
             condition: always()
             continueOnError: true
             inputs:
               targetPath: "$(Agent.TempDirectory)/TestResults"
-              artifact: "integration-test-logs"
+              artifact: "test-logs"
 
           - task: SonarQubeAnalyze@8
             displayName: "SonarQube — Run analysis"

@@ -1,0 +1,25 @@
+<Project>
+
+  <!--
+    Code-coverage hook workaround for xunit.v3 + Microsoft.Testing.Platform.
+
+    Microsoft.Testing.Extensions.CodeCoverage only registers its MTP hook (which
+    exposes the "coverage" command-line option) when
+    GenerateTestingPlatformEntryPoint == 'True'. But xunit.v3 forces
+    GenerateTestingPlatformEntryPoint=false because it generates its own MTP entry
+    point. The net effect: the coverage option silently never registers and
+    `dotnet test` with it fails with "Unknown option".
+
+    Registering the hook here makes xunit's entry-point generator emit it. The GUID
+    and type name are copied verbatim from the package's own props and are pinned
+    alongside the Microsoft.Testing.Extensions.CodeCoverage version in
+    Directory.Packages.props.
+  -->
+  <ItemGroup>
+    <TestingPlatformBuilderHook Include="83B7B6C3-DC9C-4F30-8323-A3E1EBA7F65B">
+      <DisplayName>Microsoft Code Coverage</DisplayName>
+      <TypeFullName>Microsoft.Testing.Extensions.CodeCoverage.TestingPlatformBuilderHook</TypeFullName>
+    </TestingPlatformBuilderHook>
+  </ItemGroup>
+
+</Project>
