@@ -184,7 +184,9 @@ stages:
               projects: "**/*.csproj"
               arguments: "--configuration Release --no-restore"
 
-          - bash: docker pull postgres:latest
+          # Must match the tag Aspire.Hosting.PostgreSQL resolves to, otherwise the
+          # integration test pays the pull cost mid-run. Bump alongside the Aspire package.
+          - bash: docker pull postgres:17.6
             displayName: Pre‑pull PostgreSQL image
 
           # xunit.v3 runs on Microsoft.Testing.Platform (MTP), which `dotnet test` is opted

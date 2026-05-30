@@ -40,8 +40,10 @@ public class DistributedAppFixture : IAsyncLifetime
             .WaitForResourceHealthyAsync("identity-api")
             .WaitAsync(StartupTimeout);
 
-        MusicAlbumsApiClient = _app.CreateHttpClient("musicalbums-api");
-        IdentityApiClient = _app.CreateHttpClient("identity-api");
+        // Use the HTTP endpoints: CI agents have no trusted dev certificate, so HTTPS
+        // calls would fail the TLS handshake (see the test-mode endpoints in AppHost.cs).
+        MusicAlbumsApiClient = _app.CreateHttpClient("musicalbums-api", "http");
+        IdentityApiClient = _app.CreateHttpClient("identity-api", "http");
 
         await InitializeDatabaseConnectionAsync();
     }
@@ -53,10 +55,20 @@ public class DistributedAppFixture : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
-        MusicAlbumsApiClient.Dispose();
-        IdentityApiClient.Dispose();
-        await _dbConnection.DisposeAsync();
-        await _app.DisposeAsync();
+        // Null-guarded so that if InitializeAsync throws partway through, cleanup doesn't
+        // raise a NullReferenceException that masks the original failure.
+        MusicAlbumsApiClient?.Dispose();
+        IdentityApiClient?.Dispose();
+
+        if (_dbConnection is not null)
+        {
+            await _dbConnection.DisposeAsync();
+        }
+
+        if (_app is not null)
+        {
+            await _app.DisposeAsync();
+        }
     }
 
     private async Task InitializeDatabaseConnectionAsync()
