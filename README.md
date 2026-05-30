@@ -78,6 +78,5 @@ See [Infrastructure](docs/INFRASTRUCTURE.md) for the deployment model and dev vs
 
 ## 🩺 Health endpoints
 
-- `/_health` - general health status
-- `/_health/live` - liveness probe
-- `/_health/ready` - readiness probe (checks database)
+- `/_health/live` - liveness probe (process is up; no dependency checks)
+- `/_health/ready` - readiness probe (checks database connectivity)

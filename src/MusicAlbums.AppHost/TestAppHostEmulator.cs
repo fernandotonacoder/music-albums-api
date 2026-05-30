@@ -3,10 +3,6 @@ using Aspire.Hosting.ApplicationModel;
 
 namespace MusicAlbums.AppHost;
 
-/// <summary>
-/// Test-mode resource emulators for the AppHost. Add new emulator methods here as
-/// integration tests need them (e.g. Azure Service Bus, Blob storage, etc.).
-/// </summary>
 public static class TestAppHostEmulator
 {
     private const string TestJwtKey =

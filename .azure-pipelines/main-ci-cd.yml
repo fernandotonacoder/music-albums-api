@@ -27,6 +27,7 @@ trigger:
       - infra/main/**
       - Directory.Packages.props
       - MusicAlbumsApi.slnx
+      - global.json
       - .azure-pipelines/main-ci-cd.yml
 
 pr:
@@ -41,6 +42,7 @@ pr:
       - infra/main/**
       - Directory.Packages.props
       - MusicAlbumsApi.slnx
+      - global.json
       - .azure-pipelines/main-ci-cd.yml
 
 pool:
@@ -152,9 +154,7 @@ stages:
               command: "restore"
               projects: "**/*.csproj"
 
-          # Community Edition does not support branch analysis (sonar.branch.name).
-          # These three tasks are restricted to main only. If upgrading to Developer
-          # Edition or above, remove the condition to enable PR/branch analysis.
+          # Community Edition has no branch analysis; these tasks run on main only.
           - task: SonarQubePrepare@8
             displayName: "SonarQube — Prepare analysis"
             condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -168,9 +168,7 @@ stages:
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
-          # SonarQube task v8 automatically injects sonar.branch.name into
-          # SONARQUBE_SCANNER_PARAMS, which Community Edition rejects. Strip it
-          # before the scanner runs. Remove this step if upgrading to Developer Edition.
+          # SonarQube task v8 injects sonar.branch.name, which Community Edition rejects — strip it.
           - bash: |
               FILTERED=$(echo "$SONARQUBE_SCANNER_PARAMS" | sed -E 's/"sonar\.branch\.name":"[^"]*",?//g')
               echo "##vso[task.setvariable variable=SONARQUBE_SCANNER_PARAMS]$FILTERED"
@@ -184,18 +182,10 @@ stages:
               projects: "**/*.csproj"
               arguments: "--configuration Release --no-restore"
 
-          # Must match the tag Aspire.Hosting.PostgreSQL resolves to, otherwise the
-          # integration test pays the pull cost mid-run. Bump alongside the Aspire package.
+          # Must match the tag Aspire.Hosting.PostgreSQL resolves to. Bump alongside the Aspire package.
           - bash: docker pull postgres:17.6
             displayName: Pre‑pull PostgreSQL image
 
-          # xunit.v3 runs on Microsoft.Testing.Platform (MTP), which `dotnet test` is opted
-          # into via global.json. MTP takes the project through `--project` and uses its own
-          # coverage/report flags, so these run as plain `dotnet test` script steps rather than
-          # the VSTest-oriented DotNetCoreCLI@2 `test` command (which injects `--logger trx` and
-          # passes the project positionally — both incompatible with MTP). Coverage is emitted as
-          # Cobertura for SonarQube; each project writes to its own results subfolder so the two
-          # coverage.cobertura.xml files don't overwrite each other.
           - script: >
               dotnet test
               --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
@@ -479,11 +469,11 @@ stages:
                         --resource-group '$(RESOURCE_GROUP)' \
                         --query 'properties.configuration.ingress.fqdn' -o tsv)
 
-                      echo "Checking health at https://$APP_URL/_health"
+                      echo "Checking readiness at https://$APP_URL/_health/ready"
                       echo "##vso[task.setvariable variable=appFqdn]$APP_URL"
 
                       for i in {1..10}; do
-                        if curl -sf "https://$APP_URL/_health"; then
+                        if curl -sf "https://$APP_URL/_health/ready"; then
                           echo "Deployment successful!"
                           exit 0
                         fi

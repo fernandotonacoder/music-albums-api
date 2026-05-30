@@ -35,8 +35,6 @@ public class DistributedAppFixture : IAsyncLifetime
         await WaitForResourceHealthyAsync("musicalbums-api");
         await WaitForResourceHealthyAsync("identity-api");
 
-        // Use the HTTP endpoints: CI agents have no trusted dev certificate, so HTTPS
-        // calls would fail the TLS handshake (see the test-mode endpoints in AppHost.cs).
         MusicAlbumsApiClient = _app.CreateHttpClient("musicalbums-api", "http");
         IdentityApiClient = _app.CreateHttpClient("identity-api", "http");
 
@@ -48,9 +46,6 @@ public class DistributedAppFixture : IAsyncLifetime
         await _respawner.ResetAsync(_dbConnection);
     }
 
-    // Waits for a resource to report healthy, but on timeout surfaces the resource's last
-    // known state and health-check failures instead of a bare "operation timed out" — so a
-    // CI failure (e.g. an unhealthy HTTPS probe) is diagnosable straight from the message.
     private async Task WaitForResourceHealthyAsync(string resourceName)
     {
         try
@@ -77,8 +72,6 @@ public class DistributedAppFixture : IAsyncLifetime
                 TestContext.Current.CancellationToken);
             cts.CancelAfter(TimeSpan.FromSeconds(5));
 
-            // WatchAsync replays the latest snapshot on subscribe, so a match-anything
-            // predicate returns the current state almost immediately.
             var resourceEvent = await _app.ResourceNotifications
                 .WaitForResourceAsync(resourceName, _ => true, cts.Token);
 
@@ -106,8 +99,6 @@ public class DistributedAppFixture : IAsyncLifetime
 
     public async ValueTask DisposeAsync()
     {
-        // Null-guarded so that if InitializeAsync throws partway through, cleanup doesn't
-        // raise a NullReferenceException that masks the original failure.
         MusicAlbumsApiClient?.Dispose();
         IdentityApiClient?.Dispose();
 

@@ -134,7 +134,7 @@ Telemetry (traces, metrics, logs) is configured in `MusicAlbums.ServiceDefaults`
 
 Both exporters are gated by environment variables — only one is active at a time, so there is no duplication.
 
-Health probe requests to the main API (`/_health`, `/_health/live`, `/_health/ready`) are excluded from traces to avoid polluting Application Insights with noise from Container Apps probes (which run every ~10 seconds). The Identity API does not expose health endpoints — it's a helper tool, not a probed service.
+Health probe requests to the main API (`/_health/live`, `/_health/ready`) are excluded from traces to avoid polluting Application Insights with noise from Container Apps probes (which run every ~10 seconds). The Identity API does not expose health endpoints — it's a helper tool, not a probed service.
 
 ## Standalone Postgres (legacy)
 

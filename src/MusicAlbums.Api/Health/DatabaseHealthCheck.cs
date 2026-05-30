@@ -21,7 +21,7 @@ public class DatabaseHealthCheck : IHealthCheck
     {
         try
         {
-            _ = await _dbConnectionFactory.CreateConnectionAsync(cancellationToken);
+            using var connection = await _dbConnectionFactory.CreateConnectionAsync(cancellationToken);
             return HealthCheckResult.Healthy();
         }
         catch (Exception e)

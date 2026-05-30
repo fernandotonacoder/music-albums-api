@@ -76,7 +76,7 @@ See [Observability stack](#observability-stack) for how the app uses these resou
 - Container Apps Environment
 - Container App with system-assigned managed identity
 - Auto-scaling (0–3 replicas)
-- Health probes (startup + liveness)
+- Health probes (startup + liveness + readiness)
 - Key Vault secret references via managed identity (JWT key, API key)
 - Passwordless database connection string (plain env var, no credentials)
 - JWT issuer/audience exposed as Bicep parameters (`jwtIssuer` / `jwtAudience`, defaults `MusicAlbumsIdentity` / `MusicAlbumsApi`). Must match the values the Identity API uses to **emit** tokens — locally they're injected by [`AppHost.cs`](../src/MusicAlbums.AppHost/AppHost.cs) into both services; in the cloud they come from these Bicep defaults on the main API side, and the Identity API helper pipeline injects the same constants.

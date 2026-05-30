@@ -157,12 +157,23 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
             {
               type: 'Liveness'
               httpGet: {
-                path: '/_health'
+                path: '/_health/live'
                 port: targetPort
               }
               initialDelaySeconds: 30
               periodSeconds: 10
               timeoutSeconds: 3
+              failureThreshold: 3
+            }
+            {
+              type: 'Readiness'
+              httpGet: {
+                path: '/_health/ready'
+                port: targetPort
+              }
+              initialDelaySeconds: 5
+              periodSeconds: 10
+              timeoutSeconds: 5
               failureThreshold: 3
             }
           ]

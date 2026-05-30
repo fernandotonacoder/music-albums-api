@@ -6,7 +6,7 @@ Pipeline configuration for the Music Albums API. Two Azure Pipelines handle depl
 
 ### Music Albums API — `.azure-pipelines/main-ci-cd.yml`
 
-Triggers on push to `main` (and on PRs against `main`) when any of these paths change: `src/`, `tests/`, `Dockerfile`, `infra/main/`, `Directory.Packages.props`, `MusicAlbumsApi.slnx`, or `.azure-pipelines/main-ci-cd.yml` itself.
+Triggers on push to `main` (and on PRs against `main`) when any of these paths change: `src/`, `tests/`, `Dockerfile`, `infra/main/`, `Directory.Packages.props`, `MusicAlbumsApi.slnx`, `global.json`, or `.azure-pipelines/main-ci-cd.yml` itself.
 
 Parameters:
 

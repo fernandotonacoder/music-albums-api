@@ -48,7 +48,7 @@ main ─────────────────────────
 
 ## What happens after merge to `main`
 
-Merging a PR to `main` triggers `.azure-pipelines/main-ci-cd.yml` automatically when one of these paths changed: `src/`, `tests/`, `Dockerfile`, `infra/main/`, `Directory.Packages.props`, `MusicAlbumsApi.slnx`, or `.azure-pipelines/main-ci-cd.yml` itself.
+Merging a PR to `main` triggers `.azure-pipelines/main-ci-cd.yml` automatically when one of these paths changed: `src/`, `tests/`, `Dockerfile`, `infra/main/`, `Directory.Packages.props`, `MusicAlbumsApi.slnx`, `global.json`, or `.azure-pipelines/main-ci-cd.yml` itself.
 
 ```
 Build ──► Test ──► Push image ──► (approval) ──► Deploy to dev

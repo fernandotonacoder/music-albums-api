@@ -74,6 +74,10 @@ builder.Services.AddOutputCache(x =>
         .Expire(TimeSpan.FromMinutes(1))
         .SetVaryByQuery(new[] { "title", "year", "sortBy", "page", "pageSize" })
         .Tag("albums"));
+    // Collapse repeated public hits to /_health/ready into one DB call per window.
+    // Output cache only stores 200s, so an unhealthy result is never served stale.
+    x.AddPolicy("HealthReadiness", c =>
+        c.Cache().Expire(TimeSpan.FromSeconds(5)));
 });
 
 builder.Services.AddControllers();
@@ -116,21 +120,25 @@ if (app.Environment.IsDevelopment())
     });
 }
 
-app.MapHealthChecks("_health");
-
-// Liveness probe - basic check that the app is running (no DB check)
+// Liveness: process is up and responding. No dependency checks — a failing liveness
+// probe restarts the container, which must not happen for a transient DB outage.
 app.MapHealthChecks("_health/live", new HealthCheckOptions
 {
-    Predicate = _ => false // No checks - just confirms the app responds
+    Predicate = _ => false
 });
 
-// Readiness probe - confirms app can handle requests (includes DB check)
+// Readiness: dependencies (the database) are reachable, so the instance can serve
+// traffic. A failing readiness probe pulls the instance from rotation without a restart.
 app.MapHealthChecks("_health/ready", new HealthCheckOptions
 {
     Predicate = check => check.Name == DatabaseHealthCheck.Name
-});
+}).CacheOutput("HealthReadiness");
 
-app.UseHttpsRedirection();
+// Health endpoints must stay reachable over plain HTTP: orchestrators (Container Apps,
+// Aspire) probe them without TLS, so a redirect to HTTPS would break the probe.
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/_health"),
+    branch => branch.UseHttpsRedirection());
 
 app.UseAuthentication();
 app.UseAuthorization();

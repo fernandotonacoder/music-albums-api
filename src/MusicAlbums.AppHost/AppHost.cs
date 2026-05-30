@@ -42,12 +42,8 @@ var identityApi = builder.AddProject<Projects.Identity_Api>("identity-api")
 
 if (isTestMode)
 {
-    // Integration tests run on CI agents that have no trusted ASP.NET Core dev
-    // certificate, so probing or calling an HTTPS endpoint fails the TLS handshake and
-    // the API never reports healthy. The API's launch profile is HTTPS-only, so expose a
-    // plain-HTTP endpoint (Aspire allocates the port) for the health check and the test
-    // clients to use. identity-api's launch profile already exposes HTTP, so it needs no
-    // change here.
+    // The API's launch profile is HTTPS-only; CI agents have no trusted dev certificate.
+    // Expose a plain-HTTP endpoint so the health probe and test clients can connect.
     musicAlbumsApi.WithHttpEndpoint(name: "http");
 }
 else
@@ -61,8 +57,6 @@ else
         .WithHttpsEndpoint(port: 5004, name: "https");
 }
 
-// Probe over HTTP so the readiness gate doesn't depend on a trusted dev certificate
-// (see the test-mode endpoint note above). Both modes expose an endpoint named "http".
 musicAlbumsApi.WithHttpHealthCheck("/_health/ready", endpointName: "http");
 
 await builder.Build().RunAsync();

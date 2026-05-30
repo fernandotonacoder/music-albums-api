@@ -819,7 +819,7 @@ curl -X POST https://localhost:5002/api/albums \
   -H "Authorization: Bearer YOUR_TRUSTED_MEMBER_TOKEN" \
   -d '{
     "title": "Future Album",
-    "yearOfRelease": 2030,
+    "yearOfRelease": 2099,
     "artistNames": ["Artist"],
     "genres": ["Genre"],
     "tracks": []
