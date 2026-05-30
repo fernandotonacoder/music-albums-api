@@ -27,6 +27,8 @@ public class DistributedAppFixture : IAsyncLifetime
         appHost.Services.ConfigureHttpClientDefaults(clientBuilder =>
         {
             clientBuilder.AddStandardResilienceHandler();
+            clientBuilder.ConfigurePrimaryHttpMessageHandler(() =>
+                new HttpClientHandler { AllowAutoRedirect = false });
         });
 
         _app = await appHost.BuildAsync(TestContext.Current.CancellationToken);
