@@ -133,13 +133,20 @@ public static class MusicAlbumMapping
 
     public static GetAllMusicAlbumsOptions MapToOptions(this GetAllMusicAlbumsRequest request)
     {
+        var sortOrder = SortOrder.Unsorted;
+        if (!string.IsNullOrWhiteSpace(request.SortBy))
+        {
+            sortOrder = request.SortBy.StartsWith('-')
+                ? SortOrder.Descending
+                : SortOrder.Ascending;
+        }
+
         return new GetAllMusicAlbumsOptions
         {
             Title = request.Title,
             YearOfRelease = request.Year,
             SortField = request.SortBy?.Trim('+', '-'),
-            SortOrder = request.SortBy is null ? SortOrder.Unsorted :
-                request.SortBy.StartsWith('-') ? SortOrder.Descending : SortOrder.Ascending,
+            SortOrder = sortOrder,
             Page = request.Page,
             PageSize = request.PageSize
         };

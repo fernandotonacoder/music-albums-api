@@ -6,9 +6,9 @@ public interface IMusicAlbumRepository
 {
     Task<bool> CreateAsync(MusicAlbum musicAlbum, CancellationToken token = default);
     
-    Task<MusicAlbum?> GetByIdAsync(Guid id, Guid? userid = default, CancellationToken token = default);
+    Task<MusicAlbum?> GetByIdAsync(Guid id, Guid? userId = default, CancellationToken token = default);
     
-    Task<MusicAlbum?> GetBySlugAsync(string slug, Guid? userid = default, CancellationToken token = default);
+    Task<MusicAlbum?> GetBySlugAsync(string slug, Guid? userId = default, CancellationToken token = default);
     
     Task<IEnumerable<MusicAlbum>> GetAllAsync(GetAllMusicAlbumsOptions options, CancellationToken token = default);
     
