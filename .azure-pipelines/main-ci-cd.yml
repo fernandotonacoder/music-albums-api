@@ -283,7 +283,7 @@ stages:
             condition: always()
             continueOnError: true
             inputs:
-              targetPath: "$(Agent.TempDirectory)/TestResults"
+              targetPath: "$(Build.SourcesDirectory)/TestResults"
               artifact: "test-logs"
 
           - task: SonarQubeAnalyze@8
