@@ -197,18 +197,6 @@ stages:
               --results-directory $(Build.SourcesDirectory)/TestResults/unit
             displayName: "Run unit tests"
 
-          - bash: |
-              if [ ! -s "$(Build.SourcesDirectory)/TestResults/unit/coverage.xml" ]; then
-                echo "Unit coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/unit/coverage.xml" >&2
-                exit 1
-              fi
-
-              if ! find "$(Build.SourcesDirectory)/TestResults/unit" -name "*.trx" -print -quit | grep -q .; then
-                echo "Unit test TRX file missing under $(Build.SourcesDirectory)/TestResults/unit" >&2
-                exit 1
-              fi
-            displayName: "Validate unit test artifacts"
-
           - script: >
               dotnet test
               --project tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
@@ -221,53 +209,11 @@ stages:
               --results-directory $(Build.SourcesDirectory)/TestResults/integration
             displayName: "Run integration tests (Aspire)"
 
-          - bash: |
-              if [ ! -s "$(Build.SourcesDirectory)/TestResults/integration/coverage.xml" ]; then
-                echo "Integration coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/integration/coverage.xml" >&2
-                exit 1
-              fi
-
-              if ! find "$(Build.SourcesDirectory)/TestResults/integration" -name "*.trx" -print -quit | grep -q .; then
-                echo "Integration test TRX file missing under $(Build.SourcesDirectory)/TestResults/integration" >&2
-                exit 1
-              fi
-            displayName: "Validate integration test artifacts"
-
-          - bash: |
-              dotnet tool update --global dotnet-reportgenerator-globaltool || dotnet tool install --global dotnet-reportgenerator-globaltool
-              export PATH="$PATH:$HOME/.dotnet/tools"
-              reportgenerator \
-                -reports:"$(Build.SourcesDirectory)/TestResults/**/coverage.xml" \
-                -targetdir:"$(Build.ArtifactStagingDirectory)/coverage-report" \
-                -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
-            displayName: "Generate coverage report (HTML)"
-
-          - bash: |
-              if ! find "$(Build.SourcesDirectory)/TestResults" -name "coverage.xml" -print -quit | grep -q .; then
-                echo "No coverage.xml files found under $(Build.SourcesDirectory)/TestResults" >&2
-                exit 1
-              fi
-
-              if ! find "$(Build.SourcesDirectory)/TestResults" -name "*.trx" -print -quit | grep -q .; then
-                echo "No .trx test result files found under $(Build.SourcesDirectory)/TestResults" >&2
-                exit 1
-              fi
-            displayName: "Validate coverage and test result files"
-
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish code coverage'
             inputs:
-              codeCoverageTool: 'Cobertura'
-              summaryFileLocation: '$(Build.ArtifactStagingDirectory)/coverage-report/Cobertura.xml'
-              reportDirectory: '$(Build.ArtifactStagingDirectory)/coverage-report'
-
-          - task: PublishPipelineArtifact@1
-            displayName: Publish coverage report (HTML)
-            condition: always()
-            continueOnError: true
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/coverage-report'
-              artifact: 'coverage-report'
+              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/coverage.xml'
+              failIfCoverageEmpty: true
 
           - task: PublishTestResults@2
             displayName: "Publish test results"
@@ -276,6 +222,7 @@ stages:
               testResultsFormat: VSTest
               testResultsFiles: "$(Build.SourcesDirectory)/TestResults/**/*.trx"
               failTaskOnFailedTests: true
+              failTaskOnMissingResultsFile: true
 
           - task: PublishPipelineArtifact@1
             displayName: Upload test logs
