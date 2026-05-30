@@ -79,6 +79,8 @@ stages:
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
+              addPipelineData: false
+              addBaseImageData: false
 
       - job: LintBicep
         displayName: Lint Bicep Templates
@@ -126,6 +128,8 @@ stages:
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
+              addPipelineData: false
+              addBaseImageData: false
 
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes
