@@ -163,7 +163,7 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.cobertura.reportsPaths=TestResults/**/coverage.cobertura.xml
+                sonar.cs.vscoveragexml.reportsPaths=TestResults/**/coverage.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
@@ -191,15 +191,15 @@ stages:
               --configuration Release
               --no-build
               --coverage
-              --coverage-output-format cobertura
-              --coverage-output $(Build.SourcesDirectory)/TestResults/unit/coverage.cobertura.xml
+              --coverage-output-format xml
+              --coverage-output $(Build.SourcesDirectory)/TestResults/unit/coverage.xml
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/unit
             displayName: "Run unit tests"
 
           - bash: |
-              if [ ! -s "$(Build.SourcesDirectory)/TestResults/unit/coverage.cobertura.xml" ]; then
-                echo "Unit coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/unit/coverage.cobertura.xml" >&2
+              if [ ! -s "$(Build.SourcesDirectory)/TestResults/unit/coverage.xml" ]; then
+                echo "Unit coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/unit/coverage.xml" >&2
                 exit 1
               fi
 
@@ -215,15 +215,15 @@ stages:
               --configuration Release
               --no-build
               --coverage
-              --coverage-output-format cobertura
-              --coverage-output $(Build.SourcesDirectory)/TestResults/integration/coverage.cobertura.xml
+              --coverage-output-format xml
+              --coverage-output $(Build.SourcesDirectory)/TestResults/integration/coverage.xml
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/integration
             displayName: "Run integration tests (Aspire)"
 
           - bash: |
-              if [ ! -s "$(Build.SourcesDirectory)/TestResults/integration/coverage.cobertura.xml" ]; then
-                echo "Integration coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/integration/coverage.cobertura.xml" >&2
+              if [ ! -s "$(Build.SourcesDirectory)/TestResults/integration/coverage.xml" ]; then
+                echo "Integration coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/integration/coverage.xml" >&2
                 exit 1
               fi
 
@@ -237,14 +237,14 @@ stages:
               dotnet tool update --global dotnet-reportgenerator-globaltool || dotnet tool install --global dotnet-reportgenerator-globaltool
               export PATH="$PATH:$HOME/.dotnet/tools"
               reportgenerator \
-                -reports:"$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.xml" \
+                -reports:"$(Build.SourcesDirectory)/TestResults/**/coverage.xml" \
                 -targetdir:"$(Build.ArtifactStagingDirectory)/coverage-report" \
-                -reporttypes:"HtmlInline_AzurePipelines"
+                -reporttypes:"HtmlInline_AzurePipelines;Cobertura"
             displayName: "Generate coverage report (HTML)"
 
           - bash: |
-              if ! find "$(Build.SourcesDirectory)/TestResults" -name "coverage.cobertura.xml" -print -quit | grep -q .; then
-                echo "No coverage.cobertura.xml files found under $(Build.SourcesDirectory)/TestResults" >&2
+              if ! find "$(Build.SourcesDirectory)/TestResults" -name "coverage.xml" -print -quit | grep -q .; then
+                echo "No coverage.xml files found under $(Build.SourcesDirectory)/TestResults" >&2
                 exit 1
               fi
 
@@ -258,7 +258,7 @@ stages:
             displayName: 'Publish code coverage'
             inputs:
               codeCoverageTool: 'Cobertura'
-              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.xml'
+              summaryFileLocation: '$(Build.ArtifactStagingDirectory)/coverage-report/Cobertura.xml'
               reportDirectory: '$(Build.ArtifactStagingDirectory)/coverage-report'
 
           - task: PublishPipelineArtifact@1
