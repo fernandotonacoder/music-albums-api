@@ -79,7 +79,7 @@ See [Observability stack](#observability-stack) for how the app uses these resou
 - Health probes (startup + liveness)
 - Key Vault secret references via managed identity (JWT key, API key)
 - Passwordless database connection string (plain env var, no credentials)
-- JWT issuer/audience exposed as Bicep parameters (`jwtIssuer` / `jwtAudience`, defaults `MusicAlbumsIdentity` / `MusicAlbumsApi`). Must match the values the Identity API uses to **emit** tokens — locally they're injected by [`AppHost.cs`](../src/MusicAlbumsApi.AppHost/AppHost.cs) into both services; in the cloud they come from these Bicep defaults on the main API side, and the Identity API helper pipeline injects the same constants.
+- JWT issuer/audience exposed as Bicep parameters (`jwtIssuer` / `jwtAudience`, defaults `MusicAlbumsIdentity` / `MusicAlbumsApi`). Must match the values the Identity API uses to **emit** tokens — locally they're injected by [`AppHost.cs`](../src/MusicAlbums.AppHost/AppHost.cs) into both services; in the cloud they come from these Bicep defaults on the main API side, and the Identity API helper pipeline injects the same constants.
 
 ## Resource Groups
 
@@ -108,7 +108,7 @@ Entra Admin (registers Container App identity as PostgreSQL Entra ID admin)
 
 ## Observability stack
 
-Telemetry is unified on **OpenTelemetry** — the classic Application Insights SDK is not used. Instrumentation is configured once in `MusicAlbumsApi.ServiceDefaults` (`AddServiceDefaults()` → `ConfigureOpenTelemetry()`) and used by every service that references it (the main API and the Identity API).
+Telemetry is unified on **OpenTelemetry** — the classic Application Insights SDK is not used. Instrumentation is configured once in `MusicAlbums.ServiceDefaults` (`AddServiceDefaults()` → `ConfigureOpenTelemetry()`) and used by every service that references it (the main API and the Identity API).
 
 The same code runs in both local and cloud — only the active exporter changes, gated by environment variables:
 
@@ -136,7 +136,7 @@ This is intentional — they complement each other. App Insights gives you struc
 
 ### Health probes excluded from traces
 
-The OTel ASP.NET Core instrumentation filters out requests to `/_health*` so the Container Apps liveness/readiness probes (every ~10s) do not pollute App Insights traces. Filter lives in [`MusicAlbumsApi.ServiceDefaults/Extensions.cs`](../src/MusicAlbumsApi.ServiceDefaults/Extensions.cs).
+The OTel ASP.NET Core instrumentation filters out requests to `/_health*` so the Container Apps liveness/readiness probes (every ~10s) do not pollute App Insights traces. Filter lives in [`MusicAlbums.ServiceDefaults/Extensions.cs`](../src/MusicAlbums.ServiceDefaults/Extensions.cs).
 
 ## Passwordless Database Authentication (Entra ID)
 

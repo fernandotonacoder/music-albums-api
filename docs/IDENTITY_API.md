@@ -15,7 +15,7 @@ The Identity API requires `Jwt:Key` (min 32 characters). The key **must match** 
 The AppHost reads `jwt-key` from its user-secrets and injects it as `Jwt:Key` into both services — set it once and both API and Identity API pick it up:
 
 ```bash
-cd src/MusicAlbumsApi.AppHost
+cd src/MusicAlbums.AppHost
 dotnet user-secrets set "jwt-key" "your-secret-key-min-32-chars"
 cd ..
 aspire start

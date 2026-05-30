@@ -21,7 +21,6 @@ public static class MusicAlbumMapping
             }).ToList()
         };
         
-        // Map tracks with their artists (if provided)
         album.Tracks = request.Tracks.Select(t => new Track
         {
             Id = Guid.NewGuid(),
@@ -57,7 +56,6 @@ public static class MusicAlbumMapping
             }).ToList()
         };
         
-        // Map tracks with their artists (if provided)
         album.Tracks = request.Tracks.Select(t => new Track
         {
             Id = Guid.NewGuid(),

@@ -844,9 +844,7 @@ curl -X POST https://localhost:5002/api/albums \
     {
       "id": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
       "name": "Pink Floyd",
-      "slug": "pink-floyd",
-      "country": null,
-      "yearFormed": null
+      "slug": "pink-floyd"
     }
   ],
   "genres": ["Progressive Rock", "Psychedelic Rock"],
@@ -888,7 +886,8 @@ curl -X POST https://localhost:5002/api/albums \
   ],
   "page": 1,
   "pageSize": 20,
-  "total": 42
+  "total": 42,
+  "hasNextPage": true
 }
 ```
 
@@ -899,13 +898,11 @@ curl -X POST https://localhost:5002/api/albums \
   "errors": [
     {
       "propertyName": "Title",
-      "message": "Title is required",
-      "attemptedValue": null
+      "message": "Title is required"
     },
     {
       "propertyName": "Artists",
-      "message": "At least one artist is required",
-      "attemptedValue": []
+      "message": "At least one artist is required"
     }
   ]
 }

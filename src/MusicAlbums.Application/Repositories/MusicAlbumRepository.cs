@@ -19,7 +19,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
 
         if (result > 0)
         {
-            // Insert/link artists for album
             await UpsertAndLinkAlbumArtistsAsync(connection, musicAlbum.Id, musicAlbum.Artists, token);
             
             foreach (var genre in musicAlbum.Genres)
@@ -41,8 +40,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                     values (@MusicAlbumId, @GenreId)
                     """, new { MusicAlbumId = musicAlbum.Id, GenreId = genreId.Value }, cancellationToken: token));
             }
-            
-            // Insert tracks
+
             foreach (var track in musicAlbum.Tracks)
             {
                 await connection.ExecuteAsync(new CommandDefinition("""
@@ -56,8 +54,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                     TrackNumber = track.TrackNumber,
                     DurationInSeconds = track.DurationInSeconds
                 }, cancellationToken: token));
-                
-                // Insert/link artists for track if specified
+
                 if (track.Artists.Any())
                 {
                     await UpsertAndLinkTrackArtistsAsync(connection, track.Id, track.Artists, token);
@@ -69,14 +66,13 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         return result > 0;
     }
 
-    private async Task UpsertAndLinkAlbumArtistsAsync(IDbConnection connection, Guid albumId, 
+    private async Task UpsertAndLinkAlbumArtistsAsync(IDbConnection connection, Guid albumId,
         List<Artist> artists, CancellationToken token)
     {
         for (int i = 0; i < artists.Count; i++)
         {
             var artist = artists[i];
-            
-            // Check if artist exists by name
+
             var existingArtistId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
                 select id from artists where LOWER(name) = LOWER(@Name)
                 """, new { artist.Name }, cancellationToken: token));
@@ -88,7 +84,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             }
             else
             {
-                // Insert new artist
                 artistId = artist.Id;
                 await connection.ExecuteAsync(new CommandDefinition("""
                     insert into artists (id, name, slug)
@@ -101,7 +96,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 }, cancellationToken: token));
             }
 
-            // Link artist to album
             await connection.ExecuteAsync(new CommandDefinition("""
                 insert into album_artists (album_id, artist_id, artist_order, role)
                 values (@AlbumId, @ArtistId, @Order, @Role)
@@ -116,14 +110,13 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         }
     }
 
-    private async Task UpsertAndLinkTrackArtistsAsync(IDbConnection connection, Guid trackId, 
+    private async Task UpsertAndLinkTrackArtistsAsync(IDbConnection connection, Guid trackId,
         List<Artist> artists, CancellationToken token)
     {
         for (int i = 0; i < artists.Count; i++)
         {
             var artist = artists[i];
-            
-            // Check if artist exists by name
+
             var existingArtistId = await connection.QuerySingleOrDefaultAsync<Guid?>(new CommandDefinition("""
                 select id from artists where LOWER(name) = LOWER(@Name)
                 """, new { artist.Name }, cancellationToken: token));
@@ -135,7 +128,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             }
             else
             {
-                // Insert new artist
                 artistId = artist.Id;
                 await connection.ExecuteAsync(new CommandDefinition("""
                     insert into artists (id, name, slug)
@@ -148,7 +140,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 }, cancellationToken: token));
             }
 
-            // Link artist to track
             await connection.ExecuteAsync(new CommandDefinition("""
                 insert into track_artists (track_id, artist_id, artist_order, role)
                 values (@TrackId, @ArtistId, @Order, @Role)
@@ -204,7 +195,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             return null;
         }
 
-        // Load artists for album
         var albumArtists = await connection.QueryAsync<Artist>(new CommandDefinition("""
             select a.id as Id, a.name as Name, a.slug as Slug
             from artists a
@@ -215,7 +205,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         
         foundAlbum.Artists = albumArtists.ToList();
 
-        // Load tracks
         var tracks = await connection.QueryAsync<Track>(new CommandDefinition("""
             select id as Id,
                    music_album_id as MusicAlbumId,
@@ -229,7 +218,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         
         foundAlbum.Tracks = tracks.ToList();
 
-        // Load artists for each track
         if (foundAlbum.Tracks.Any())
         {
             var trackIds = foundAlbum.Tracks.Select(t => t.Id).ToArray();
@@ -304,7 +292,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             return null;
         }
 
-        // Load artists for album
         var albumArtists = await connection.QueryAsync<Artist>(new CommandDefinition("""
             select a.id as Id, a.name as Name, a.slug as Slug
             from artists a
@@ -315,7 +302,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         
         foundAlbum.Artists = albumArtists.ToList();
 
-        // Load tracks
         var tracks = await connection.QueryAsync<Track>(new CommandDefinition("""
             select id as Id,
                    music_album_id as MusicAlbumId,
@@ -329,7 +315,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         
         foundAlbum.Tracks = tracks.ToList();
 
-        // Load artists for each track
         if (foundAlbum.Tracks.Any())
         {
             var trackIds = foundAlbum.Tracks.Select(t => t.Id).ToArray();
@@ -446,7 +431,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 .GroupBy(g => g.AlbumId)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.GenreName).ToList());
 
-            // Load artists for albums
             var artistData = await connection.QueryAsync<Guid, Artist, (Guid AlbumId, Artist Artist)>(
                 new CommandDefinition("""
                 select aa.album_id, a.id as Id, a.name as Name, a.slug as Slug
@@ -462,7 +446,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 .GroupBy(a => a.AlbumId)
                 .ToDictionary(g => g.Key, g => g.Select(x => x.Artist).ToList());
 
-            // Load tracks for albums
             var trackData = await connection.QueryAsync<Track>(new CommandDefinition("""
             select id as Id,
                    music_album_id as MusicAlbumId,
@@ -478,7 +461,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 .GroupBy(t => t.MusicAlbumId)
                 .ToDictionary(g => g.Key, g => g.ToList());
 
-            // Load artists for tracks if there are any tracks
             if (trackData.Any())
             {
                 var trackIds = trackData.Select(t => t.Id).ToArray();
@@ -519,14 +501,12 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         using var connection = await dbConnectionFactory.CreateConnectionAsync(token);
         using var transaction = connection.BeginTransaction();
 
-        // Delete and re-insert artists
         await connection.ExecuteAsync(new CommandDefinition("""
         delete from album_artists where album_id = @id
         """, new { id = musicAlbum.Id }, cancellationToken: token));
 
         await UpsertAndLinkAlbumArtistsAsync(connection, musicAlbum.Id, musicAlbum.Artists, token);
 
-        // Delete and re-insert genres
         await connection.ExecuteAsync(new CommandDefinition("""
         delete from music_album_genres where music_album_id = @id
         """, new { id = musicAlbum.Id }, cancellationToken: token));
@@ -551,7 +531,6 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             """, new { MusicAlbumId = musicAlbum.Id, GenreId = genreId.Value }, cancellationToken: token));
         }
 
-        // Delete existing tracks and insert new ones
         await connection.ExecuteAsync(new CommandDefinition("""
         delete from tracks where music_album_id = @id
         """, new { id = musicAlbum.Id }, cancellationToken: token));
@@ -569,8 +548,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 TrackNumber = track.TrackNumber,
                 DurationInSeconds = track.DurationInSeconds
             }, cancellationToken: token));
-            
-            // Insert/link artists for track if specified
+
             if (track.Artists.Any())
             {
                 await UpsertAndLinkTrackArtistsAsync(connection, track.Id, track.Artists, token);
@@ -578,7 +556,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         }
 
         var result = await connection.ExecuteAsync(new CommandDefinition("""
-        update music_albums 
+        update music_albums
         set slug = @Slug, 
             title = @Title, 
             year_of_release = @YearOfRelease

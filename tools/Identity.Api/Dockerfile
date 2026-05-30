@@ -3,12 +3,12 @@ WORKDIR /app
 
 COPY ["Directory.Packages.props", "./"]
 COPY ["tools/Identity.Api/Identity.Api.csproj", "tools/Identity.Api/"]
-COPY ["src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj", "src/MusicAlbumsApi.ServiceDefaults/"]
+COPY ["src/MusicAlbums.ServiceDefaults/MusicAlbums.ServiceDefaults.csproj", "src/MusicAlbums.ServiceDefaults/"]
 
 RUN dotnet restore "tools/Identity.Api/Identity.Api.csproj"
 
 COPY ["tools/Identity.Api/", "tools/Identity.Api/"]
-COPY ["src/MusicAlbumsApi.ServiceDefaults/", "src/MusicAlbumsApi.ServiceDefaults/"]
+COPY ["src/MusicAlbums.ServiceDefaults/", "src/MusicAlbums.ServiceDefaults/"]
 WORKDIR "/app/tools/Identity.Api"
 RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish /p:UseAppHost=false
 

@@ -12,21 +12,28 @@
 
     <ItemGroup>
         <PackageReference Include="Aspire.Hosting.Testing" />
+        <PackageReference Include="FluentAssertions" />
         <PackageReference Include="coverlet.collector">
           <PrivateAssets>all</PrivateAssets>
           <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
         </PackageReference>
         <PackageReference Include="Microsoft.NET.Test.Sdk" />
+        <PackageReference Include="Respawn" />
         <PackageReference Include="xunit.runner.visualstudio" />
         <PackageReference Include="xunit.v3" />
     </ItemGroup>
 
     <ItemGroup>
-        <Using Include="System.Net"/>
-        <Using Include="Microsoft.Extensions.DependencyInjection"/>
-        <Using Include="Aspire.Hosting.ApplicationModel"/>
-        <Using Include="Aspire.Hosting.Testing"/>
-        <Using Include="Xunit"/>
+        <Using Include="System.Net" />
+        <Using Include="Microsoft.Extensions.DependencyInjection" />
+        <Using Include="Aspire.Hosting.ApplicationModel" />
+        <Using Include="Aspire.Hosting.Testing" />
+        <Using Include="FluentAssertions" />
+        <Using Include="Xunit" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\src\MusicAlbums.AppHost\MusicAlbums.AppHost.csproj" />
     </ItemGroup>
 
 </Project>

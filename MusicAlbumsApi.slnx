@@ -12,8 +12,8 @@
     <Project Path="src/MusicAlbums.Api/MusicAlbums.Api.csproj" />
     <Project Path="src/MusicAlbums.Application/MusicAlbums.Application.csproj" />
     <Project Path="src/MusicAlbums.Contracts/MusicAlbums.Contracts.csproj" />
-    <Project Path="src/MusicAlbumsApi.AppHost/MusicAlbumsApi.AppHost.csproj" />
-    <Project Path="src/MusicAlbumsApi.ServiceDefaults/MusicAlbumsApi.ServiceDefaults.csproj" />
+    <Project Path="src/MusicAlbums.AppHost/MusicAlbums.AppHost.csproj" />
+    <Project Path="src/MusicAlbums.ServiceDefaults/MusicAlbums.ServiceDefaults.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj" />

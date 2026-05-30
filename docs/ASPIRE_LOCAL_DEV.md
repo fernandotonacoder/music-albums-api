@@ -22,7 +22,7 @@ $env:ASPIRE_CONTAINER_RUNTIME  # should print: podman
 
 ## How the database works
 
-The AppHost (`MusicAlbumsApi.AppHost`) declares a single PostgreSQL resource:
+The AppHost (`MusicAlbums.AppHost`) declares a single PostgreSQL resource:
 
 ```csharp
 var db = builder.AddPostgres("musicalbums-postgres", password: pgPassword, port: 5433)
@@ -52,7 +52,7 @@ You can either use the CLI or run from your IDE — both do the same thing:
 aspire start
 ```
 
-Or, in your IDE: open the solution and **F5 / Run** the `MusicAlbumsApi.AppHost` project (set it as the startup project if needed). Supported in:
+Or, in your IDE: open the solution and **F5 / Run** the `MusicAlbums.AppHost` project (set it as the startup project if needed). Supported in:
 
 - **Visual Studio** — native Aspire tooling, no extra setup
 - **JetBrains Rider** — native Aspire support since 2024.2
@@ -67,7 +67,7 @@ On the first run, Aspire creates the Postgres container and the data volume; on 
 The AppHost reads sensitive values from its user-secrets store:
 
 ```bash
-cd src/MusicAlbumsApi.AppHost
+cd src/MusicAlbums.AppHost
 dotnet user-secrets set "jwt-key" "your-super-secret-32-plus-character-jwt-key"
 dotnet user-secrets set "api-key" "your-api-key"
 dotnet user-secrets set "pg-password" "your-local-postgres-password"
@@ -79,7 +79,7 @@ The `pg-password` is used by Aspire when it brings up the Postgres container. Yo
 
 ```bash
 # List values from the AppHost user-secrets store
-cd src/MusicAlbumsApi.AppHost
+cd src/MusicAlbums.AppHost
 dotnet user-secrets list
 
 # Open the underlying secrets file directly
@@ -89,7 +89,7 @@ code "$env:APPDATA\Microsoft\UserSecrets\<UserSecretsId>\secrets.json"
 code ~/.microsoft/usersecrets/<UserSecretsId>/secrets.json
 ```
 
-`<UserSecretsId>` is declared in `MusicAlbumsApi.AppHost.csproj`.
+`<UserSecretsId>` is declared in `MusicAlbums.AppHost.csproj`.
 
 ## Resetting the database
 
@@ -125,7 +125,7 @@ These ports are fixed in the AppHost so they are easy to find and predictable.
 
 ## Observability
 
-Telemetry (traces, metrics, logs) is configured in `MusicAlbumsApi.ServiceDefaults` (`AddServiceDefaults()`) and behaves differently depending on the environment:
+Telemetry (traces, metrics, logs) is configured in `MusicAlbums.ServiceDefaults` (`AddServiceDefaults()`) and behaves differently depending on the environment:
 
 | Environment | How it works |
 | ----------- | ------------ |

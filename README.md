@@ -1,7 +1,7 @@
 # Music Albums API
 
 [![Build Status](https://dev.azure.com/fernandotonacoder/music-albums-api/_apis/build/status%2FMusic%20Albums%20API%20Build%20and%20Deploy?branchName=main)](https://dev.azure.com/fernandotonacoder/music-albums-api/_build/latest?definitionId=1&branchName=main)
-[![Azure Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078D4?logo=microsoft-azure&logoColor=white)](https://music-albums-07-api-dev.redflower-b6906ccc.swedencentral.azurecontainerapps.io/scalar/v1)
+[![Azure Container Apps](https://img.shields.io/badge/Azure-Container%20Apps-0078D4?logo=microsoft-azure&logoColor=white)](https://music-albums-api-dev.happysand-f026cd85.swedencentral.azurecontainerapps.io/scalar/v1)
 [![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white)](Dockerfile)
 [![Bicep](https://img.shields.io/badge/Bicep-IaC-orange?logo=microsoft-azure&logoColor=white)](infra/main/main.bicep)
 
@@ -21,11 +21,11 @@ This project is a **monolith** with a pragmatic **Layered Architecture**, organi
 - **`MusicAlbums.Api`** (Presentation): MVC Controllers, auth handlers, request/response mapping, health checks, and OpenAPI / Scalar configuration.
 - **`MusicAlbums.Application`** (Business & Data): Core business logic (`Services`), data access (`Repositories` & `Database`), domain models, and input validation (`Validators`).
 - **`MusicAlbums.Contracts`** (HTTP Contracts): Request and Response DTOs that define the API's public interface.
-- **`MusicAlbumsApi.ServiceDefaults`** (Shared Infrastructure): Cross-cutting runtime concerns — OpenTelemetry instrumentation, service discovery, HTTP client resilience. Referenced by both the API and the Identity API via `builder.AddServiceDefaults()`, and **runs in both local and cloud** — only the telemetry exporter changes (OTLP to the Aspire dashboard locally, Azure Monitor to Application Insights in production).
+- **`MusicAlbums.ServiceDefaults`** (Shared Infrastructure): Cross-cutting runtime concerns — OpenTelemetry instrumentation, service discovery, HTTP client resilience. Referenced by both the API and the Identity API via `builder.AddServiceDefaults()`, and **runs in both local and cloud** — only the telemetry exporter changes (OTLP to the Aspire dashboard locally, Azure Monitor to Application Insights in production).
 
 One additional project handles local orchestration only:
 
-- **`MusicAlbumsApi.AppHost`** — [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/) orchestrator. Declares the local dev topology (PostgreSQL, the API, the Identity API helper) and is invoked by `aspire start`. **Local development only** — not built into the Docker image, not deployed to the cloud.
+- **`MusicAlbums.AppHost`** — [.NET Aspire](https://learn.microsoft.com/en-us/dotnet/aspire/) orchestrator. Declares the local dev topology (PostgreSQL, the API, the Identity API helper) and is invoked by `aspire start`. **Local development only** — not built into the Docker image, not deployed to the cloud.
 
 ## 🌐 Live Demo
 

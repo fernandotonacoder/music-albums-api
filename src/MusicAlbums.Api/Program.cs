@@ -10,7 +10,7 @@ using MusicAlbums.Api.Mapping;
 using MusicAlbums.Api.OpenApi;
 using MusicAlbums.Application;
 using MusicAlbums.Application.Database;
-using MusicAlbumsApi.ServiceDefaults;
+using MusicAlbums.ServiceDefaults;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);

@@ -22,8 +22,12 @@ trigger:
   paths:
     include:
       - src/**
+      - tests/**
       - Dockerfile
       - infra/main/**
+      - Directory.Packages.props
+      - MusicAlbumsApi.slnx
+      - .azure-pipelines/main-ci-cd.yml
 
 pr:
   branches:
@@ -32,8 +36,12 @@ pr:
   paths:
     include:
       - src/**
+      - tests/**
       - Dockerfile
-      - infra/**
+      - infra/main/**
+      - Directory.Packages.props
+      - MusicAlbumsApi.slnx
+      - .azure-pipelines/main-ci-cd.yml
 
 pool:
   vmImage: ubuntu-latest
@@ -126,8 +134,8 @@ stages:
     dependsOn: Build
     condition: and(succeeded(), ne('${{ parameters.destroyInfra }}', 'true'))
     jobs:
-      - job: UnitTests
-        displayName: "Unit Tests + SonarQube Analysis"
+      - job: Tests
+        displayName: "Tests + SonarQube Analysis"
         steps:
           - task: UseDotNet@2
             displayName: "Use .NET SDK"
@@ -135,13 +143,14 @@ stages:
               packageType: "sdk"
               version: "10.x"
 
+          - bash: docker info
+            displayName: "Verify Docker daemon is available (required by Aspire integration tests)"
+
           - task: DotNetCoreCLI@2
             displayName: "Restore packages"
             inputs:
               command: "restore"
-              projects: |
-                **/*.csproj
-                !src/MusicAlbumsApi.AppHost/**/*.csproj
+              projects: "**/*.csproj"
 
           # Community Edition does not support branch analysis (sonar.branch.name).
           # These three tasks are restricted to main only. If upgrading to Developer
@@ -157,7 +166,7 @@ stages:
               extraProperties: |
                 sonar.cs.opencover.reportsPaths=$(Agent.TempDirectory)/**/coverage.opencover.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
-                sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs
+                sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
           # SonarQube task v8 automatically injects sonar.branch.name into
           # SONARQUBE_SCANNER_PARAMS, which Community Edition rejects. Strip it
@@ -172,9 +181,7 @@ stages:
             displayName: "Build solution"
             inputs:
               command: "build"
-              projects: |
-                **/*.csproj
-                !src/MusicAlbumsApi.AppHost/**/*.csproj
+              projects: "**/*.csproj"
               arguments: "--configuration Release --no-restore"
 
           - task: DotNetCoreCLI@2
@@ -185,6 +192,20 @@ stages:
               arguments: >
                 --configuration Release
                 --no-restore
+                --no-build
+                --collect:"XPlat Code Coverage"
+                -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
+              publishTestResults: true
+
+          - task: DotNetCoreCLI@2
+            displayName: "Run integration tests (Aspire)"
+            inputs:
+              command: "test"
+              projects: "tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj"
+              arguments: >
+                --configuration Release
+                --no-restore
+                --no-build
                 --collect:"XPlat Code Coverage"
                 -- DataCollectionRunSettings.DataCollectors.DataCollector.Configuration.Format=opencover
               publishTestResults: true
@@ -427,9 +448,6 @@ stages:
                     scriptType: bash
                     scriptLocation: inlineScript
                     inlineScript: |
-                      # FIX: Replaced brittle sleep 30 with a retry loop.
-                      # Retries up to 10 times with 15s gaps (2.5 min total
-                      # window) before failing the pipeline.
                       APP_URL=$(az containerapp show \
                         --name '$(containerAppName)' \
                         --resource-group '$(RESOURCE_GROUP)' \

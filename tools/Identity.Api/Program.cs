@@ -1,4 +1,4 @@
-using MusicAlbumsApi.ServiceDefaults;
+using MusicAlbums.ServiceDefaults;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
