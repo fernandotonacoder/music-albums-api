@@ -74,11 +74,12 @@ stages:
               command: build
               Dockerfile: tools/Identity.Api/Dockerfile
               buildContext: $(Build.SourcesDirectory)
-              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
+              addPipelineData: false
+              addBaseImageData: false
 
       - job: LintBicep
         displayName: Lint Bicep Templates
@@ -121,11 +122,12 @@ stages:
               command: buildAndPush
               Dockerfile: tools/Identity.Api/Dockerfile
               buildContext: $(Build.SourcesDirectory)
-              arguments: '--label "org.opencontainers.image.source=https://github.com/fernandotonacoder/music-albums-api"'
               tags: |
                 $(imageTag)
                 $(imageTag)-${{ parameters.environment }}
                 ${{ parameters.environment }}
+              addPipelineData: false
+              addBaseImageData: false
 
   - stage: PreviewInfra
     displayName: Preview Infrastructure Changes

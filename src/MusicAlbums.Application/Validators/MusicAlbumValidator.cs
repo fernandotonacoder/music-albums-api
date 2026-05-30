@@ -40,7 +40,7 @@ public class MusicAlbumValidator : AbstractValidator<MusicAlbum>
             .WithMessage("Track numbers must be unique within an album");
     }
 
-    private bool HaveUniqueTrackNumbers(List<Track> tracks)
+    private static bool HaveUniqueTrackNumbers(List<Track> tracks)
     {
         var trackNumbers = tracks.Select(t => t.TrackNumber).ToList();
         return trackNumbers.Count == trackNumbers.Distinct().Count();

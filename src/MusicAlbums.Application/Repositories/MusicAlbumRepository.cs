@@ -513,22 +513,12 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
 
         foreach (var genre in musicAlbum.Genres)
         {
-            var genreId = await connection.QuerySingleOrDefaultAsync<int?>(new CommandDefinition("""
-            select id from genres where name = @Name
-            """, new { Name = genre }, cancellationToken: token));
-
-            if (!genreId.HasValue)
-            {
-                genreId = await connection.QuerySingleAsync<int>(new CommandDefinition("""
-                insert into genres (name) values (@Name)
-                returning id
-                """, new { Name = genre }, cancellationToken: token));
-            }
+            var genreId = await EnsureGenreIdAsync(connection, genre, token);
 
             await connection.ExecuteAsync(new CommandDefinition("""
             insert into music_album_genres (music_album_id, genre_id) 
             values (@MusicAlbumId, @GenreId)
-            """, new { MusicAlbumId = musicAlbum.Id, GenreId = genreId.Value }, cancellationToken: token));
+            """, new { MusicAlbumId = musicAlbum.Id, GenreId = genreId }, cancellationToken: token));
         }
 
         await connection.ExecuteAsync(new CommandDefinition("""
@@ -606,5 +596,22 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             title,
             yearOfRelease
         }, cancellationToken: token));
+    }
+
+    private static async Task<int> EnsureGenreIdAsync(IDbConnection connection, string genre, CancellationToken token)
+    {
+        var genreId = await connection.QuerySingleOrDefaultAsync<int?>(new CommandDefinition("""
+            select id from genres where name = @Name
+            """, new { Name = genre }, cancellationToken: token));
+
+        if (genreId.HasValue)
+        {
+            return genreId.Value;
+        }
+
+        return await connection.QuerySingleAsync<int>(new CommandDefinition("""
+            insert into genres (name) values (@Name)
+            returning id
+            """, new { Name = genre }, cancellationToken: token));
     }
 }

@@ -15,6 +15,7 @@ RUN dotnet publish "Identity.Api.csproj" -c Release -o /app/publish /p:UseAppHos
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 5003
+LABEL org.opencontainers.image.source="https://github.com/fernandotonacoder/music-albums-api"
 COPY --from=build /app/publish .
 RUN useradd -m appuser
 USER appuser

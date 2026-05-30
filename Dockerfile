@@ -27,6 +27,7 @@ RUN dotnet publish "MusicAlbums.Api.csproj" -c Release -o /app/publish /p:UseApp
 FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS final
 WORKDIR /app
 EXPOSE 8080
+LABEL org.opencontainers.image.source="https://github.com/fernandotonacoder/music-albums-api"
 RUN apt-get update && apt-get install -y libgssapi-krb5-2 && rm -rf /var/lib/apt/lists/*
 COPY --from=build /app/publish .
 
