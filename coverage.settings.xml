@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Code coverage filter for `dotnet-coverage collect`.
+
+  Aspire integration tests run the API/Identity/Postgres as separate OS processes (via DCP),
+  so coverlet (in-process only) misses all of it. dotnet-coverage instruments via the CoreCLR
+  profiler whose env vars propagate to the child processes, capturing real cross-process coverage.
+
+  ModulePath matches the FULL file path, so filters are anchored on the file name (path separator
+  before the assembly name) to avoid matching third-party DLLs that sit inside a first-party
+  output folder (e.g. .../MusicAlbums.Api/bin/.../Dapper.dll).
+
+  Scope: the deployed app (MusicAlbums.* + Identity.Api). Excludes the AppHost (local-only
+  orchestration, not deployed) and the test assemblies.
+-->
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Include>
+        <ModulePath>.*[/\\]MusicAlbums\.[^/\\]*\.dll$</ModulePath>
+        <ModulePath>.*[/\\]Identity\.Api\.dll$</ModulePath>
+      </Include>
+      <Exclude>
+        <ModulePath>.*[/\\]MusicAlbums\.AppHost\.dll$</ModulePath>
+        <ModulePath>.*[/\\][^/\\]*\.Tests\.[^/\\]*\.dll$</ModulePath>
+      </Exclude>
+    </ModulePaths>
+    <Attributes>
+      <Exclude>
+        <Attribute>^System\.Diagnostics\.DebuggerHiddenAttribute$</Attribute>
+        <Attribute>^System\.Diagnostics\.DebuggerNonUserCodeAttribute$</Attribute>
+        <Attribute>^System\.CodeDom\.Compiler\.GeneratedCodeAttribute$</Attribute>
+        <Attribute>^System\.Diagnostics\.CodeAnalysis\.ExcludeFromCodeCoverageAttribute$</Attribute>
+      </Exclude>
+    </Attributes>
+    <EnableStaticManagedInstrumentation>True</EnableStaticManagedInstrumentation>
+    <EnableDynamicManagedInstrumentation>True</EnableDynamicManagedInstrumentation>
+  </CodeCoverage>
+</Configuration>

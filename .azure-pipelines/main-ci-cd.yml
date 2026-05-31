@@ -28,6 +28,7 @@ trigger:
       - Directory.Packages.props
       - MusicAlbumsApi.slnx
       - global.json
+      - coverage.settings.xml
       - .azure-pipelines/main-ci-cd.yml
 
 pr:
@@ -43,6 +44,7 @@ pr:
       - Directory.Packages.props
       - MusicAlbumsApi.slnx
       - global.json
+      - coverage.settings.xml
       - .azure-pipelines/main-ci-cd.yml
 
 pool:
@@ -144,6 +146,14 @@ stages:
               packageType: "sdk"
               version: "10.x"
 
+          # Cross-process code coverage. Aspire integration tests run the API/Identity/Postgres
+          # as separate processes (DCP), which in-process collectors (coverlet) cannot see;
+          # dotnet-coverage instruments via the CoreCLR profiler and captures the child processes.
+          - script: |
+              dotnet tool install --global dotnet-coverage || dotnet tool update --global dotnet-coverage
+              echo "##vso[task.prependpath]$HOME/.dotnet/tools"
+            displayName: "Install dotnet-coverage"
+
           - bash: docker info
             displayName: "Verify Docker daemon is available (required by Aspire integration tests)"
 
@@ -163,7 +173,7 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.opencover.reportsPaths=TestResults/**/coverage.opencover.*.xml
+                sonar.cs.vscoveragexml.reportsPaths=TestResults/coverage.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
@@ -186,33 +196,46 @@ stages:
             displayName: Pre‑pull PostgreSQL image
 
           - script: >
+              dotnet-coverage collect
+              --output $(Build.SourcesDirectory)/TestResults/unit.coverage
+              --output-format coverage
+              --settings $(Build.SourcesDirectory)/coverage.settings.xml
+              --
               dotnet test
               --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
               --configuration Release
               --no-build
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/unit
-              --
-              --coverlet
-              --coverlet-output-format cobertura opencover
             displayName: "Run unit tests"
 
           - script: >
+              dotnet-coverage collect
+              --output $(Build.SourcesDirectory)/TestResults/integration.coverage
+              --output-format coverage
+              --settings $(Build.SourcesDirectory)/coverage.settings.xml
+              --
               dotnet test
               --project tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
               --configuration Release
               --no-build
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/integration
-              --
-              --coverlet
-              --coverlet-output-format cobertura opencover
             displayName: "Run integration tests (Aspire)"
+
+          # Merge unit + integration into one report per consumer:
+          # cobertura for the Azure DevOps coverage tab, vscoveragexml (xml) for SonarQube.
+          - script: |
+              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/*.coverage \
+                --output $(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml --output-format cobertura
+              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/*.coverage \
+                --output $(Build.SourcesDirectory)/TestResults/coverage.xml --output-format xml
+            displayName: "Merge coverage reports"
 
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish code coverage'
             inputs:
-              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.*.xml'
+              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml'
               failIfCoverageEmpty: true
 
           - task: PublishTestResults@2
