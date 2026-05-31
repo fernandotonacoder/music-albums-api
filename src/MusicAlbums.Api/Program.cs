@@ -106,6 +106,10 @@ builder.Services.AddDatabase(config["Database:ConnectionString"]!);
 
 var app = builder.Build();
 
+// Must run before anything reads the request scheme/host (OpenAPI servers, redirects, links):
+// rewrites them from the reverse-proxy forwarded headers configured in AddServiceDefaults.
+app.UseForwardedHeaders();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
@@ -134,14 +138,8 @@ app.MapHealthChecks("_health/ready", new HealthCheckOptions
     Predicate = check => check.Name == DatabaseHealthCheck.Name
 }).CacheOutput("HealthReadiness");
 
-// Skip HTTPS redirect in test mode: CI has no trusted dev cert, and test clients
-// connect over plain HTTP. In production the container is HTTP-only, so this
-// middleware is also a no-op there (no HTTPS port → UseHttpsRedirection skips itself).
-var isTestMode = bool.TryParse(config["TestMode"], out var tm) && tm;
-if (!isTestMode)
-{
-    app.UseHttpsRedirection();
-}
+// Emit HSTS when running behind the Container Apps ingress (see UseHttpsHardening).
+app.UseHttpsHardening();
 
 app.UseAuthentication();
 app.UseAuthorization();
