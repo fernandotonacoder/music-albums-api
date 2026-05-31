@@ -1,6 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!--
-  Code coverage filter for `dotnet-coverage collect`.
+  Module filter for `dotnet-coverage collect` on the INTEGRATION tests.
+  (Unit tests use coverlet, scoped via its own coverlet include/exclude flags in the pipeline.)
 
   Aspire integration tests run the API/Identity/Postgres as separate OS processes (via DCP),
   so coverlet (in-process only) misses all of it. dotnet-coverage instruments via the CoreCLR
