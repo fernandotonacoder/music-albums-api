@@ -45,9 +45,11 @@ One additional project handles local orchestration only:
 - [API Testing Guide](docs/API_TESTING_GUIDE.md) - copy-pastable requests for all endpoints
 - [Infrastructure](docs/INFRASTRUCTURE.md) - Bicep modules and Azure resources
 - [CI/CD](docs/CI_CD.md) - Azure Pipelines, service connections, variable groups, GitHub Actions
+- [Integration Tests](docs/CONTAINERIZED_INTEGRATION_TESTS_ASPIRE.md) - testing with Aspire AppHost containers & Zscaler corporate proxy fixes
 - [Identity API](docs/IDENTITY_API.md) - JWT token generator (helper tool)
 - [Standalone Postgres](tools/local-postgres/README.md) - legacy `docker-compose` Postgres, kept for non-Aspire workflows
 - [Linux Native Docker Setup](docs/DOCKER_QUICK_SETUP_LINUX.md) - optimized native Docker Engine setup for Ubuntu/Linux developers
+- [Windows Native Docker Setup](docs/DOCKER_QUICK_SETUP_WINDOWS.md) - optimized native Docker Engine setup for Windows Developers via WSL2
 
 ## 🚀 Local Development
 
