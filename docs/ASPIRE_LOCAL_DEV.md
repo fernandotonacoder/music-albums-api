@@ -4,9 +4,11 @@ This repository uses Aspire as the local orchestrator. Postgres is managed by As
 
 ## Prerequisites
 
-Aspire uses a container runtime to manage PostgreSQL and the integration test containers. You need **Docker** or **Podman** installed.
+Aspire uses a container runtime to manage PostgreSQL and the integration test containers. You can use whatever you prefer: **Docker** or **Podman**.
 
-By default Aspire assumes Docker. To use Podman instead:
+> **Tip for Linux Users**: If you choose Docker, check out the [Linux Native Docker Engine Setup](DOCKER_QUICK_SETUP_LINUX.md) for a lightweight, native installation without Docker Desktop.
+
+By default, Aspire assumes Docker. If you choose Podman instead, you just need to tell Aspire to use it:
 
 **Linux/macOS:**
 ```bash
@@ -35,7 +37,7 @@ What this gives you:
 
 - **Persistent container** — the Postgres container survives `aspire start` / stop cycles. The next time you `aspire start`, the existing container is reused, not recreated.
 - **Persistent volume** — the data lives in a named Docker volume (`musicalbums-postgres-data`), separate from the container. Data survives even if the container is removed.
-- **Visible in Docker Desktop** — it's a normal Docker container. You can stop, start, inspect logs, attach `psql`, or use any Postgres client (DBeaver, pgcli, …) on `localhost:5433` even when the AppHost is not running.
+- **Visible in your container UI** — it's a standard container (viewable in the Aspire dashboard, Docker Desktop, Podman Desktop, Portainer, or IDE extensions). You can stop, start, inspect logs, attach `psql`, or use any Postgres client (DBeaver, pgAdmin, pgcli, …) on `localhost:5433` even when the AppHost is not running.
 
 In the Aspire dashboard graph you'll see both resources typed:
 
@@ -102,7 +104,7 @@ docker volume rm musicalbums-postgres-data
 
 On the next `aspire start`, Aspire recreates the volume and the schema is re-initialised by `DbInitializer`.
 
-Alternatively, delete the volume from the Docker Desktop UI under **Volumes**.
+Alternatively, delete the volume from your preferred container management UI (Docker Desktop, Podman Desktop, Portainer, or IDE extensions) under the **Volumes** section.
 
 ## Dashboard workflow
 

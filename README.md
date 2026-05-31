@@ -47,6 +47,7 @@ One additional project handles local orchestration only:
 - [CI/CD](docs/CI_CD.md) - Azure Pipelines, service connections, variable groups, GitHub Actions
 - [Identity API](docs/IDENTITY_API.md) - JWT token generator (helper tool)
 - [Standalone Postgres](tools/local-postgres/README.md) - legacy `docker-compose` Postgres, kept for non-Aspire workflows
+- [Linux Native Docker Setup](docs/DOCKER_QUICK_SETUP_LINUX.md) - optimized native Docker Engine setup for Ubuntu/Linux developers
 
 ## 🚀 Local Development
 

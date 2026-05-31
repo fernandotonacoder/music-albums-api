@@ -4,6 +4,8 @@
 
 Before this repository adopted Aspire, **this Compose file was how the local PostgreSQL ran for development** — you'd `docker-compose up -d` from the repo root, and the API would connect to it.
 
+> **Tip:** If you are a Linux user setting up Docker to run this, check out our [Linux Native Docker Setup](../../docs/DOCKER_QUICK_SETUP_LINUX.md) to avoid the overhead of Docker Desktop.
+
 After the migration to Aspire, the AppHost manages its own persistent Postgres container (`aspire start` handles everything), and this Compose file became unnecessary for the day-to-day workflow. It was kept here, under `tools/local-postgres/`, for the niche cases where running Postgres without the AppHost is still useful.
 
 ## When to use this
