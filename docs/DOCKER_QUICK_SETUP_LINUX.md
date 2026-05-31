@@ -13,7 +13,7 @@ Both Portainer Community Edition and Docker Engine CLI are open-source and free 
 Before installing Docker Engine, you need to uninstall any conflicting packages to ensure a clean installation. Run the following command:
 
 ```bash
-sudo apt remove $(dpkg --get-selections docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
+sudo apt remove $(dpkg --get-selections docker-desktop docker.io docker-compose docker-compose-v2 docker-doc podman-docker containerd runc | cut -f1)
 ```
 
 Now, run these commands to set up prerequisites and install the official Docker daemon:
