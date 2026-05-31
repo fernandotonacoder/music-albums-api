@@ -7,8 +7,8 @@ This repository uses Aspire as the local orchestrator. Postgres is managed by As
 Aspire uses a container runtime to manage PostgreSQL and the integration test containers. You can use whatever you prefer: **Docker** or **Podman**.
 
 > **Tip**: Looking for a lightweight, native installation without the commercial restrictions or overhead of Docker Desktop? 
-> - [Linux Native Docker Engine + UI Setup](DOCKER_QUICK_SETUP_LINUX.md)
-> - [Windows Native Docker Engine + UI Setup (WSL2)](DOCKER_QUICK_SETUP_WINDOWS.md)
+> - [Linux: Native Docker Engine + Portainer](DOCKER_QUICK_SETUP_LINUX.md)
+> - [Windows: Podman + Portainer](PODMAN_QUICK_SETUP_WINDOWS.md)
 
 By default, Aspire assumes Docker. If you choose Podman instead, you just need to tell Aspire to use it:
 
@@ -101,7 +101,7 @@ When you want a clean database:
 
 ```bash
 # Stop the AppHost first (Ctrl+C), then:
-docker volume rm musicalbums-postgres-data
+docker volume rm musicalbums-postgres-data   # or: podman volume rm musicalbums-postgres-data
 ```
 
 On the next `aspire start`, Aspire recreates the volume and the schema is re-initialised by `DbInitializer`.
