@@ -163,7 +163,8 @@ stages:
               command: "restore"
               projects: "**/*.csproj"
 
-          # Community Edition has no branch analysis; these tasks run on main only.
+          # Community Edition has no per-git-branch analysis (unrelated to code condition/branch
+          # coverage, which it does show); so the SonarQube tasks run on main only.
           - task: SonarQubePrepare@8
             displayName: "SonarQube — Prepare analysis"
             condition: eq(variables['Build.SourceBranch'], 'refs/heads/main')
@@ -172,8 +173,14 @@ stages:
               scannerMode: "dotnet"
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
+              # Two coverage sources, both with ABSOLUTE paths — the SonarScanner for .NET does
+              # not reliably resolve relative coverage paths (that was the cause of the 0% on main).
+              #   opencover     ← unit tests (coverlet, in-process): line + branch (condition) coverage
+              #   vscoveragexml ← integration tests (dotnet-coverage, cross-process): line coverage
+              # Sonar merges both. coverlet's OpenCover filename carries a timestamp, hence the wildcard.
               extraProperties: |
-                sonar.cs.vscoveragexml.reportsPaths=TestResults/coverage.xml
+                sonar.cs.opencover.reportsPaths=$(Build.SourcesDirectory)/TestResults/**/coverage.opencover.*.xml
+                sonar.cs.vscoveragexml.reportsPaths=$(Build.SourcesDirectory)/TestResults/integration.coverage.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
@@ -195,19 +202,23 @@ stages:
           - bash: docker pull postgres:17.6
             displayName: Pre‑pull PostgreSQL image
 
+          # Unit tests run in-process, so coverlet can produce LINE + BRANCH (condition) coverage,
+          # exported as OpenCover for SonarQube (cobertura too, as a freebie for the ADO tab).
+          # Scope to first-party assemblies — coverlet would otherwise instrument Dapper, Moq, etc.
           - script: >
-              dotnet-coverage collect
-              --output $(Build.SourcesDirectory)/TestResults/unit.coverage
-              --output-format coverage
-              --settings $(Build.SourcesDirectory)/coverage.settings.xml
-              --
               dotnet test
               --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
               --configuration Release
               --no-build
+              --coverlet
+              --coverlet-output-format opencover
+              --coverlet-output-format cobertura
+              --coverlet-include "[MusicAlbums.*]*"
+              --coverlet-exclude "[*.Tests.*]*"
+              --coverlet-exclude "[MusicAlbums.AppHost]*"
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/unit
-            displayName: "Run unit tests"
+            displayName: "Run unit tests (coverlet → OpenCover, line + branch)"
 
           - script: >
               dotnet-coverage collect
@@ -221,22 +232,25 @@ stages:
               --no-build
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/integration
-            displayName: "Run integration tests (Aspire)"
+            displayName: "Run integration tests (Aspire, dotnet-coverage cross-process → line)"
 
-          # Merge unit + integration into one report per consumer:
-          # cobertura for the Azure DevOps coverage tab, vscoveragexml (xml) for SonarQube.
+          # Convert the integration capture: vscoveragexml for SonarQube (line coverage of the
+          # cross-process services) and cobertura for the ADO tab.
           - script: |
-              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/*.coverage \
-                --output $(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml --output-format cobertura
-              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/*.coverage \
-                --output $(Build.SourcesDirectory)/TestResults/coverage.xml --output-format xml
-            displayName: "Merge coverage reports"
+              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/integration.coverage \
+                --output $(Build.SourcesDirectory)/TestResults/integration.coverage.xml --output-format xml
+              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/integration.coverage \
+                --output $(Build.SourcesDirectory)/TestResults/integration.cobertura.xml --output-format cobertura
+            displayName: "Convert integration coverage (SonarQube xml + ADO cobertura)"
 
+          # ADO coverage tab is best-effort (SonarQube is the source of truth). Merges the unit
+          # cobertura (coverlet) and the integration cobertura into one tab; never fails the build.
           - task: PublishCodeCoverageResults@2
-            displayName: 'Publish code coverage'
+            displayName: 'Publish code coverage (ADO tab — best effort)'
+            condition: succeededOrFailed()
+            continueOnError: true
             inputs:
-              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml'
-              failIfCoverageEmpty: true
+              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/*cobertura*.xml'
 
           - task: PublishTestResults@2
             displayName: "Publish test results"
