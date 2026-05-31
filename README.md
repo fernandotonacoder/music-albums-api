@@ -21,12 +21,12 @@
   </tr>
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/quality_gate?project=fernandotonacoder_music-albums-api" alt="Quality gate" />
       </a>
     </td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/quality_gate?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Quality gate (server)" />
       </a>
     </td>
@@ -34,19 +34,19 @@
   <!-- Security -->
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=security_rating" alt="Security Rating" />
       </a>
     </td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_security_rating&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Security Rating (server)" />
       </a>
     </td>
   </tr>
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=vulnerabilities" alt="Vulnerabilities" />
       </a>
     </td>
@@ -55,7 +55,7 @@
   <tr>
     <td>N/A — Standard mode (use Vulnerabilities)</td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_security_issues&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Security Issues (server)" />
       </a>
     </td>
@@ -63,7 +63,7 @@
   <tr>
     <td>N/A — free tier limitation</td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=security_hotspots&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Security Hotspots (server)" />
       </a>
     </td>
@@ -71,19 +71,19 @@
   <!-- Reliability -->
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=reliability_rating" alt="Reliability Rating" />
       </a>
     </td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_reliability_rating&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Reliability Rating (server)" />
       </a>
     </td>
   </tr>
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=bugs" alt="Bugs" />
       </a>
     </td>
@@ -92,7 +92,7 @@
   <tr>
     <td>N/A — Standard mode (use Bugs)</td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_reliability_issues&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Reliability Issues (server)" />
       </a>
     </td>
@@ -100,31 +100,31 @@
   <!-- Maintainability -->
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=sqale_rating" alt="Maintainability Rating" />
       </a>
     </td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_maintainability_rating&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Maintainability Rating (server)" />
       </a>
     </td>
   </tr>
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=sqale_index" alt="Technical Debt" />
       </a>
     </td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_maintainability_remediation_effort&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Technical Debt (server)" />
       </a>
     </td>
   </tr>
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=code_smells" alt="Code Smells" />
       </a>
     </td>
@@ -133,7 +133,7 @@
   <tr>
     <td>N/A — Standard mode (use Code Smells)</td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_maintainability_issues&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Maintainability Issues (server)" />
       </a>
     </td>
@@ -142,19 +142,19 @@
   <tr>
     <td>N/A — coverage not uploaded to SonarQube Cloud</td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=coverage&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Coverage (server)" />
       </a>
     </td>
   </tr>
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=duplicated_lines_density" alt="Duplicated Lines (%)" />
       </a>
     </td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=duplicated_lines_density&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Duplicated Lines (%) (server)" />
       </a>
     </td>
@@ -162,12 +162,12 @@
   <!-- Size -->
   <tr>
     <td>
-      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+      <a href="https://sonarcloud.io/summary/overall?id=fernandotonacoder_music-albums-api&branch=main">
         <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=ncloc" alt="Lines of Code" />
       </a>
     </td>
     <td>
-      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&codeScope=overall">
         <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=ncloc&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Lines of Code (server)" />
       </a>
     </td>
