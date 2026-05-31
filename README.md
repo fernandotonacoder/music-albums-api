@@ -14,6 +14,166 @@
 [![JWT](https://img.shields.io/badge/JWT-Authentication-000000?logo=jsonwebtokens&logoColor=white)](docs/IDENTITY_API.md)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
+<table>
+  <tr>
+    <th>SonarQube Cloud <code>main</code></th>
+    <th>SonarQube Server <code>main</code> (self-hosted on Azure)</th>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/quality_gate?project=fernandotonacoder_music-albums-api" alt="Quality gate" />
+      </a>
+    </td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/quality_gate?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Quality gate (server)" />
+      </a>
+    </td>
+  </tr>
+  <!-- Security -->
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=security_rating" alt="Security Rating" />
+      </a>
+    </td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_security_rating&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Security Rating (server)" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=vulnerabilities" alt="Vulnerabilities" />
+      </a>
+    </td>
+    <td>N/A — MQR mode (use Security Issues)</td>
+  </tr>
+  <tr>
+    <td>N/A — Standard mode (use Vulnerabilities)</td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_security_issues&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Security Issues (server)" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>N/A — free tier limitation</td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=security_hotspots&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Security Hotspots (server)" />
+      </a>
+    </td>
+  </tr>
+  <!-- Reliability -->
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=reliability_rating" alt="Reliability Rating" />
+      </a>
+    </td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_reliability_rating&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Reliability Rating (server)" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=bugs" alt="Bugs" />
+      </a>
+    </td>
+    <td>N/A — MQR mode (use Reliability Issues)</td>
+  </tr>
+  <tr>
+    <td>N/A — Standard mode (use Bugs)</td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_reliability_issues&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Reliability Issues (server)" />
+      </a>
+    </td>
+  </tr>
+  <!-- Maintainability -->
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=sqale_rating" alt="Maintainability Rating" />
+      </a>
+    </td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_maintainability_rating&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Maintainability Rating (server)" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=sqale_index" alt="Technical Debt" />
+      </a>
+    </td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_maintainability_remediation_effort&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Technical Debt (server)" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=code_smells" alt="Code Smells" />
+      </a>
+    </td>
+    <td>N/A — MQR mode (use Maintainability Issues)</td>
+  </tr>
+  <tr>
+    <td>N/A — Standard mode (use Code Smells)</td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=software_quality_maintainability_issues&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Maintainability Issues (server)" />
+      </a>
+    </td>
+  </tr>
+  <!-- Coverage & Duplication -->
+  <tr>
+    <td>N/A — coverage not uploaded to SonarQube Cloud</td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=coverage&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Coverage (server)" />
+      </a>
+    </td>
+  </tr>
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=duplicated_lines_density" alt="Duplicated Lines (%)" />
+      </a>
+    </td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=duplicated_lines_density&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Duplicated Lines (%) (server)" />
+      </a>
+    </td>
+  </tr>
+  <!-- Size -->
+  <tr>
+    <td>
+      <a href="https://sonarcloud.io/summary/new_code?id=fernandotonacoder_music-albums-api">
+        <img src="https://sonarcloud.io/api/project_badges/measure?project=fernandotonacoder_music-albums-api&metric=ncloc" alt="Lines of Code" />
+      </a>
+    </td>
+    <td>
+      <a href="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/dashboard?id=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd">
+        <img src="https://sonarqube-ft-dpdwb8g8dnhkfbey.swedencentral-01.azurewebsites.net/api/project_badges/measure?project=fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd&metric=ncloc&token=sqb_0ec2dc5aefba40e04c5b0bdafa86bbe6ea9c72ba" alt="Lines of Code (server)" />
+      </a>
+    </td>
+  </tr>
+</table>
+
 Music Albums REST API in .NET / C#, with Dapper and PostgreSQL. **Locally orchestrated by Aspire** and **deployed to Azure Container Apps** through Bicep's Infrastructure as Code (IaC) and Azure Pipelines CI/CD. Development follows **[GitHub Flow](docs/CONTRIBUTING.md)** — all changes go through PRs (direct push to `main` is not allowed), CI required, squash merge enforced.
 
 This project is a **monolith** with a pragmatic **Layered Architecture**, organized by technical concerns:
