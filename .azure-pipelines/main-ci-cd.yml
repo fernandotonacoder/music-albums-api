@@ -163,7 +163,7 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.vscoveragexml.reportsPaths=TestResults/**/coverage.xml
+                sonar.cs.opencover.reportsPaths=TestResults/**/coverage.opencover.*.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
@@ -190,11 +190,11 @@ stages:
               --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
               --configuration Release
               --no-build
-              --coverage
-              --coverage-output-format xml
-              --coverage-output $(Build.SourcesDirectory)/TestResults/unit/coverage.xml
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/unit
+              --
+              --coverlet
+              --coverlet-output-format cobertura opencover
             displayName: "Run unit tests"
 
           - script: >
@@ -202,17 +202,17 @@ stages:
               --project tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
               --configuration Release
               --no-build
-              --coverage
-              --coverage-output-format xml
-              --coverage-output $(Build.SourcesDirectory)/TestResults/integration/coverage.xml
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/integration
+              --
+              --coverlet
+              --coverlet-output-format cobertura opencover
             displayName: "Run integration tests (Aspire)"
 
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish code coverage'
             inputs:
-              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/coverage.xml'
+              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.*.xml'
               failIfCoverageEmpty: true
 
           - task: PublishTestResults@2
