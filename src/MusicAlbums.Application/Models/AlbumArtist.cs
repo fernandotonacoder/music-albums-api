@@ -1,8 +1,5 @@
 namespace MusicAlbums.Application.Models;
 
-/// <summary>
-/// Represents the relationship between an album and an artist
-/// </summary>
 public class AlbumArtist
 {
     public required Guid AlbumId { get; set; }

@@ -21,6 +21,13 @@ if (builder.Environment.IsDevelopment())
 
 var app = builder.Build();
 
+// Must run before anything reads the request scheme/host (OpenAPI servers, redirects, links):
+// rewrites them from the reverse-proxy forwarded headers configured in AddServiceDefaults.
+app.UseForwardedHeaders();
+
+// Emit HSTS when running behind the Container Apps ingress (see UseHttpsHardening).
+app.UseHttpsHardening();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
