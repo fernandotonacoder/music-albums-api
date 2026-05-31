@@ -28,6 +28,7 @@ trigger:
       - Directory.Packages.props
       - MusicAlbumsApi.slnx
       - global.json
+      - coverage.settings.xml
       - .azure-pipelines/main-ci-cd.yml
 
 pr:
@@ -43,6 +44,7 @@ pr:
       - Directory.Packages.props
       - MusicAlbumsApi.slnx
       - global.json
+      - coverage.settings.xml
       - .azure-pipelines/main-ci-cd.yml
 
 pool:
@@ -144,6 +146,14 @@ stages:
               packageType: "sdk"
               version: "10.x"
 
+          # Cross-process code coverage. Aspire integration tests run the API/Identity/Postgres
+          # as separate processes (DCP), which in-process collectors (coverlet) cannot see;
+          # dotnet-coverage instruments via the CoreCLR profiler and captures the child processes.
+          - script: |
+              dotnet tool install --global dotnet-coverage || dotnet tool update --global dotnet-coverage
+              echo "##vso[task.prependpath]$HOME/.dotnet/tools"
+            displayName: "Install dotnet-coverage"
+
           - bash: docker info
             displayName: "Verify Docker daemon is available (required by Aspire integration tests)"
 
@@ -163,7 +173,7 @@ stages:
               projectKey: "fernandotonacoder_music-albums-api_eae8c9a8-9fe7-4c8a-9b9d-5871867c54bd"
               projectName: "music-albums-api"
               extraProperties: |
-                sonar.cs.cobertura.reportsPaths=TestResults/**/coverage.cobertura.xml
+                sonar.cs.vscoveragexml.reportsPaths=TestResults/coverage.xml
                 sonar.exclusions=**/Migrations/**,**/wwwroot/**
                 sonar.coverage.exclusions=**/Program.cs,**/*.Dto.cs,**/MusicAlbums.AppHost/**
 
@@ -186,88 +196,47 @@ stages:
             displayName: Pre‑pull PostgreSQL image
 
           - script: >
+              dotnet-coverage collect
+              --output $(Build.SourcesDirectory)/TestResults/unit.coverage
+              --output-format coverage
+              --settings $(Build.SourcesDirectory)/coverage.settings.xml
+              --
               dotnet test
               --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
               --configuration Release
               --no-build
-              --coverage
-              --coverage-output-format cobertura
-              --coverage-output $(Build.SourcesDirectory)/TestResults/unit/coverage.cobertura.xml
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/unit
             displayName: "Run unit tests"
 
-          - bash: |
-              if [ ! -s "$(Build.SourcesDirectory)/TestResults/unit/coverage.cobertura.xml" ]; then
-                echo "Unit coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/unit/coverage.cobertura.xml" >&2
-                exit 1
-              fi
-
-              if ! find "$(Build.SourcesDirectory)/TestResults/unit" -name "*.trx" -print -quit | grep -q .; then
-                echo "Unit test TRX file missing under $(Build.SourcesDirectory)/TestResults/unit" >&2
-                exit 1
-              fi
-            displayName: "Validate unit test artifacts"
-
           - script: >
+              dotnet-coverage collect
+              --output $(Build.SourcesDirectory)/TestResults/integration.coverage
+              --output-format coverage
+              --settings $(Build.SourcesDirectory)/coverage.settings.xml
+              --
               dotnet test
               --project tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
               --configuration Release
               --no-build
-              --coverage
-              --coverage-output-format cobertura
-              --coverage-output $(Build.SourcesDirectory)/TestResults/integration/coverage.cobertura.xml
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/integration
             displayName: "Run integration tests (Aspire)"
 
-          - bash: |
-              if [ ! -s "$(Build.SourcesDirectory)/TestResults/integration/coverage.cobertura.xml" ]; then
-                echo "Integration coverage file missing or empty: $(Build.SourcesDirectory)/TestResults/integration/coverage.cobertura.xml" >&2
-                exit 1
-              fi
-
-              if ! find "$(Build.SourcesDirectory)/TestResults/integration" -name "*.trx" -print -quit | grep -q .; then
-                echo "Integration test TRX file missing under $(Build.SourcesDirectory)/TestResults/integration" >&2
-                exit 1
-              fi
-            displayName: "Validate integration test artifacts"
-
-          - bash: |
-              dotnet tool update --global dotnet-reportgenerator-globaltool || dotnet tool install --global dotnet-reportgenerator-globaltool
-              export PATH="$PATH:$HOME/.dotnet/tools"
-              reportgenerator \
-                -reports:"$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.xml" \
-                -targetdir:"$(Build.ArtifactStagingDirectory)/coverage-report" \
-                -reporttypes:"HtmlInline_AzurePipelines"
-            displayName: "Generate coverage report (HTML)"
-
-          - bash: |
-              if ! find "$(Build.SourcesDirectory)/TestResults" -name "coverage.cobertura.xml" -print -quit | grep -q .; then
-                echo "No coverage.cobertura.xml files found under $(Build.SourcesDirectory)/TestResults" >&2
-                exit 1
-              fi
-
-              if ! find "$(Build.SourcesDirectory)/TestResults" -name "*.trx" -print -quit | grep -q .; then
-                echo "No .trx test result files found under $(Build.SourcesDirectory)/TestResults" >&2
-                exit 1
-              fi
-            displayName: "Validate coverage and test result files"
+          # Merge unit + integration into one report per consumer:
+          # cobertura for the Azure DevOps coverage tab, vscoveragexml (xml) for SonarQube.
+          - script: |
+              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/*.coverage \
+                --output $(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml --output-format cobertura
+              dotnet-coverage merge $(Build.SourcesDirectory)/TestResults/*.coverage \
+                --output $(Build.SourcesDirectory)/TestResults/coverage.xml --output-format xml
+            displayName: "Merge coverage reports"
 
           - task: PublishCodeCoverageResults@2
             displayName: 'Publish code coverage'
             inputs:
-              codeCoverageTool: 'Cobertura'
-              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/**/coverage.cobertura.xml'
-              reportDirectory: '$(Build.ArtifactStagingDirectory)/coverage-report'
-
-          - task: PublishPipelineArtifact@1
-            displayName: Publish coverage report (HTML)
-            condition: always()
-            continueOnError: true
-            inputs:
-              targetPath: '$(Build.ArtifactStagingDirectory)/coverage-report'
-              artifact: 'coverage-report'
+              summaryFileLocation: '$(Build.SourcesDirectory)/TestResults/coverage.cobertura.xml'
+              failIfCoverageEmpty: true
 
           - task: PublishTestResults@2
             displayName: "Publish test results"
@@ -276,6 +245,7 @@ stages:
               testResultsFormat: VSTest
               testResultsFiles: "$(Build.SourcesDirectory)/TestResults/**/*.trx"
               failTaskOnFailedTests: true
+              failTaskOnMissingResultsFile: true
 
           - task: PublishPipelineArtifact@1
             displayName: Upload test logs
