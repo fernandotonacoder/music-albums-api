@@ -50,6 +50,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         external: true
         targetPort: 5003
         allowInsecure: false
+        // No mTLS: short-lived dev helper tool, torn down after use.
+        clientCertificateMode: 'ignore'
       }
       secrets: [
         {
