@@ -1,7 +1,10 @@
-﻿namespace Identity.Api.Contracts;
+﻿using System.Text.Json.Serialization;
+
+namespace Identity.Api.Contracts;
 
 public class TokenGenerationRequest
 {
+    [JsonRequired]
     public Guid UserId { get; set; }
     
     public string? Email { get; set; }

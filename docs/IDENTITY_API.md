@@ -42,7 +42,7 @@ dotnet run
 **Endpoint:** `POST /token`
 
 **Validation:**
-- `userId` must be a valid GUID (not all zeros)
+- `userId` is required (must be present in the payload) and must be a valid GUID (not all zeros)
 
 **Request:**
 ```json
