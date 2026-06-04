@@ -9,6 +9,7 @@
         <UseMicrosoftTestingPlatformRunner>true</UseMicrosoftTestingPlatformRunner>
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
         <OutputType>Exe</OutputType>
+        <RootNamespace>MusicAlbums.Tests.Integration</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
