@@ -48,14 +48,14 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                     values (@Id, @MusicAlbumId, @Title, @TrackNumber, @DurationInSeconds)
                     """, new
                 {
-                    Id = track.Id,
+                    track.Id,
                     MusicAlbumId = musicAlbum.Id,
-                    Title = track.Title,
-                    TrackNumber = track.TrackNumber,
-                    DurationInSeconds = track.DurationInSeconds
+                    track.Title,
+                    track.TrackNumber,
+                    track.DurationInSeconds
                 }, cancellationToken: token));
 
-                if (track.Artists.Any())
+                if (track.Artists.Count != 0)
                 {
                     await UpsertAndLinkTrackArtistsAsync(connection, track.Id, track.Artists, token);
                 }
@@ -66,7 +66,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         return result > 0;
     }
 
-    private async Task UpsertAndLinkAlbumArtistsAsync(IDbConnection connection, Guid albumId,
+    private static async Task UpsertAndLinkAlbumArtistsAsync(IDbConnection connection, Guid albumId,
         List<Artist> artists, CancellationToken token)
     {
         for (int i = 0; i < artists.Count; i++)
@@ -110,7 +110,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         }
     }
 
-    private async Task UpsertAndLinkTrackArtistsAsync(IDbConnection connection, Guid trackId,
+    private static async Task UpsertAndLinkTrackArtistsAsync(IDbConnection connection, Guid trackId,
         List<Artist> artists, CancellationToken token)
     {
         for (int i = 0; i < artists.Count; i++)
@@ -218,28 +218,9 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         
         foundAlbum.Tracks = tracks.ToList();
 
-        if (foundAlbum.Tracks.Any())
+        if (foundAlbum.Tracks.Count != 0)
         {
-            var trackIds = foundAlbum.Tracks.Select(t => t.Id).ToArray();
-            var trackArtistsData = await connection.QueryAsync<Guid, Artist, (Guid TrackId, Artist Artist)>(
-                new CommandDefinition("""
-                select ta.track_id, a.id as Id, a.name as Name, a.slug as Slug
-                from artists a
-                join track_artists ta on a.id = ta.artist_id
-                where ta.track_id = ANY(@TrackIds)
-                order by ta.artist_order
-                """, new { TrackIds = trackIds }, cancellationToken: token),
-                (trackId, artist) => (trackId, artist),
-                splitOn: "Id");
-
-            var trackArtistsByTrack = trackArtistsData
-                .GroupBy(x => x.TrackId)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.Artist).ToList());
-
-            foreach (var track in foundAlbum.Tracks)
-            {
-                track.Artists = trackArtistsByTrack.GetValueOrDefault(track.Id, new List<Artist>());
-            }
+            await LoadTrackArtistsAsync(connection, foundAlbum.Tracks, token);
         }
 
         if (userId.HasValue)
@@ -298,7 +279,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             join album_artists aa on a.id = aa.artist_id
             where aa.album_id = @Id
             order by aa.artist_order
-            """, new { Id = foundAlbum.Id }, cancellationToken: token));
+            """, new { foundAlbum.Id }, cancellationToken: token));
         
         foundAlbum.Artists = albumArtists.ToList();
 
@@ -311,32 +292,13 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             from tracks
             where music_album_id = @Id
             order by track_number
-            """, new { Id = foundAlbum.Id }, cancellationToken: token));
+            """, new { foundAlbum.Id }, cancellationToken: token));
         
         foundAlbum.Tracks = tracks.ToList();
 
-        if (foundAlbum.Tracks.Any())
+        if (foundAlbum.Tracks.Count != 0)
         {
-            var trackIds = foundAlbum.Tracks.Select(t => t.Id).ToArray();
-            var trackArtistsData = await connection.QueryAsync<Guid, Artist, (Guid TrackId, Artist Artist)>(
-                new CommandDefinition("""
-                select ta.track_id, a.id as Id, a.name as Name, a.slug as Slug
-                from artists a
-                join track_artists ta on a.id = ta.artist_id
-                where ta.track_id = ANY(@TrackIds)
-                order by ta.artist_order
-                """, new { TrackIds = trackIds }, cancellationToken: token),
-                (trackId, artist) => (trackId, artist),
-                splitOn: "Id");
-
-            var trackArtistsByTrack = trackArtistsData
-                .GroupBy(x => x.TrackId)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.Artist).ToList());
-
-            foreach (var track in foundAlbum.Tracks)
-            {
-                track.Artists = trackArtistsByTrack.GetValueOrDefault(track.Id, new List<Artist>());
-            }
+            await LoadTrackArtistsAsync(connection, foundAlbum.Tracks, token);
         }
 
         if (userId.HasValue)
@@ -374,34 +336,8 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         offset @offset
         """);
 
-        if (!string.IsNullOrEmpty(options.Title))
-        {
-            sqlBuilder.Where("ma.title like '%' || @title || '%'", new { title = options.Title });
-        }
-
-        if (options.YearOfRelease.HasValue)
-        {
-            sqlBuilder.Where("ma.year_of_release = @yearOfRelease", new { yearOfRelease = options.YearOfRelease.Value });
-        }
-
-        if (options.SortField is not null && options.SortOrder != SortOrder.Unsorted)
-        {
-            var sortDirection = options.SortOrder switch
-            {
-                SortOrder.Ascending => "ASC",
-                SortOrder.Descending => "DESC",
-                _ => "ASC"
-            };
-
-            var dbSortField = options.SortField.ToLowerInvariant() switch
-            {
-                "yearofrelease" => "year_of_release",
-                "title" => "title",
-                _ => options.SortField
-            };
-
-            sqlBuilder.OrderBy($"{dbSortField} {sortDirection}");
-        }
+        ApplyFilters(sqlBuilder, options);
+        ApplyOrdering(sqlBuilder, options);
 
         var offset = (options.Page - 1) * options.PageSize;
 
@@ -417,83 +353,127 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
 
         if (albumList.Count != 0)
         {
-            var albumIds = albumList.Select(a => a.Id).ToArray();
-
-            var genreData = await connection.QueryAsync<AlbumGenre>(new CommandDefinition("""
-            select ma.id as AlbumId, g.name as GenreName
-            from music_albums ma 
-            join music_album_genres mag on ma.id = mag.music_album_id
-            join genres g on mag.genre_id = g.id
-            where ma.id = ANY(@albumIds)
-            """, new { albumIds }, cancellationToken: token));
-
-            var genresByAlbum = genreData
-                .GroupBy(g => g.AlbumId)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.GenreName).ToList());
-
-            var artistData = await connection.QueryAsync<Guid, Artist, (Guid AlbumId, Artist Artist)>(
-                new CommandDefinition("""
-                select aa.album_id, a.id as Id, a.name as Name, a.slug as Slug
-                from artists a
-                join album_artists aa on a.id = aa.artist_id
-                where aa.album_id = ANY(@albumIds)
-                order by aa.artist_order
-                """, new { albumIds }, cancellationToken: token),
-                (albumId, artist) => (albumId, artist),
-                splitOn: "Id");
-
-            var artistsByAlbum = artistData
-                .GroupBy(a => a.AlbumId)
-                .ToDictionary(g => g.Key, g => g.Select(x => x.Artist).ToList());
-
-            var trackData = await connection.QueryAsync<Track>(new CommandDefinition("""
-            select id as Id,
-                   music_album_id as MusicAlbumId,
-                   title as Title,
-                   track_number as TrackNumber,
-                   duration_in_seconds as DurationInSeconds
-            from tracks
-            where music_album_id = ANY(@albumIds)
-            order by track_number
-            """, new { albumIds }, cancellationToken: token));
-
-            var tracksByAlbum = trackData
-                .GroupBy(t => t.MusicAlbumId)
-                .ToDictionary(g => g.Key, g => g.ToList());
-
-            if (trackData.Any())
-            {
-                var trackIds = trackData.Select(t => t.Id).ToArray();
-                var trackArtistsData = await connection.QueryAsync<Guid, Artist, (Guid TrackId, Artist Artist)>(
-                    new CommandDefinition("""
-                    select ta.track_id, a.id as Id, a.name as Name, a.slug as Slug
-                    from artists a
-                    join track_artists ta on a.id = ta.artist_id
-                    where ta.track_id = ANY(@TrackIds)
-                    order by ta.artist_order
-                    """, new { TrackIds = trackIds }, cancellationToken: token),
-                    (trackId, artist) => (trackId, artist),
-                    splitOn: "Id");
-
-                var trackArtistsByTrack = trackArtistsData
-                    .GroupBy(x => x.TrackId)
-                    .ToDictionary(g => g.Key, g => g.Select(x => x.Artist).ToList());
-
-                foreach (var track in trackData)
-                {
-                    track.Artists = trackArtistsByTrack.GetValueOrDefault(track.Id, new List<Artist>());
-                }
-            }
-
-            foreach (var album in albumList)
-            {
-                album.Genres = genresByAlbum.GetValueOrDefault(album.Id, []);
-                album.Artists = artistsByAlbum.GetValueOrDefault(album.Id, []);
-                album.Tracks = tracksByAlbum.GetValueOrDefault(album.Id, []);
-            }
+            await EnrichAlbumsAsync(connection, albumList, token);
         }
 
         return albumList;
+    }
+
+    private static void ApplyFilters(SqlBuilder sqlBuilder, GetAllMusicAlbumsOptions options)
+    {
+        if (!string.IsNullOrEmpty(options.Title))
+        {
+            sqlBuilder.Where("ma.title like '%' || @title || '%'", new { title = options.Title });
+        }
+
+        if (options.YearOfRelease.HasValue)
+        {
+            sqlBuilder.Where("ma.year_of_release = @yearOfRelease", new { yearOfRelease = options.YearOfRelease.Value });
+        }
+    }
+
+    private static void ApplyOrdering(SqlBuilder sqlBuilder, GetAllMusicAlbumsOptions options)
+    {
+        if (options.SortField is null || options.SortOrder == SortOrder.Unsorted)
+        {
+            return;
+        }
+
+        var sortDirection = options.SortOrder == SortOrder.Descending ? "DESC" : "ASC";
+
+        var dbSortField = options.SortField.ToLowerInvariant() switch
+        {
+            "yearofrelease" => "year_of_release",
+            "title" => "title",
+            _ => options.SortField
+        };
+
+        sqlBuilder.OrderBy($"{dbSortField} {sortDirection}");
+    }
+
+    private static async Task EnrichAlbumsAsync(IDbConnection connection, List<MusicAlbum> albumList,
+        CancellationToken token)
+    {
+        var albumIds = albumList.Select(a => a.Id).ToArray();
+
+        var genreData = await connection.QueryAsync<AlbumGenre>(new CommandDefinition("""
+        select ma.id as AlbumId, g.name as GenreName
+        from music_albums ma
+        join music_album_genres mag on ma.id = mag.music_album_id
+        join genres g on mag.genre_id = g.id
+        where ma.id = ANY(@albumIds)
+        """, new { albumIds }, cancellationToken: token));
+
+        var genresByAlbum = genreData
+            .GroupBy(g => g.AlbumId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.GenreName).ToList());
+
+        var artistData = await connection.QueryAsync<Guid, Artist, (Guid AlbumId, Artist Artist)>(
+            new CommandDefinition("""
+            select aa.album_id, a.id as Id, a.name as Name, a.slug as Slug
+            from artists a
+            join album_artists aa on a.id = aa.artist_id
+            where aa.album_id = ANY(@albumIds)
+            order by aa.artist_order
+            """, new { albumIds }, cancellationToken: token),
+            (albumId, artist) => (albumId, artist),
+            splitOn: "Id");
+
+        var artistsByAlbum = artistData
+            .GroupBy(a => a.AlbumId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Artist).ToList());
+
+        var trackData = (await connection.QueryAsync<Track>(new CommandDefinition("""
+        select id as Id,
+               music_album_id as MusicAlbumId,
+               title as Title,
+               track_number as TrackNumber,
+               duration_in_seconds as DurationInSeconds
+        from tracks
+        where music_album_id = ANY(@albumIds)
+        order by track_number
+        """, new { albumIds }, cancellationToken: token))).ToList();
+
+        var tracksByAlbum = trackData
+            .GroupBy(t => t.MusicAlbumId)
+            .ToDictionary(g => g.Key, g => g.ToList());
+
+        if (trackData.Count != 0)
+        {
+            await LoadTrackArtistsAsync(connection, trackData, token);
+        }
+
+        foreach (var album in albumList)
+        {
+            album.Genres = genresByAlbum.GetValueOrDefault(album.Id, []);
+            album.Artists = artistsByAlbum.GetValueOrDefault(album.Id, []);
+            album.Tracks = tracksByAlbum.GetValueOrDefault(album.Id, []);
+        }
+    }
+
+    private static async Task LoadTrackArtistsAsync(IDbConnection connection, IReadOnlyCollection<Track> tracks,
+        CancellationToken token)
+    {
+        var trackIds = tracks.Select(t => t.Id).ToArray();
+        var trackArtistsData = await connection.QueryAsync<Guid, Artist, (Guid TrackId, Artist Artist)>(
+            new CommandDefinition("""
+            select ta.track_id, a.id as Id, a.name as Name, a.slug as Slug
+            from artists a
+            join track_artists ta on a.id = ta.artist_id
+            where ta.track_id = ANY(@TrackIds)
+            order by ta.artist_order
+            """, new { TrackIds = trackIds }, cancellationToken: token),
+            (trackId, artist) => (trackId, artist),
+            splitOn: "Id");
+
+        var trackArtistsByTrack = trackArtistsData
+            .GroupBy(x => x.TrackId)
+            .ToDictionary(g => g.Key, g => g.Select(x => x.Artist).ToList());
+
+        foreach (var track in tracks)
+        {
+            track.Artists = trackArtistsByTrack.GetValueOrDefault(track.Id, new List<Artist>());
+        }
     }
 
     public async Task<bool> UpdateAsync(MusicAlbum musicAlbum, CancellationToken token = default)
@@ -532,14 +512,14 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 values (@Id, @MusicAlbumId, @Title, @TrackNumber, @DurationInSeconds)
                 """, new
             {
-                Id = track.Id,
+                track.Id,
                 MusicAlbumId = musicAlbum.Id,
-                Title = track.Title,
-                TrackNumber = track.TrackNumber,
-                DurationInSeconds = track.DurationInSeconds
+                track.Title,
+                track.TrackNumber,
+                track.DurationInSeconds
             }, cancellationToken: token));
 
-            if (track.Artists.Any())
+            if (track.Artists.Count != 0)
             {
                 await UpsertAndLinkTrackArtistsAsync(connection, track.Id, track.Artists, token);
             }
@@ -553,10 +533,10 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         where id = @Id
         """, new
         {
-            Id = musicAlbum.Id,
-            Slug = musicAlbum.Slug,
-            Title = musicAlbum.Title,
-            YearOfRelease = musicAlbum.YearOfRelease
+            musicAlbum.Id,
+            musicAlbum.Slug,
+            musicAlbum.Title,
+            musicAlbum.YearOfRelease
         }, cancellationToken: token));
 
         transaction.Commit();

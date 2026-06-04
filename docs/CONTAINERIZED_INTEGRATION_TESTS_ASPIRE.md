@@ -21,12 +21,12 @@ Tests use a single shared AppHost instance across the entire test run, managed b
 
 ## Running the tests
 
-From **Visual Studio / Rider**: Open the Test Explorer and run anything under `MusicAlbums.Tests.Integration`.
+From **Visual Studio / Rider**: Open the Test Explorer and run anything under `MusicAlbums.Integration.Tests`.
 
 From the **CLI**:
 
 ```bash
-dotnet test tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
+dotnet test tests/MusicAlbums.Integration.Tests/MusicAlbums.Integration.Tests.csproj
 ```
 
 ## Further reading

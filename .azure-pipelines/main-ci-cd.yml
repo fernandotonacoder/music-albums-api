@@ -199,7 +199,7 @@ stages:
               arguments: "--configuration Release --no-restore"
 
           # Must match the tag Aspire.Hosting.PostgreSQL resolves to. Bump alongside the Aspire package.
-          - bash: docker pull postgres:17.6
+          - bash: docker pull postgres:18.4
             displayName: Pre‑pull PostgreSQL image
 
           # Unit tests run in-process, so coverlet can produce LINE + BRANCH (condition) coverage,
@@ -207,14 +207,14 @@ stages:
           # Scope to first-party assemblies — coverlet would otherwise instrument Dapper, Moq, etc.
           - script: >
               dotnet test
-              --project tests/MusicAlbums.Application.Tests.Unit/MusicAlbums.Application.Tests.Unit.csproj
+              --project tests/MusicAlbums.Unit.Tests/MusicAlbums.Unit.Tests.csproj
               --configuration Release
               --no-build
               --coverlet
               --coverlet-output-format opencover
               --coverlet-output-format cobertura
               --coverlet-include "[MusicAlbums.*]*"
-              --coverlet-exclude "[*.Tests.*]*"
+              --coverlet-exclude "[*.Tests]*"
               --coverlet-exclude "[MusicAlbums.AppHost]*"
               --report-trx
               --results-directory $(Build.SourcesDirectory)/TestResults/unit
@@ -227,7 +227,7 @@ stages:
               --settings $(Build.SourcesDirectory)/coverage.settings.xml
               --
               dotnet test
-              --project tests/MusicAlbums.Tests.Integration/MusicAlbums.Tests.Integration.csproj
+              --project tests/MusicAlbums.Integration.Tests/MusicAlbums.Integration.Tests.csproj
               --configuration Release
               --no-build
               --report-trx

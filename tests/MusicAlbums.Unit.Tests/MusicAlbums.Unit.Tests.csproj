@@ -10,6 +10,7 @@
         <TestingPlatformDotnetTestSupport>true</TestingPlatformDotnetTestSupport>
         <LangVersion>14</LangVersion>
         <OutputType>Exe</OutputType>
+        <RootNamespace>MusicAlbums.Application.Tests.Unit</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

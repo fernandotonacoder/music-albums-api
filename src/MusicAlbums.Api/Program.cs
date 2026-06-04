@@ -66,13 +66,15 @@ builder.Services.AddApiVersioning(x =>
     x.ApiVersionReader = new MediaTypeApiVersionReader("api-version");
 }).AddMvc().AddApiExplorer();
 
+string[] albumCacheVaryByQueryKeys = ["title", "year", "sortBy", "page", "pageSize"];
+
 builder.Services.AddOutputCache(x =>
 {
     x.AddBasePolicy(c => c.Cache());
     x.AddPolicy("AlbumCache", c =>
         c.Cache()
         .Expire(TimeSpan.FromMinutes(1))
-        .SetVaryByQuery(new[] { "title", "year", "sortBy", "page", "pageSize" })
+        .SetVaryByQuery(albumCacheVaryByQueryKeys)
         .Tag("albums"));
     // Collapse repeated public hits to /_health/ready into one DB call per window.
     // Output cache only stores 200s, so an unhealthy result is never served stale.

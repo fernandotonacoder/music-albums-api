@@ -1,5 +1,5 @@
-using Aspire.Hosting.ApplicationModel;
 using MusicAlbums.AppHost;
+using Projects;
 
 var builder = DistributedApplication.CreateBuilder(args);
 
@@ -22,12 +22,13 @@ else
     // Aspire-managed PostgreSQL: container survives AppHost stops (Persistent lifetime),
     // data survives container recreation (named volume). Reset = `docker volume rm musicalbums-postgres-data`.
     postgres = builder.AddPostgres("musicalbums-postgres", password: pgPassword, port: 5433)
+        .WithImageTag("18.4")
         .WithLifetime(ContainerLifetime.Persistent)
         .WithDataVolume("musicalbums-postgres-data")
         .AddDatabase("albums");
 }
 
-var musicAlbumsApi = builder.AddProject<Projects.MusicAlbums_Api>("musicalbums-api")
+var musicAlbumsApi = builder.AddProject<MusicAlbums_Api>("musicalbums-api")
     .WithEnvironment("Database:ConnectionString", postgres.Resource.ConnectionStringExpression)
     .WithEnvironment("Jwt:Key", jwtKey)
     .WithEnvironment("Jwt:Issuer", "MusicAlbumsIdentity")
@@ -35,7 +36,7 @@ var musicAlbumsApi = builder.AddProject<Projects.MusicAlbums_Api>("musicalbums-a
     .WithEnvironment("ApiKey", apiKey)
     .WaitFor(postgres);
 
-var identityApi = builder.AddProject<Projects.Identity_Api>("identity-api")
+var identityApi = builder.AddProject<Identity_Api>("identity-api")
     .WithEnvironment("Jwt:Key", jwtKey)
     .WithEnvironment("Jwt:Issuer", "MusicAlbumsIdentity")
     .WithEnvironment("Jwt:Audience", "MusicAlbumsApi");
