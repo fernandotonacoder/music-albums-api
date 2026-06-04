@@ -48,11 +48,11 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                     values (@Id, @MusicAlbumId, @Title, @TrackNumber, @DurationInSeconds)
                     """, new
                 {
-                    Id = track.Id,
+                    track.Id,
                     MusicAlbumId = musicAlbum.Id,
-                    Title = track.Title,
-                    TrackNumber = track.TrackNumber,
-                    DurationInSeconds = track.DurationInSeconds
+                    track.Title,
+                    track.TrackNumber,
+                    track.DurationInSeconds
                 }, cancellationToken: token));
 
                 if (track.Artists.Count != 0)
@@ -279,7 +279,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             join album_artists aa on a.id = aa.artist_id
             where aa.album_id = @Id
             order by aa.artist_order
-            """, new { Id = foundAlbum.Id }, cancellationToken: token));
+            """, new { foundAlbum.Id }, cancellationToken: token));
         
         foundAlbum.Artists = albumArtists.ToList();
 
@@ -292,7 +292,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
             from tracks
             where music_album_id = @Id
             order by track_number
-            """, new { Id = foundAlbum.Id }, cancellationToken: token));
+            """, new { foundAlbum.Id }, cancellationToken: token));
         
         foundAlbum.Tracks = tracks.ToList();
 
@@ -512,11 +512,11 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 values (@Id, @MusicAlbumId, @Title, @TrackNumber, @DurationInSeconds)
                 """, new
             {
-                Id = track.Id,
+                track.Id,
                 MusicAlbumId = musicAlbum.Id,
-                Title = track.Title,
-                TrackNumber = track.TrackNumber,
-                DurationInSeconds = track.DurationInSeconds
+                track.Title,
+                track.TrackNumber,
+                track.DurationInSeconds
             }, cancellationToken: token));
 
             if (track.Artists.Count != 0)
@@ -533,10 +533,10 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         where id = @Id
         """, new
         {
-            Id = musicAlbum.Id,
-            Slug = musicAlbum.Slug,
-            Title = musicAlbum.Title,
-            YearOfRelease = musicAlbum.YearOfRelease
+            musicAlbum.Id,
+            musicAlbum.Slug,
+            musicAlbum.Title,
+            musicAlbum.YearOfRelease
         }, cancellationToken: token));
 
         transaction.Commit();

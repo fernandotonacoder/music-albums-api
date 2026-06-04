@@ -79,8 +79,8 @@ public static class Extensions
             .WithTracing(tracing =>
             {
                 tracing.AddSource(builder.Environment.ApplicationName)
-                    .AddAspNetCoreInstrumentation(tracing =>
-                        tracing.Filter = context =>
+                    .AddAspNetCoreInstrumentation(options =>
+                        options.Filter = context =>
                             !context.Request.Path.StartsWithSegments(HealthEndpointPrefix)
                     )
                     .AddHttpClientInstrumentation();
