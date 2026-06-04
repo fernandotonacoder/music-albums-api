@@ -1,6 +1,3 @@
-using Aspire.Hosting;
-using Aspire.Hosting.ApplicationModel;
-
 namespace MusicAlbums.AppHost;
 
 public static class TestAppHostEmulator
