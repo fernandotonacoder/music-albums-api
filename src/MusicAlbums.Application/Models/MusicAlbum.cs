@@ -29,6 +29,6 @@ public partial class MusicAlbum
         return $"{sluggedTitle}-{YearOfRelease}";
     }
 
-    [GeneratedRegex("[^0-9A-Za-z _-]", RegexOptions.NonBacktracking, 5)]
+    [GeneratedRegex("[^0-9A-Za-z _-]", RegexOptions.None, 5)]
     private static partial Regex SlugRegex();
 }
