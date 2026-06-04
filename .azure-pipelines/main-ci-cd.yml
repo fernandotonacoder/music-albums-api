@@ -199,7 +199,7 @@ stages:
               arguments: "--configuration Release --no-restore"
 
           # Must match the tag Aspire.Hosting.PostgreSQL resolves to. Bump alongside the Aspire package.
-          - bash: docker pull postgres:17.6
+          - bash: docker pull postgres:18.4
             displayName: Pre‑pull PostgreSQL image
 
           # Unit tests run in-process, so coverlet can produce LINE + BRANCH (condition) coverage,

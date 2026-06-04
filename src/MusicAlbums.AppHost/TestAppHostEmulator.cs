@@ -17,6 +17,7 @@ public static class TestAppHostEmulator
         var apiKey = builder.AddParameter("api-key", TestApiKey, secret: true);
 
         var postgres = builder.AddPostgres("test-music-albums-postgres")
+            .WithImageTag("18.4")
             .AddDatabase("albums");
 
         return (postgres, jwtKey, apiKey);

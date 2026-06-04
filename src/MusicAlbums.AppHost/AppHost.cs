@@ -22,6 +22,7 @@ else
     // Aspire-managed PostgreSQL: container survives AppHost stops (Persistent lifetime),
     // data survives container recreation (named volume). Reset = `docker volume rm musicalbums-postgres-data`.
     postgres = builder.AddPostgres("musicalbums-postgres", password: pgPassword, port: 5433)
+        .WithImageTag("18.4")
         .WithLifetime(ContainerLifetime.Persistent)
         .WithDataVolume("musicalbums-postgres-data")
         .AddDatabase("albums");
