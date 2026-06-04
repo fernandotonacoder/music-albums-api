@@ -119,6 +119,8 @@ resource containerApp 'Microsoft.App/containerApps@2024-03-01' = {
         external: true
         targetPort: targetPort
         allowInsecure: false
+        // No mTLS: public API authenticated at the app layer (JWT Bearer + API key).
+        clientCertificateMode: 'ignore'
       }
       secrets: [
         {

@@ -6,7 +6,7 @@ using Respawn;
 
 namespace MusicAlbums.Tests.Integration;
 
-public class DistributedAppFixture : IAsyncLifetime
+public sealed class DistributedAppFixture : IAsyncLifetime
 {
     private static readonly TimeSpan StartupTimeout = TimeSpan.FromSeconds(180);
 

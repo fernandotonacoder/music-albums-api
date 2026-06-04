@@ -174,7 +174,7 @@
   </tr>
 </table>
 
-Music Albums REST API in .NET / C#, with Dapper and PostgreSQL. **Locally orchestrated by Aspire** and **deployed to Azure Container Apps** through Bicep's Infrastructure as Code (IaC) and Azure Pipelines CI/CD. Development follows **[GitHub Flow](docs/CONTRIBUTING.md)** — all changes go through PRs (direct push to `main` is not allowed), CI required, squash merge enforced.
+Music Albums REST API in **.NET 10 / C#**, with Dapper and PostgreSQL. **Locally orchestrated by .NET Aspire**; containerized with Docker, published to the **GitHub Container Registry (GHCR)**, and **deployed to Azure Container Apps** through Bicep's Infrastructure as Code (IaC) and a multi-stage Azure Pipelines CI/CD — with **app and infrastructure deploys gated by manual approval**; a scheduled GitHub Actions workflow prunes old GHCR images. Quality is enforced through unit and integration tests, code coverage, and **SonarQube** quality gates (Cloud + self-hosted Server). Development follows **[GitHub Flow](docs/CONTRIBUTING.md)** — all changes go through PRs (direct push to `main` is not allowed), CI required, squash merge enforced.
 
 This project is a **monolith** with a pragmatic **Layered Architecture**, organized by technical concerns:
 

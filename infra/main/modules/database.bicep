@@ -82,8 +82,8 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
     administratorLogin: postgresAdminLogin
     administratorLoginPassword: postgresAdminPassword
     authConfig: {
-      activeDirectoryAuth: 'Enabled'
-      passwordAuth: isProduction ? 'Disabled' : 'Enabled'
+      activeDirectoryAuth: 'Enabled' // prod + dev: Container App authenticates via managed identity
+      passwordAuth: isProduction ? 'Disabled' : 'Enabled' // prod: passwordless only; dev: password also enabled for direct access
     }
     storage: {
       storageSizeGB: storageSizeGB
@@ -107,6 +107,10 @@ resource postgres 'Microsoft.DBforPostgreSQL/flexibleServers@2023-12-01-preview'
   }
 }
 
+// Dev-only rule: 0.0.0.0/0.0.0.0 is Azure's special sentinel for "Allow Azure services" —
+// required because dev has no VNet and the Container App needs to reach the database.
+// Not an open-internet rule. Network access still requires valid credentials (password auth is
+// enabled in dev). Absent in production, where VNet isolation replaces this rule entirely.
 resource postgresAllowAzureServices 'Microsoft.DBforPostgreSQL/flexibleServers/firewallRules@2023-12-01-preview' = if (!isProduction) {
   parent: postgres
   name: 'AllowAllAzureServicesAndResourcesWithinAzureIps'

@@ -4,7 +4,7 @@ using MusicAlbums.Tests.Integration.Contracts;
 namespace MusicAlbums.Tests.Integration;
 
 [Collection("AspireTests")]
-public class GetAllMusicAlbumsTests(DistributedAppFixture fixture) : IAsyncLifetime
+public sealed class GetAllMusicAlbumsTests(DistributedAppFixture fixture) : IAsyncLifetime
 {
     public async ValueTask InitializeAsync() => await fixture.ResetDatabaseAsync();
 
