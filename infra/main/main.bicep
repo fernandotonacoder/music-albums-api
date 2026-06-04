@@ -77,6 +77,30 @@ var commonTags = {
 }
 
 // ============================================================================
+// RBAC: Grant Container App access to Key Vault secrets
+// ============================================================================
+// Declared before the modules to satisfy the recommended Bicep element order
+// (resources before modules). Bicep resolves references via the dependency
+// graph, so referencing the compute module's output here is valid.
+
+resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
+  name: resourceNames.keyVault
+}
+
+resource keyVaultSecretUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+  scope: keyVault
+  name: guid(keyVault.id, resourceNames.containerApp, 'Key Vault Secrets User')
+  properties: {
+    principalId: compute.outputs.containerAppPrincipalId
+    principalType: 'ServicePrincipal'
+    roleDefinitionId: subscriptionResourceId(
+      'Microsoft.Authorization/roleDefinitions',
+      '4633458b-17de-408a-b874-0445c86b69e6'
+    )
+  }
+}
+
+// ============================================================================
 // Module: Network (VNet, Subnets, Private DNS) — prod only
 // ============================================================================
 
@@ -167,27 +191,6 @@ module compute './modules/compute.bicep' = {
     appInsightsConnectionString: monitoring.outputs.appInsightsConnectionString
     containerAppSubnetId: network.outputs.containerAppSubnetId
     tags: commonTags
-  }
-}
-
-// ============================================================================
-// RBAC: Grant Container App access to Key Vault secrets
-// ============================================================================
-
-resource keyVault 'Microsoft.KeyVault/vaults@2023-07-01' existing = {
-  name: resourceNames.keyVault
-}
-
-resource keyVaultSecretUserRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
-  name: guid(keyVault.id, resourceNames.containerApp, 'Key Vault Secrets User')
-  scope: keyVault
-  properties: {
-    principalId: compute.outputs.containerAppPrincipalId
-    principalType: 'ServicePrincipal'
-    roleDefinitionId: subscriptionResourceId(
-      'Microsoft.Authorization/roleDefinitions',
-      '4633458b-17de-408a-b874-0445c86b69e6'
-    )
   }
 }
 
