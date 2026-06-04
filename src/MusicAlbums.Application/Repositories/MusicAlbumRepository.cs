@@ -55,7 +55,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                     DurationInSeconds = track.DurationInSeconds
                 }, cancellationToken: token));
 
-                if (track.Artists.Any())
+                if (track.Artists.Count != 0)
                 {
                     await UpsertAndLinkTrackArtistsAsync(connection, track.Id, track.Artists, token);
                 }
@@ -66,7 +66,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         return result > 0;
     }
 
-    private async Task UpsertAndLinkAlbumArtistsAsync(IDbConnection connection, Guid albumId,
+    private static async Task UpsertAndLinkAlbumArtistsAsync(IDbConnection connection, Guid albumId,
         List<Artist> artists, CancellationToken token)
     {
         for (int i = 0; i < artists.Count; i++)
@@ -110,7 +110,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
         }
     }
 
-    private async Task UpsertAndLinkTrackArtistsAsync(IDbConnection connection, Guid trackId,
+    private static async Task UpsertAndLinkTrackArtistsAsync(IDbConnection connection, Guid trackId,
         List<Artist> artists, CancellationToken token)
     {
         for (int i = 0; i < artists.Count; i++)
@@ -519,7 +519,7 @@ public class MusicAlbumRepository(IDbConnectionFactory dbConnectionFactory) : IM
                 DurationInSeconds = track.DurationInSeconds
             }, cancellationToken: token));
 
-            if (track.Artists.Any())
+            if (track.Artists.Count != 0)
             {
                 await UpsertAndLinkTrackArtistsAsync(connection, track.Id, track.Artists, token);
             }

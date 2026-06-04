@@ -36,7 +36,7 @@ public class MusicAlbumValidator : AbstractValidator<MusicAlbum>
         
         RuleFor(x => x.Tracks)
             .Must(HaveUniqueTrackNumbers)
-            .When(x => x.Tracks.Any())
+            .When(x => x.Tracks.Count != 0)
             .WithMessage("Track numbers must be unique within an album");
     }
 
@@ -48,7 +48,7 @@ public class MusicAlbumValidator : AbstractValidator<MusicAlbum>
 
     private async Task<bool> ValidateSlug(MusicAlbum musicAlbum, string slug, CancellationToken token = default)
     {
-        var existingAlbum = await _musicAlbumRepository.GetBySlugAsync(slug);
+        var existingAlbum = await _musicAlbumRepository.GetBySlugAsync(slug, token: token);
 
         if (existingAlbum is not null)
         {
