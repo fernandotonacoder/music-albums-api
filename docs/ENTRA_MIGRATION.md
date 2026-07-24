@@ -52,21 +52,20 @@ header is a second, independent path to admin that bypasses tokens entirely.
 
 ```mermaid
 flowchart LR
-    You["You<br/>Postman / Scalar / curl"]
-    Id["Identity.Api<br/>tools/Identity.Api"]
-    Api["MusicAlbums.Api"]
-    KV[("Key Vault<br/>jwt-key · api-key")]
+    You["You<br/>any client"]
 
-    You -->|"1 · POST /token<br/>any userId, any claims"| Id
-    Id -->|"2 · HS256-signed JWT"| You
-    You -->|"3 · Authorization: Bearer"| Api
-    You -.->|"or just: x-api-key header<br/>= instant admin"| Api
+    subgraph shared["Both hold the same secret · Jwt:Key"]
+        Id["Identity.Api<br/>mints tokens"]
+        Api["MusicAlbums.Api<br/>validates tokens"]
+    end
 
-    KV -.->|Jwt__Key| Id
-    KV -.->|"Jwt__Key · ApiKey"| Api
-
-    Id <-.->|same shared secret| Api
+    You -->|"ask for any token<br/>any userId, any claims"| Id
+    Id -->|"HS256-signed JWT"| You
+    You -->|"Bearer token"| Api
+    You -.->|"or skip tokens entirely<br/>x-api-key = instant admin"| Api
 ```
+
+Both secrets come from Key Vault, and the same `Jwt:Key` is injected into both services.
 
 ### After
 
@@ -78,19 +77,19 @@ with a real sign-in.
 flowchart LR
     You["You<br/>Postman / Scalar / az cli"]
     Public["Anonymous visitor"]
-    Entra["Microsoft Entra ID<br/>login.microsoftonline.com"]
-    Api["MusicAlbums.Api<br/>zero auth secrets"]
-    KV[("Key Vault<br/>postgres creds only")]
+    Entra["Microsoft Entra ID<br/>holds the signing keys"]
+    Api["MusicAlbums.Api<br/>holds no auth secret"]
 
-    You -->|"1 · sign in<br/>auth code + PKCE"| Entra
-    Entra -->|"2 · RS256 access token"| You
-    You -->|"3 · Authorization: Bearer<br/>reads + writes"| Api
+    You <-->|"sign in · auth code + PKCE<br/>returns an RS256 access token"| Entra
+    You -->|"Bearer token<br/>reads + writes"| Api
 
     Public -->|"GET only, no token"| Api
 
-    Api -->|"4 · fetch public JWKS<br/>cached, auto-rotating"| Entra
-    KV -.-> Api
+    Api -.->|"public JWKS<br/>cached, auto-rotating"| Entra
 ```
+
+Key Vault is still there, holding the PostgreSQL credentials — it just stops holding
+anything to do with authentication.
 
 > **`Azure.Identity` is not part of this.** It handles *outbound* auth — your app getting a
 > token to call an Azure service. This repo already uses that pattern: the Container App
@@ -440,7 +439,8 @@ sequenceDiagram
     Api-->>Client: 200 OK
 ```
 
-Steps 8-9 happen once and are cached; they are not a per-request round trip.
+Step 9 happens once and is then cached — fetching the signing keys is not a per-request
+round trip to Entra. Step 8 onwards is what every subsequent call looks like.
 
 ### Fastest loop: Azure CLI
 
@@ -519,32 +519,10 @@ Distinct audiences are what isolate the environments: a token minted for local i
 by prod on the `aud` check, for free. Separate *tenants* per environment would be stricter
 still, but that is real overhead for little gain here.
 
-```mermaid
-flowchart TB
-    subgraph tenant["Single Entra tenant"]
-        RegLocal["music-albums-api-local<br/>aud: api://local-id"]
-        RegDev["music-albums-api-dev<br/>aud: api://dev-id"]
-        RegProd["music-albums-api-prod<br/>aud: api://prod-id"]
-    end
-
-    subgraph envs["Running instances"]
-        Local["localhost:5002<br/>config from AppHost.cs"]
-        Dev["...-dev.azurecontainerapps.io<br/>config from compute.bicep"]
-        Prod["...-prod.azurecontainerapps.io<br/>config from compute.bicep"]
-    end
-
-    RegLocal ==>|validates| Local
-    RegDev ==>|validates| Dev
-    RegProd ==>|validates| Prod
-
-    Local -. "401: wrong aud" .-> Prod
-    Dev -. "401: wrong aud" .-> Prod
-
-    style Prod stroke-width:3px
-```
-
-The dotted lines are the property that matters: a token you minted on your laptop is
-structurally incapable of reaching production.
+Each environment is sealed off from the others by its audience. A token minted against the
+local registration carries `aud: api://local-id`, so prod rejects it on the audience check
+without any extra work on your part — that is the whole reason for three registrations
+rather than one.
 
 Do **not** share one registration across all three. It would mean a token from your laptop
 is valid against production.
